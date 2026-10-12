@@ -23,3 +23,4 @@ def test_slugify():
     assert slugify("Numb - Roomie (Original Song)") == "numb-roomie"
     assert slugify("Café del Mar [Remastered]") == "cafe-del-mar"
     assert slugify("((()))", fallback="x") == "x"
+    assert slugify("残響散歌") == "残響散歌"          # non-Latin titles keep their letters

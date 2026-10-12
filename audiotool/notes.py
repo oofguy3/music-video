@@ -61,6 +61,26 @@ def gate(notes: list[list[float]], active: list[list[float]], pad: float = 0.25,
     return kept
 
 
+def monophonic(notes: list[list[float]], min_overlap: float = 0.5) -> list[list[float]]:
+    """A single voice sings one note at a time. basic-pitch often adds a quieter ghost an octave
+    above (or below) the sung note; drop any note that mostly overlaps a louder one."""
+    keep = []
+    for i, n in enumerate(notes):
+        dur = max(n[1] - n[0], 1e-3)
+        ghost = False
+        for j, m in enumerate(notes):
+            if j == i or m[3] < n[3] or (m[3] == n[3] and j > i):
+                continue
+            if m[0] > n[1]:
+                break
+            if min(n[1], m[1]) - max(n[0], m[0]) >= min_overlap * dur:
+                ghost = True
+                break
+        if not ghost:
+            keep.append(n)
+    return keep
+
+
 def write_midi(path: Path, notes_by_source: dict[str, list[list[float]]], tempo: float) -> Path:
     import pretty_midi
 
@@ -100,6 +120,8 @@ def run(ctx: Context) -> None:
         notes = transcribe(ctx.path("stems", f"{source}.wav"), source, model, tempo)
         raw_counts[source] = len(notes)
         notes = gate(notes, loud["stems"][source]["active"])
+        if source == "vocals":
+            notes = monophonic(notes)
         out[source] = [[round(a, 3), round(b, 3), m, round(v, 2)] for a, b, m, v in notes]
         write_midi(ctx.path("midi", f"{source}.mid"), {source: out[source]}, tempo)
     write_midi(ctx.path("midi", "all.mid"), out, tempo)

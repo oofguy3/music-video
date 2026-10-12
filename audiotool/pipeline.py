@@ -95,13 +95,16 @@ def _read_param(cfg: Config) -> dict:
 
 STAGES: dict[str, Stage] = {s.name: s for s in [
     Stage("decode", "decode", (), lambda c: {},
-          lambda ctx: [ctx.stage_json("decode"), ctx.path("audio", "mix.wav")]),
+          lambda ctx: [ctx.stage_json("decode"), ctx.path("audio", "mix.wav"),
+                       ctx.path("audio", "song" + ctx.song.suffix.lower())]),
     Stage("stems", "stems", ("decode",), lambda c: {"separator": c.separator},
           lambda ctx: [ctx.stage_json("stems")] + [ctx.path("stems", f"{s}.wav") for s in
                                                    ("vocals", "drums", "bass", "other")]),
     Stage("loudness", "loudness", ("decode", "stems"), lambda c: {}, _own("loudness")),
     Stage("rhythm", "rhythm", ("decode", "stems"), lambda c: {"beats": c.beats}, _own("rhythm")),
-    Stage("notes", "notes", ("stems", "loudness", "rhythm"), lambda c: {}, _own("notes")),
+    Stage("notes", "notes", ("stems", "loudness", "rhythm"), lambda c: {},
+          lambda ctx: [ctx.stage_json("notes")] + [ctx.path("midi", f"{s}.mid") for s in
+                                                   ("vocals", "bass", "other", "all")]),
     Stage("tonal", "tonal", ("stems", "rhythm"), lambda c: {}, _own("tonal")),
     Stage("lyrics", "lyrics", ("stems", "loudness"),
           lambda c: {"whisper": c.whisper, "language": c.language, "vad": c.vad}, _own("lyrics")),
@@ -162,6 +165,14 @@ def _done_path(ctx: Context, name: str) -> Path:
     return ctx.path("stages", f"{name}.done.json")
 
 
+def _degraded(ctx: Context, name: str) -> str | None:
+    """Stages that can fall back to another model record it as `fallback` in their JSON."""
+    try:
+        return ctx.load(name).get("fallback") if ctx.stage_json(name).exists() else None
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def run(ctx: Context, targets: list[str], force: set[str] | None = None) -> dict:
     """Run `targets` and their dependencies; returns the manifest."""
     force = force or set()
@@ -181,19 +192,31 @@ def run(ctx: Context, targets: list[str], force: set[str] | None = None) -> dict
         done = load_json(done_path) if done_path.exists() else None
         fresh = (done is not None and done.get("key") == key
                  and all(p.exists() for p in stage.outputs(ctx)))
-        if fresh and name not in force:
-            log(f"{name:<9} cached")
+        # A stage that fell back to a lesser model (e.g. a download failed) is retried once on the
+        # next run, then kept with a warning so a permanently blocked host doesn't cost a re-run.
+        retry = fresh and done.get("degraded") and done.get("attempts", 1) < 2
+        if fresh and not retry and name not in force:
+            note = " (fallback model; --force to retry)" if done.get("degraded") else ""
+            log(f"{name:<9} cached{note}")
             dep_runs[name] = done["run"]
             manifest["stages"].setdefault(name, {})["cached"] = True
             continue
 
-        log(f"{name:<9} running…")
+        log(f"{name:<9} {'retrying preferred model' if retry else 'running'}…")
+        # Drop the old marker first: a crash mid-write must not leave half-written outputs "cached".
+        done_path.unlink(missing_ok=True)
         t0 = time.perf_counter()
         stage.run(ctx)
         elapsed = round(time.perf_counter() - t0, 2)
         run_id = uuid.uuid4().hex
-        dump_json(done_path, {"key": key, "run": run_id, "elapsed_s": elapsed,
-                              "finished": time.strftime("%Y-%m-%dT%H:%M:%S")}, indent=1)
+        degraded = _degraded(ctx, name)
+        marker = {"key": key, "run": run_id, "elapsed_s": elapsed,
+                  "finished": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        if degraded:
+            same = done is not None and done.get("key") == key and done.get("degraded")
+            marker.update(degraded=degraded, attempts=(done.get("attempts", 1) + 1) if same else 1)
+            log(f"{name:<9} used a fallback: {degraded}")
+        dump_json(done_path, marker, indent=1)
         dep_runs[name] = run_id
         manifest["stages"][name] = {"elapsed_s": elapsed, "cached": False}
         log(f"{name:<9} done in {elapsed:.1f}s")

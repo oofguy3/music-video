@@ -59,7 +59,9 @@ def _torchaudio(mix: np.ndarray, sr: int) -> tuple[dict[str, np.ndarray], int, s
     _, channels, length = wav.shape
     chunk_len = int(msr * segment * (1 + overlap))
     overlap_frames = int(overlap * msr)
-    fade = Fade(fade_in_len=0, fade_out_len=overlap_frames, fade_shape="linear")
+    # no fade-out on a chunk that already reaches the end (nothing follows to add the weight back)
+    fade = Fade(fade_in_len=0, fade_out_len=0 if chunk_len >= length else overlap_frames,
+                fade_shape="linear")
     final = torch.zeros(1, len(model.sources), channels, length)
     start, end = 0, chunk_len
     with torch.inference_mode():
@@ -81,7 +83,8 @@ def _torchaudio(mix: np.ndarray, sr: int) -> tuple[dict[str, np.ndarray], int, s
 
 
 def separate(mix: np.ndarray, sr: int, method: str = "htdemucs") -> tuple[dict[str, np.ndarray], str]:
-    """Split a (samples, 2) mix into the four sources at `sr`; returns (stems, model id)."""
+    """Split a (samples, 2) mix into the four sources at `sr`; returns (stems, model id).
+    The model id names the separator that actually ran, which may be the fallback."""
     attempts = []
     if method in ("htdemucs", "htdemucs_ft"):
         attempts.append(lambda: _demucs(mix, sr, method))
@@ -119,8 +122,10 @@ def run(ctx: Context) -> None:
     total = sum(stems[s] for s in SOURCES)
     resid = mix - total
     rms = lambda a: float(np.sqrt(np.mean(np.square(a, dtype=np.float64))) + 1e-12)  # noqa: E731
+    wanted = "torchaudio" if ctx.cfg.separator == "torchaudio" else f"demucs:{ctx.cfg.separator}"
     ctx.save("stems", {
         "model": model_id,
+        "fallback": None if model_id.startswith(wanted) else f"{ctx.cfg.separator} unavailable, used {model_id}",
         "sources": list(SOURCES),
         "sr": sr,
         "residual_db": round(20 * np.log10(rms(resid) / rms(mix)), 2),

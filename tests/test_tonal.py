@@ -1,7 +1,7 @@
 import numpy as np
 
 from audiotool.tonal import (PITCHES, chord_fit, chord_templates, estimate_chords, estimate_key, key_name,
-                             key_timeline, signature_distance, spell_chord, uses_flats)
+                             key_timeline, signature_distance, spell_chord, subdivide, uses_flats)
 
 MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11]
 
@@ -80,3 +80,8 @@ def test_chord_fit_prefers_tonic():
     chords = [[0, 4, "C:maj"], [4, 6, "A:min"], [6, 8, "G:maj"]]
     fit = chord_fit(chords, 0, 8)
     assert fit[0] > fit[2 * 9 + 1]   # C major beats A minor when C is the chord heard most
+
+
+def test_subdivide_long_beats():
+    grid = subdivide(np.array([0.0, 0.5, 1.7, 2.0]), max_step=0.6)
+    assert np.allclose(grid, [0.0, 0.5, 1.1, 1.7, 2.0])

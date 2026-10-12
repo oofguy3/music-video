@@ -1,7 +1,7 @@
 import numpy as np
 
 from audiotool.io import write_wav
-from audiotool.notes import gate, load_model, midi_name, summary, transcribe, write_midi
+from audiotool.notes import gate, load_model, midi_name, monophonic, summary, transcribe, write_midi
 from synth import MELODY, SR, hz
 
 
@@ -43,3 +43,10 @@ def test_write_midi_and_summary(tmp_path):
     assert sorted(i.name for i in pm.instruments) == ["bass", "vocals"]
     assert summary(notes["vocals"])["n"] == 2
     assert summary([]) == {"n": 0}
+
+
+def test_monophonic_drops_octave_ghosts():
+    sung = [0.0, 1.0, 62, 0.8]
+    ghost = [0.1, 0.9, 74, 0.3]           # quieter, an octave up, inside the sung note
+    nxt = [1.0, 2.0, 64, 0.7]
+    assert monophonic([sung, ghost, nxt]) == [sung, nxt]

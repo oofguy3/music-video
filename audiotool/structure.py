@@ -183,9 +183,11 @@ def section_stats(t0, t1, loud, notes, tonal, lyrics, rhythm) -> dict:
                            "hi": midi_name(np.percentile(p, 95), flats), "per_s": round(len(sel) / dur, 2)}
         else:
             nstats[src] = {"n": 0}
+    beat_s = float(np.median(np.diff(rhythm["beats"]))) if len(rhythm["beats"]) > 1 else 0.5
+    min_overlap = max(0.25, 0.5 * beat_s)   # ignore a neighbour's chord that grazes the boundary
     chords, roman = [], []
     for c0, c1, label, c in tonal["chords"]:
-        if c1 > t0 and c0 < t1 and c != "N" and (not chords or chords[-1] != c):
+        if min(c1, t1) - max(c0, t0) >= min_overlap and c != "N" and (not chords or chords[-1] != c):
             chords.append(c)
             roman.append(roman_numeral(label, key))
     lines = [ln["id"] for ln in lyrics["lines"] if t0 <= (ln["t0"] + ln["t1"]) / 2 < t1]
@@ -247,15 +249,18 @@ def run(ctx: Context) -> None:
     if len(beats) < 16:
         beats = np.arange(0, duration, 0.5)
     Csync, Msync, times = beat_features(y, SR, beats)
-    evecs = laplacian_embedding(Csync, Msync)
     bpb = int(str(rhythm.get("meter") or "4/4").split("/")[0])
     tempo = rhythm.get("tempo_bpm") or 120
     bar_s = bpb * 60.0 / tempo
     times = times.copy()
     times[-1] = duration
-    labels, k = choose_segments(evecs, times, bar_s)
-    min_len = 2 * bar_s * 0.9  # only sub-two-bar slivers get merged away
-    segs = snap_and_merge(_runs(labels), times, downbeats, min_len)
+    if Csync.shape[1] < 16:   # too short to segment (a jingle, a sketch): one section
+        segs, k = [[0.0, float(duration), 0]], 1
+    else:
+        evecs = laplacian_embedding(Csync, Msync)
+        labels, k = choose_segments(evecs, times, bar_s)
+        min_len = 2 * bar_s * 0.9  # only sub-two-bar slivers get merged away
+        segs = snap_and_merge(_runs(labels), times, downbeats, min_len)
     names = letter_labels(segs)
 
     sections = []

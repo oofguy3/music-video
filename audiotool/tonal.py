@@ -81,21 +81,22 @@ def _idx_name(i: int) -> str:
 def estimate_key(chroma: np.ndarray, weights: np.ndarray | None = None,
                  chords: list[list] | None = None) -> tuple[str, float, list]:
     """Krumhansl-Schmuckler key. When the top two are relative major/minor and nearly tied, the one
-    whose tonic triad is heard longer in `chords` wins."""
+    whose tonic triad is heard longer in `chords` wins; the margin is then reported as negative
+    (the chosen key scored slightly lower) and the chosen key is listed first."""
     sc = key_scores(chroma, weights)
-    order = np.argsort(-sc)
-    best, second = int(order[0]), int(order[1])
+    order = [int(i) for i in np.argsort(-sc)]
+    best, second = order[0], order[1]
     margin = float(sc[best] - sc[second])
     if chords and margin < 0.06 and best % 2 != second % 2:
         maj, mnr = (best, second) if best % 2 == 0 else (second, best)
         if (maj // 2 - 3) % 12 == mnr // 2:  # relative pair
             def tonic_time(i: int) -> float:
                 lab = f"{PITCHES[i // 2]}:{'min' if i % 2 else 'maj'}"
-                return sum(t1 - t0 for t0, t1, c in chords if c == lab)
+                return sum(c[1] - c[0] for c in chords if c[2] == lab)
             if tonic_time(second) > 1.5 * tonic_time(best):
-                best, second = second, best
-                margin = float(sc[best] - sc[second])
-    return _idx_name(best), round(abs(margin), 3), [[_idx_name(int(i)), round(float(sc[i]), 3)] for i in order[:3]]
+                order[0], order[1] = second, best
+                best, margin = second, -margin
+    return _idx_name(best), round(margin, 3), [[_idx_name(i), round(float(sc[i]), 3)] for i in order[:3]]
 
 
 def chord_fit(chords: list[list], t0: float, t1: float) -> np.ndarray:
@@ -184,6 +185,16 @@ def signature_distance(k1: int, k2: int) -> int:
     return min(d, 12 - d)
 
 
+def subdivide(grid: np.ndarray, max_step: float = 0.6) -> np.ndarray:
+    """Split long beat intervals (half-time tracking, slow songs) so the chord decoder's per-step
+    switching cost stays about the same per second."""
+    out = [grid[0]] if len(grid) else []
+    for a, b in zip(grid[:-1], grid[1:]):
+        k = max(1, int(np.ceil((b - a) / max_step)))
+        out.extend(a + (b - a) * np.arange(1, k + 1) / k)
+    return np.asarray(out)
+
+
 def chord_templates() -> tuple[np.ndarray, list[str]]:
     labels, rows = [], []
     for root in range(12):
@@ -204,7 +215,8 @@ def estimate_chords(chroma: np.ndarray, energy: np.ndarray, times: np.ndarray,
     norm = chroma / (np.linalg.norm(chroma, axis=0, keepdims=True) + 1e-9)
     sim = T @ norm                                      # 24 x B cosine similarity
     quiet = energy < 0.05 * (np.percentile(energy, 95) + 1e-9)
-    no_chord = np.where(quiet, 1.0, 0.55)               # "N" wins in silence or when nothing fits
+    weak = sim.max(axis=0) < 0.55
+    no_chord = np.where(quiet, 1.0, np.where(weak, 0.55, 0.0))   # "N" only in silence or when nothing fits
     scores = np.vstack([sim, no_chord[None, :]])
     prob = np.exp(beta * (scores - scores.max(axis=0, keepdims=True)))
     prob /= prob.sum(axis=0, keepdims=True)
@@ -229,6 +241,7 @@ def run(ctx: Context) -> None:
     beats = np.asarray(rhythm["beats"], dtype=float)
     if len(beats) < 4:  # no usable beat grid: fall back to half-second frames
         beats = np.arange(0, len(y) / SR, 0.5)
+    beats = subdivide(beats)
     chroma, energy, times = beat_chroma(y, SR, beats)
     chords = estimate_chords(chroma, energy, times)
     key, conf, top = estimate_key(chroma, energy, chords)

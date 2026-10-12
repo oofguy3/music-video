@@ -58,3 +58,42 @@ def test_run_caches_and_invalidates_downstream(tmp_path, monkeypatch):
     (ctx.stage_json("c")).unlink()
     pipeline.run(ctx, ["c"])
     assert ctx.calls == ["c"]                  # a missing output re-runs only that stage
+
+
+class Boom(Exception):
+    pass
+
+
+def test_crash_mid_rerun_does_not_leave_a_cached_stage(tmp_path, monkeypatch):
+    stages = _stages()
+    monkeypatch.setattr(pipeline, "STAGES", stages)
+    ctx = FakeCtx(song=tmp_path / "s.mp3", out=tmp_path / "out", cfg=Config(), song_sha="x")
+    ctx.calls = []
+    pipeline.run(ctx, ["a"])
+
+    @dataclass(frozen=True)
+    class Crash(Stage):
+        def run(self, ctx):
+            raise Boom
+
+    stages["a"] = Crash("a", "decode", (), lambda c: {}, stages["a"].outputs)
+    with pytest.raises(Boom):
+        pipeline.run(ctx, ["a"], force={"a"})
+    assert not ctx.path("stages", "a.done.json").exists()
+
+
+def test_fallback_result_is_retried_once(tmp_path, monkeypatch):
+    @dataclass(frozen=True)
+    class Degraded(Stage):
+        def run(self, ctx):
+            ctx.calls.append(self.name)
+            ctx.save(self.name, {"fallback": "preferred model unavailable"})
+
+    monkeypatch.setattr(pipeline, "STAGES", {"a": Degraded("a", "decode", (), lambda c: {},
+                                                           lambda ctx: [ctx.stage_json("a")])})
+    ctx = FakeCtx(song=tmp_path / "s.mp3", out=tmp_path / "out", cfg=Config(), song_sha="x")
+    ctx.calls = []
+    for _ in range(4):
+        ctx._cache.clear()
+        pipeline.run(ctx, ["a"])
+    assert ctx.calls == ["a", "a"]     # first run, one retry, then kept with a warning

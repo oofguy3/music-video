@@ -98,6 +98,30 @@ def stem_events(stems: dict, min_gap: float = 4.0) -> list[tuple[float, str]]:
     return sorted(events)
 
 
+def untranscribed(vocal_notes: list, lines: list, min_s: float = 1.0, join: float = 0.35,
+                  pad: float = 0.2) -> list[tuple[float, float]]:
+    """Stretches where the voice is singing notes but Whisper produced no words (likely missing lyrics)."""
+    spans: list[list[float]] = []
+    for t0, t1, *_ in sorted(vocal_notes):
+        if spans and t0 - spans[-1][1] <= join:
+            spans[-1][1] = max(spans[-1][1], t1)
+        else:
+            spans.append([t0, t1])
+    words = sorted((w[0] - pad, w[1] + pad) for ln in lines for w in ln["words"])
+    gaps = []
+    for a, b in spans:
+        cur = a
+        for w0, w1 in words:
+            if w1 <= cur or w0 >= b:
+                continue
+            if w0 - cur >= min_s:
+                gaps.append((cur, w0))
+            cur = max(cur, w1)
+        if b - cur >= min_s:
+            gaps.append((cur, b))
+    return gaps
+
+
 def _ruler(duration: float, step_s: float, every_s: int = 30) -> str:
     n = int(np.ceil(duration / step_s))
     chars = [" "] * n
@@ -144,7 +168,9 @@ def render_digest(a: dict, step_s: float = 2.0) -> str:
         w("- Key changes: " + " -> ".join(f"{k} ({mmss(k0)}-{mmss(k1)})" for k0, k1, k, _ in T["keys"])
           + f". Whole-song estimate {T['key']} is a blend.")
     else:
-        w(f"- Key estimate: {T['key']} (margin over runner-up {T['key_conf']}; candidates: "
+        why = (f"margin over runner-up {T['key_conf']}" if T["key_conf"] >= 0 else
+               "chosen over its near-tied relative key because its tonic chord is heard longer")
+        w(f"- Key estimate: {T['key']} ({why}; candidates: "
           + ", ".join(f"{k} {r}" for k, r in T["key_candidates"]) + ")")
     w(f"- Most-used chords (seconds): " + ", ".join(f"{c} {s}" for c, s in T["chord_usage_s"]))
     w(f"- Loudness: integrated {L['integrated_lufs']} LUFS, loudness range {L['lra_lu']} LU, "
@@ -204,15 +230,20 @@ def render_digest(a: dict, step_s: float = 2.0) -> str:
     w("")
     flagged_any = False
     lines_by_id = {ln["id"]: ln for ln in ly["lines"]}
+    gaps = untranscribed(a["notes"]["vocals"], ly["lines"])
     for s in secs:
         w(f"### {s['label']} {mmss(s['t0'])}-{mmss(s['t1'])}" + (f" ({s['hint']})" if s.get("hint") else ""))
-        if not s["lines"]:
+        rows = [(ln["t0"], "line", ln) for ln in (lines_by_id[i] for i in s["lines"])]
+        rows += [(g0, "gap", (g0, g1)) for g0, g1 in gaps if s["t0"] <= g0 < s["t1"]]
+        if not rows:
             w("(no vocals transcribed)")
-        for lid in s["lines"]:
-            ln = lines_by_id[lid]
-            flags = f"  <{', '.join(ln['flags'])}>" if ln["flags"] else ""
-            flagged_any |= bool(ln["flags"])
-            w(f"- [{mmss(ln['t0'])}] {_lyric_text(ln, ly['p_low'])}{flags}")
+        for t, kind, item in sorted(rows, key=lambda r: r[0]):
+            if kind == "gap":
+                w(f"- [{mmss(t)}] (sung for {item[1] - item[0]:.1f} s, no words transcribed)")
+                continue
+            flags = f"  <{', '.join(item['flags'])}>" if item["flags"] else ""
+            flagged_any |= bool(item["flags"])
+            w(f"- [{mmss(t)}] {_lyric_text(item, ly['p_low'])}{flags}")
         w("")
     if flagged_any:
         w("Line flags: outside_vocals = text where the vocal stem is quiet (possible hallucination); "

@@ -17,10 +17,11 @@ SR = 44100
 def probe(song: Path) -> dict:
     info = ffprobe_json(song)
     fmt = info.get("format", {})
-    tags = {k.lower(): v for k, v in (fmt.get("tags") or {}).items()}
     audio = next((s for s in info.get("streams", []) if s.get("codec_type") == "audio"), None)
     if audio is None:
         raise ValueError(f"{song} has no audio stream")
+    # Ogg/Opus keep tags on the stream; MP3/M4A/FLAC on the container. Container tags win.
+    tags = {k.lower(): v for src in (audio.get("tags") or {}, fmt.get("tags") or {}) for k, v in src.items()}
     return {
         "title": tags.get("title") or song.stem,
         "artist": tags.get("artist") or tags.get("album_artist") or "",
@@ -35,10 +36,10 @@ def probe(song: Path) -> dict:
 
 
 def slugify(title: str, fallback: str = "song") -> str:
-    """'Numb - Roomie (Original Song)' -> 'numb-roomie'."""
+    """'Numb - Roomie (Original Song)' -> 'numb-roomie'; non-Latin titles keep their letters."""
     t = re.sub(r"[\(\[].*?[\)\]]", " ", title)
-    t = unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode()
-    t = re.sub(r"[^a-zA-Z0-9]+", "-", t).strip("-").lower()
+    t = "".join(c for c in unicodedata.normalize("NFKD", t) if not unicodedata.combining(c))
+    t = re.sub(r"[\W_]+", "-", t).strip("-").lower()
     return t or fallback
 
 
@@ -58,8 +59,7 @@ def run(ctx: Context) -> None:
     mix = decode(ctx.song, ctx.path("audio", "mix.wav"))
     # The local player plays the original file from next to index.html.
     local_audio = ctx.path("audio", "song" + ctx.song.suffix.lower())
-    if not local_audio.exists() or local_audio.stat().st_size != ctx.song.stat().st_size:
-        shutil.copyfile(ctx.song, local_audio)
+    shutil.copyfile(ctx.song, local_audio)
 
     import soundfile as sf
 

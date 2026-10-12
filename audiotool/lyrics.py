@@ -46,7 +46,9 @@ def prep_vocals(path: Path, active: list[list[float]], pad: float = 0.5,
     for a, b in active:
         gain[max(0, int((a - pad) * sr)): int((b + pad) * sr)] = 1.0
     y = y * gain
-    peak = np.abs(y).max()
+    # normalise on the sung parts only, so muted bleed is never boosted back up
+    sung = np.abs(y[gain == 1.0])
+    peak = sung.max() if sung.size else 0.0
     if peak > 0:
         y = y * (10 ** (-1 / 20) / peak)
     return y.astype(np.float32)
@@ -147,6 +149,11 @@ def build_lines(words: list[dict]) -> list[dict]:
 
 def run(ctx: Context) -> None:
     active = ctx.load("loudness")["stems"]["vocals"]["active"]
+    if not active:  # instrumental: nothing to transcribe, and Whisper would hallucinate on bleed
+        ctx.save("lyrics", {"model": None, "vad": ctx.cfg.vad, "language": None, "lang_prob": None,
+                            "p_low": P_LOW, "n_words": 0, "n_low": 0, "word_cols": ["t0", "t1", "word", "p"],
+                            "lines": [], "note": "no vocal activity detected"})
+        return
     audio = prep_vocals(ctx.path("stems", "vocals.wav"), active)
     model_dir, repo = ensure_model(ctx.cfg.whisper)
     words, meta = transcribe(audio, model_dir, ctx.cfg)

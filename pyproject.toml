@@ -55,3 +55,4 @@ torchaudio = { index = "pytorch-cpu" }
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["slow: downloads models / heavy CPU; enable with --slow"]
+filterwarnings = ["ignore:pkg_resources is deprecated:UserWarning"]

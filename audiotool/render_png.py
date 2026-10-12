@@ -59,8 +59,37 @@ def panel_text(read_path: str | None) -> str | None:
     else:
         paras = [p for p in re.split(r"\n\s*\n", md) if p.strip() and not p.lstrip().startswith("#")]
         text = paras[0] if paras else ""
-    text = re.sub(r"[*_`>#]", "", text)
+    text = re.sub(r"(?m)^\s*(?:[>#]+|[-*+]\s)\s*", "", text)            # quote/heading/list markers
+    text = re.sub(r"(\*\*|__|\*|_|`)(\S(?:.*?\S)?)\1", r"\2", text)       # emphasis and code spans
     return " ".join(text.split()) or None
+
+
+def fit_text(fig, ax, text: str, x: float, y: float, right: float, bottom: float,
+             sizes=(12.5, 11.5, 10.5, 9.5)) -> None:
+    """Wrap `text` into the box (x..right, y..bottom), shrinking the font until it fits; if even the
+    smallest size overflows, cut whole lines and end with an ellipsis."""
+    renderer = fig.canvas.get_renderer()
+    for size in sizes:
+        for width in range(40, 14, -1):
+            lines = textwrap.wrap(text, width=width)
+            t = ax.text(x, y, "\n".join(lines), color="#d9d9d9", fontsize=size, va="top", linespacing=1.45,
+                        zorder=5, parse_math=False, family="DejaVu Sans")
+            bb = t.get_window_extent(renderer)
+            if bb.x1 <= right:   # widest wrap that fits horizontally at this size
+                if bb.y0 >= H - bottom:   # display y grows upwards; data y grows downwards
+                    return
+                t.remove()
+                break
+            t.remove()
+    # smallest size still too tall: keep the lines that fit
+    lines = textwrap.wrap(text, width=width)
+    line_h = sizes[-1] * 150 / 72 * 1.45
+    keep = max(1, int((bottom - y) // line_h))
+    if keep < len(lines):
+        lines = lines[:keep]
+        lines[-1] = lines[-1].rstrip(" .,;") + " …"
+    ax.text(x, y, "\n".join(lines), color="#d9d9d9", fontsize=sizes[-1], va="top", linespacing=1.45, zorder=5,
+            parse_math=False, family="DejaVu Sans")
 
 
 def render(a: dict, out: Path, read_path: str | None = None) -> Path:
@@ -91,12 +120,16 @@ def render(a: dict, out: Path, read_path: str | None = None) -> Path:
 
     # header tags
     def tag(x, y, text):
-        t = ax.text(x, y, text, color=INK, fontsize=17, va="center", ha="left", zorder=5, **mono)
+        t = ax.text(x, y, text, color=INK, fontsize=17, va="center", ha="left", zorder=5, parse_math=False,
+                    **mono)
         t.set_bbox(dict(boxstyle="round,pad=0.55,rounding_size=0.4", fc=PANEL, ec="#4a4a4a", lw=1.2))
         return t
 
     m = a["meta"]
-    first = tag(X0 + 30, 105, m["title"].strip()[:42])
+    from .render_html import clean_title
+
+    name = clean_title(m["title"], m["artist"])
+    first = tag(X0 + 30, 105, (f"{name} · {m['artist']}" if m["artist"] else name)[:44])
     # figure pixels == data units here, so the drawn box's extent gives the next tag's x
     fig.canvas.draw()
     box = first.get_bbox_patch().get_window_extent(fig.canvas.get_renderer())
@@ -108,7 +141,7 @@ def render(a: dict, out: Path, read_path: str | None = None) -> Path:
         x = float(_tx(s["t0"], dur))
         if s["t0"] > 0.5:
             ax.plot([x, x], [205, ROWS["lyrics"][2] + 10], color="#2f2f2f", lw=1.0, zorder=1)
-        ax.text(x + 6, 212, s["label"], color=MUTED, fontsize=10, va="center", **mono)
+        ax.text(x + 6, 212, s["label"], color=MUTED, fontsize=10, va="center", parse_math=False, **mono)
 
     def label(key):
         name, y0, y1 = ROWS[key]
@@ -190,24 +223,18 @@ def render(a: dict, out: Path, read_path: str | None = None) -> Path:
     ax.text(X0, 1265, sub, color=MUTED, fontsize=13, ha="left", **mono)
 
     # right panel + AI node
-    px0, py0, px1, py1 = 1965, 355, W + 20, 840
+    px0, py0, px1, py1 = 1965, 355, W + 20, 1045
     ax.add_patch(FancyBboxPatch((px0, py0), px1 - px0, py1 - py0, boxstyle="round,pad=0,rounding_size=10",
                                 fc=PANEL, ec=PANEL_EDGE, lw=1.4, zorder=4))
     ax.text(px0 + 36, py0 + 40, "what the song\nis about", color=INK, fontsize=22, va="top",
             linespacing=1.25, zorder=5, **sans)
     summary = panel_text(read_path)
     if summary:
-        wrapped = textwrap.fill(summary, width=34)
-        lines = wrapped.split("\n")
-        if len(lines) > 12:
-            lines = lines[:12]
-            lines[-1] = lines[-1].rstrip(" .,;") + " …"
-        ax.text(px0 + 36, py0 + 165, "\n".join(lines), color="#d9d9d9", fontsize=12.5, va="top",
-                linespacing=1.45, zorder=5, **sans)
+        fit_text(fig, ax, summary, x=px0 + 36, y=py0 + 180, right=W - 28, bottom=py1 - 24)
     else:
         for i, frac in enumerate((1, 1, 1, 1, 1, 0.55)):
             yy = py0 + 190 + i * 44
-            ax.plot([px0 + 36, px0 + 36 + (px1 - px0 - 80) * frac], [yy, yy], color="#4a4a4a", lw=7,
+            ax.plot([px0 + 36, px0 + 36 + (W - 28 - px0 - 36) * frac], [yy, yy], color="#4a4a4a", lw=7,
                     solid_capstyle="butt", zorder=5)
 
     cx, cy, r = 2290, 1210, 118

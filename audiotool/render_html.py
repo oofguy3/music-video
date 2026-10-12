@@ -17,10 +17,23 @@ STEMS = ("vocals", "drums", "bass", "other")
 SRC_INDEX = {"vocals": 0, "bass": 1, "other": 2}
 
 
-def clean_title(title: str) -> str:
-    """'Numb - Roomie (Original Song)' -> 'Numb'."""
-    t = re.sub(r"\s*[\(\[].*?[\)\]]", "", title).strip()
-    return t.split(" - ")[0].strip() or title
+def clean_title(title: str, artist: str = "") -> str:
+    """'Numb - Roomie (Original Song)' -> 'Numb'; 'Roomie - Numb' (artist first) -> 'Numb'.
+    Only trailing bracketed tags are removed, and ' - ' is split only when one side names the artist."""
+    t = title.strip()
+    while True:
+        stripped = re.sub(r"\s*[\(\[][^\)\]]*[\)\]]\s*$", "", t)
+        if stripped == t or not stripped:
+            break
+        t = stripped
+    if " - " in t:
+        left, right = (part.strip() for part in t.split(" - ", 1))
+        names = {n for n in (artist.lower(), artist.lower().removesuffix("official").strip()) if n}
+        if left.lower() in names:
+            return right or title
+        if right.lower() in names:
+            return left or title
+    return t or title
 
 
 # ---------------------------------------------------------------- tiny, escaping markdown
@@ -32,6 +45,14 @@ def _inline(text: str) -> str:
     s = re.sub(r"(?<![*\w])\*([^*\n]+)\*(?!\w)", r"<em>\1</em>", s)
     s = re.sub(r"(?<![_\w])_([^_\n]+)_(?!\w)", r"<em>\1</em>", s)
     return s
+
+
+def split_read(md: str) -> tuple[str | None, str]:
+    """(panel summary, rest of the read) from a song-read document."""
+    m = re.search(r"<!--\s*panel\s*-->(.*?)<!--\s*/panel\s*-->", md, re.S)
+    if not m:
+        return None, md
+    return " ".join(m.group(1).split()), md[:m.start()] + md[m.end():]
 
 
 def md_to_html(md: str, drop_title: bool = True) -> str:
@@ -126,13 +147,15 @@ def view_model(a: dict, mode: str, lyrics_mode: str, read_md: str | None) -> dic
     models = m["models"]
     foot = (f"Measured by audiotool: stems {models['separation']}, beats {models['beats']}, "
             f"notes {models['notes']}, lyrics {models['asr']}. Lyrics are machine-transcribed. ")
-    if lyrics_mode in ("blocks", "none"):
+    if lyrics_mode == "blocks":
         foot += "This page leaves the lyric text out; the lyrics lane shows when each line is sung. "
+    elif lyrics_mode == "none":
+        foot += "This page leaves the lyrics out. "
     if mode == "artifact":
         foot += "The song itself is not part of this page."
     return {
         "mode": mode,
-        "meta": {"title": clean_title(m["title"]), "artist": m["artist"], "duration_s": m["duration_s"]},
+        "meta": {"title": clean_title(m["title"], m["artist"]), "artist": m["artist"], "duration_s": m["duration_s"]},
         "audio_src": m.get("local_audio") if mode == "local" else None,
         "stats": {"tempo": a["rhythm"]["tempo_bpm"], "meter": a["rhythm"]["meter"],
                   "key": key_text, "lufs": a["loudness"]["integrated_lufs"]},
@@ -147,9 +170,17 @@ def view_model(a: dict, mode: str, lyrics_mode: str, read_md: str | None) -> dic
         "chords": a["tonal"]["chords"],
         "sections": sections,
         "lyrics": _lyrics(a, lyrics_mode),
-        "read_html": md_to_html(read_md) if read_md else None,
+        **_read(read_md),
         "footnote": foot.strip(),
     }
+
+
+def _read(read_md: str | None) -> dict:
+    if not read_md:
+        return {"read_lead": None, "read_html": None}
+    lead, rest = split_read(read_md)
+    body = md_to_html(rest).strip()
+    return {"read_lead": lead, "read_html": body or None}
 
 
 def _template() -> tuple[str, str]:
@@ -160,7 +191,9 @@ def _template() -> tuple[str, str]:
 
 def page(a: dict, mode: str, lyrics_mode: str, read_md: str | None) -> str:
     vm = view_model(a, mode, lyrics_mode, read_md)
-    data = dumps(vm).replace("</", "<\\/").replace("<!--", "<\\!--")
+    # "<" only ever appears inside JSON strings, where \u003c is a valid escape; this keeps
+    # "</script" and "<!--" out of the inline script whatever the lyrics or titles contain.
+    data = dumps(vm).replace("<", "\\u003c")
     title = f"{vm['meta']['title']}, Track by Track"
     head, body = _template()
     head = head.replace("__TITLE__", html.escape(title))

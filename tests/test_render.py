@@ -7,7 +7,7 @@ from audiotool.render_png import panel_text, render
 
 def _data(html_text: str) -> dict:
     m = re.search(r'<script type="application/json" id="data">(.*?)</script>', html_text, re.S)
-    return json.loads(m.group(1).replace("<\\/", "</"))
+    return json.loads(m.group(1))
 
 
 def test_png_renders(analysis, tmp_path):
@@ -56,9 +56,37 @@ def test_panel_text(tmp_path):
     assert panel_text(str(p)) == "Short summary here."
     p.write_text("# Read\n\nFirst paragraph wins.\n\nSecond.")
     assert panel_text(str(p)) == "First paragraph wins."
+    p.write_text("<!-- panel -->\nIt moves from C# minor to *F#* via `ii`.\n<!-- /panel -->")
+    assert panel_text(str(p)) == "It moves from C# minor to F# via ii."
     assert panel_text(None) is None
 
 
 def test_clean_title():
-    assert clean_title("Numb - Roomie (Original Song)") == "Numb"
+    assert clean_title("Numb - Roomie (Original Song)", "RoomieOfficial") == "Numb"
+    assert clean_title("Roomie - Numb", "Roomie") == "Numb"
     assert clean_title("Plain") == "Plain"
+    assert clean_title("(Untitled) Track") == "(Untitled) Track"     # only trailing tags go
+    assert clean_title("Song - Part Two") == "Song - Part Two"       # no artist on either side
+
+
+def test_html_comment_text_keeps_json_valid(analysis):
+    analysis["meta"]["title"] = "a <!-- b --> c"
+    analysis["lyrics"]["lines"][0]["text"] = "</script> <!--"
+    d = _data(page(analysis, "local", "full", None))
+    assert d["meta"]["title"] == "a <!-- b --> c"
+    assert d["lyrics"]["lines"][0]["text"] == "</script> <!--"
+
+
+def test_png_survives_dollar_signs_and_long_read(analysis, tmp_path):
+    analysis["meta"]["title"] = "$money$ and $more$"
+    read = tmp_path / "read.md"
+    read.write_text("<!-- panel -->\n" + "A long panel sentence about C# minor and the $5 bill. " * 12
+                    + "\n<!-- /panel -->\n")
+    assert render(analysis, tmp_path / "t.png", str(read)).exists()
+
+
+def test_read_splits_into_lead_and_body(analysis):
+    md = "# T\n\n<!-- panel -->\nShort answer.\n<!-- /panel -->\n\n## More\nDetail <i>x</i>.\n"
+    d = _data(page(analysis, "artifact", "blocks", md))
+    assert d["read_lead"] == "Short answer."
+    assert "Short answer" not in d["read_html"] and "&lt;i&gt;" in d["read_html"]

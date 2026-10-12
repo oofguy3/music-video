@@ -89,8 +89,10 @@ def run(ctx: Context) -> None:
         beats, downbeats = librosa_beats(drums, mix, SR)
         source = "librosa:beat_track+low-band-phase"
 
+    wanted = "librosa" if ctx.cfg.beats == "librosa" else f"beat_this:{ctx.cfg.beats}"
     ctx.save("rhythm", {
         "source": source,
+        "fallback": None if source.startswith(wanted) else f"{ctx.cfg.beats} unavailable, used {source}",
         **summarize(beats, downbeats),
         "beats": rnd(beats, 3),
         "downbeats": rnd(downbeats, 3),
