@@ -1,0 +1,19 @@
+# analysis outputs (stems, lyrics, audio of copyrighted songs) never leave the machine
+out/
+songs/
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+*.mid
+*.npz
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
