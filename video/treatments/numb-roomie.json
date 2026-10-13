@@ -104,7 +104,7 @@
    "scene": "milksea",
    "t0": "@downbeats[32]",
    "t1": "@cuts[0]",
-   "budgetMs": 150,
+   "budgetMs": 185,
    "palette": {
     "skyTop": "#5EC8D8",
     "skyLow": "#FFD3B6",
