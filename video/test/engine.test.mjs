@@ -122,3 +122,32 @@ test('the numb-roomie treatment resolves against the real analysis', { skip: !fs
   assert.deepEqual(tr.coverageProblems(F.duration), []);
   assert.equal(Math.floor(tr.timeline.find((e) => e.id === 'orbit').t0 * 30 + 0.5), 2933);
 });
+
+test('VJ post effects: driven amounts, deterministic, no-ops at zero', async () => {
+  const { Post, vjAmount } = await import('../engine/post.mjs');
+  const { createCanvas } = await import('../engine/canvas.mjs');
+  const F = { frame: 7, c: { kick: 0.5 } };
+  assert.equal(vjAmount({ zoom: 0.04 }, 'zoom', F), 0.04);
+  assert.equal(vjAmount({ zoom: 0.04, zoomBy: 'kick' }, 'zoom', F), 0.02);
+  assert.equal(vjAmount({ zoom: 0.04, zoomBy: 'nope' }, 'zoom', F), 0);
+  const card = () => {
+    const c = createCanvas(64, 36), x = c.getContext('2d');
+    x.fillStyle = '#204'; x.fillRect(0, 0, 64, 36);
+    x.fillStyle = '#fd3'; x.fillRect(20, 8, 16, 20);
+    return c;
+  };
+  const px = (c) => Buffer.from(c.getContext('2d').getImageData(0, 0, 64, 36).data);
+  const post = new Post(64, 36);
+  const base = px(card());
+  const none = card(); post.apply(none, {}, F);
+  assert.ok(px(none).equals(base));
+  for (const P of [{ zoom: 0.1 }, { shake: 40 }, { glitch: 1 }, { rgbSplit: 60 }, { invert: 1 }, { flash: 0.5 }]) {
+    const a = card(), b = card();
+    post.apply(a, P, F);
+    post.apply(b, P, F);
+    assert.ok(!px(a).equals(base), JSON.stringify(P));
+    assert.ok(px(a).equals(px(b)), `deterministic ${JSON.stringify(P)}`);
+  }
+  const weak = card(); post.apply(weak, { invert: 1, invertBy: 'kick' }, { frame: 7, c: { kick: 0.4 } });
+  assert.ok(px(weak).equals(base));
+});

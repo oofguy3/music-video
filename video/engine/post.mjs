@@ -1,13 +1,34 @@
 // Whole-frame post-processing, run after the scenes in device pixels:
-//   bloom      quarter-res blurred copy screened back (soft glow around lights)
+//   zoom       punch-in about the centre (fraction, 0.04 = 4 %)
+//   shake      camera jitter in logical px (overscanned, so no edges show)
+//   glitch     0..1 horizontal slice displacement, shapes held for 2 frames
+//   rgbSplit   chromatic split in logical px: red one way, blue the other (rgbSplitAngle, degrees)
+//   invert     strobe: the frame flips to its negative while the amount is >= 0.5
+//   flash      0..1 a colour (flashColor) screened over the frame
 //   frost      the "numb" look: colour drains, a cold tint, a slight blur; amount = numb x gain
+//   bloom      quarter-res blurred copy screened back (soft glow around lights)
 //   vignette   darker corners
 //   grain      fine film grain: applied in finishRGBA (midtone-weighted, keeps pure black black)
-// Parameters (all optional, 0 disables): bloom, bloomRadius, frost, frostTint, vignette, grain.
+// Parameters (all optional, 0 disables): the above plus bloomRadius and frostTint. Each of zoom,
+// shake, glitch, rgbSplit, invert and flash may name a feature column in <name>By (for example
+// "zoomBy": "kick") that multiplies it frame by frame.
 
 import { createCanvas } from './canvas.mjs';
 import { css } from './color.mjs';
-import { hash32 } from './noise.mjs';
+import { hash01, hash32 } from './noise.mjs';
+
+const VJ = ['zoom', 'shake', 'glitch', 'rgbSplit', 'invert', 'flash'];
+
+/** A VJ effect's amount at this frame: the parameter times its driving column, if any. */
+export function vjAmount(P, k, F) {
+  const v = P[k];
+  if (typeof v !== 'number' || !v) return 0;
+  const by = P[`${k}By`];
+  if (!by) return v;
+  const c = F && F.c ? F.c[by] : undefined;
+  return typeof c === 'number' ? v * c : 0;
+}
+export const VJ_EFFECTS = VJ;
 
 export class Post {
   constructor(devW, devH) {
@@ -28,6 +49,87 @@ export class Post {
     this.vignetteCache = null;
   }
 
+  /** A full-size scratch canvas holding a copy of `src` (or empty when src is null). */
+  _copy(i, src) {
+    this.scratch ||= [];
+    let c = this.scratch[i];
+    if (!c) c = this.scratch[i] = createCanvas(this.w, this.h);
+    const x = c.getContext('2d');
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.globalAlpha = 1;
+    x.filter = 'none';
+    x.globalCompositeOperation = 'copy';
+    if (src) x.drawImage(src, 0, 0);
+    x.globalCompositeOperation = 'source-over';
+    return c;
+  }
+
+  _vj(canvas, ctx, P, F) {
+    const { w, h } = this;
+    const frame = F && Number.isFinite(F.frame) ? F.frame : 0;
+    const k = w / 1920;
+    const zoom = Math.max(0, vjAmount(P, 'zoom', F));
+    const shake = Math.abs(vjAmount(P, 'shake', F)) * k;
+    if (zoom > 1e-4 || shake > 0.05) {
+      const dx = shake * (hash01(frame, 11) * 2 - 1), dy = shake * (hash01(frame, 12) * 2 - 1);
+      const s = 1 + zoom + 2 * Math.max(Math.abs(dx) / w, Math.abs(dy) / h);
+      const src = this._copy(0, canvas);
+      ctx.globalCompositeOperation = 'copy';
+      ctx.drawImage(src, (w - w * s) / 2 + dx, (h - h * s) / 2 + dy, w * s, h * s);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    const gl = Math.min(1, vjAmount(P, 'glitch', F));
+    if (gl > 0.01) {
+      const src = this._copy(0, canvas);
+      const seed = Math.floor(frame / 2);
+      const n = Math.round(3 + 18 * gl);
+      for (let i = 0; i < n; i++) {
+        const y = Math.floor(hash01(seed, i, 1) * h);
+        const sh = Math.min(h - y, Math.max(2, Math.floor((0.01 + 0.07 * hash01(seed, i, 2)) * h * (0.5 + gl))));
+        const dx = Math.round((hash01(seed, i, 3) * 2 - 1) * gl * 0.12 * w);
+        if (!dx || sh <= 0) continue;
+        ctx.drawImage(src, 0, y, w, sh, dx, y, w, sh);
+        if (dx > 0) ctx.drawImage(src, w - dx, y, dx, sh, 0, y, dx, sh);
+        else ctx.drawImage(src, 0, y, -dx, sh, w + dx, y, -dx, sh);
+      }
+    }
+    const rs = Math.abs(vjAmount(P, 'rgbSplit', F)) * k;
+    if (rs > 0.3) {
+      const ang = ((P.rgbSplitAngle ?? 0) * Math.PI) / 180;
+      const ox = rs * Math.cos(ang), oy = rs * Math.sin(ang);
+      const red = this._copy(0, canvas), blue = this._copy(1, canvas);
+      for (const [c, col] of [[red, '#ff0000'], [blue, '#0000ff']]) {
+        const x = c.getContext('2d');
+        x.globalCompositeOperation = 'multiply';
+        x.fillStyle = col;
+        x.fillRect(0, 0, w, h);
+        x.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = '#00ff00';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(red, -ox, -oy);
+      ctx.drawImage(blue, ox, oy);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // A partial invert is a flat grey (x(1-a) + a(1-x) = 0.5 at a = 0.5), so invert is a strobe:
+    // the whole frame flips while the amount is at least 0.5.
+    if (vjAmount(P, 'invert', F) >= 0.5) {
+      ctx.globalCompositeOperation = 'difference';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    const fl = Math.min(1, vjAmount(P, 'flash', F));
+    if (fl > 0.004) {
+      ctx.globalCompositeOperation = 'screen';
+      ctx.fillStyle = css(P.flashColor || '#ffffff', fl);
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
   apply(canvas, P, F) {
     const ctx = canvas.getContext('2d');
     const { w, h } = this;
@@ -35,6 +137,7 @@ export class Post {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.filter = 'none';
+    this._vj(canvas, ctx, P, F);
 
     const frostAmt = Math.max(0, Math.min(1, (F ? F.c.numb : 0) * (P.frost ?? 0)));
     if (frostAmt > 0.002) {
