@@ -132,7 +132,8 @@
     "grain": 0.03,
     "paper": 0.14,
     "zoom": 0.012,
-    "zoomBy": "kick"
+    "zoomBy": "kick",
+    "vjGateBy": "numb"
    },
    "brief": "B1 first chorus, frames 1825-2710: THE MILK SEA under a SPIRAL SUN, the first time the drums and bass are in (the bass enters on the first frame; quiet percussion builds all the way to the cut). SKY: a turquoise (skyTop) to peach (skyLow) gradient down to the horizon at y=430, with soft drifting clouds (worldkit.field low contrast or blobs). SPIRAL SUN at (960, 300), r 150: a cream disc with 6 concentric sunRing rings and a soft spiral of light (e.g. 12 curved wedges) turning slowly (one turn per 8 bars), pulsing 6% bigger on every downbeat. THE SEA: from the horizon to the bottom, 44 perspective wave strips (filled polylines, sea colour far to seaDeep near, each crest edged with a 2-5 px crest highlight), wave height = base + 30*bass_lvl px near the camera; slow travelling noise. LANDING (first 1.5 s): Kite Island from the previous scene is on the sea at (960, 600), splashing down on frame 1825: a crown of ~120 milk droplets (closed-form particles, gravity) and an expanding ring wave; then the island floats and drifts slowly right and away. CHARACTERS (cast.mjs, .teen designs): KIT, JUNE and FRIENDS step off the island and walk across the milk in a loose line toward the camera-left diagonal, in side view, walk phase locked to the beat grid (one stride per two beats: phase = F.c.mt/2), bobbing. Every kick (F.ev.kick) puts a ripple ring at the foot of the nearest walker (a perspective ellipse expanding over 0.8 s, fading). THE CROWD (we all): faceless figures (cast.crowdDesign(crowd colour, 'teen'), stamped with puppet.puppetSprite using phase-quantised keys) appear on the sea in rows behind them, recruited over the chorus from 12 to P.crowdMax (more from P.swell, frame 2457, the build), all marching in unison on the beat, smaller with distance (perspective). Hats -> sparkles: on each F.ev.hat hit, 3-6 star glints pop on random wave crests (scale up then fade over 0.25 s). Snares -> a quick shimmer along the crests. NUMB (the key idea, both windows F.ev.numb[0] frames 2157-2268 and [1] 2600-2711): THE MILK RISES. The sea surface climbs up the figures (waist-high when F.c.numb = 1; clip the lower bodies under the milk surface), the colour drains out of everything toward the milk colour (mix figures, sky and sun toward milk by 0.85*numb), the ripples stop, and TIME BRAKES: drive every animation phase (walk, waves, sun spin, clouds) with a freeze clock tau(t) = t - 0.92*F.integral('numb', S.t0, t) so the world slows to a near-stop; after each window colour returns but never fully (keep 0.25*F.c.numb_accum of the drain). The scene ends frozen and pale in the second window; the engine hard-cuts at frame 2711. KEY FRAMES: 1825, 1830, 1860, 1900, 2000, 2100, 2157, 2200, 2268, 2300, 2457, 2550, 2600, 2650, 2710. The drums must be visible: ripples on kicks, sparkles on hats, the subtle post zoom on kicks. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev)."
   },
@@ -243,7 +244,8 @@
     "beam": "#FFF1C9"
    },
    "params": {
-    "loudest": "@loudest"
+    "loudest": "@loudest",
+    "shatterFrom": "goldlake"
    },
    "post": {
     "bloom": 0.22,
@@ -256,7 +258,8 @@
     "rgbSplit": 6,
     "rgbSplitBy": "snare",
     "shake": 6,
-    "shakeBy": "hit"
+    "shakeBy": "hit",
+    "vjGateBy": "numb"
    },
    "brief": "D1 final chorus, frames 3985-4925: THE KALEIDOSCOPE STORM, the ONE BIG TRIP of the film and the loudest section. It must stay beautiful and in the film's own palette (plum, rose, gold, milk, teal, violet, peach), never rainbow neon or raw fractal noise. The short cut of the video starts here (from frame 3970 with a fade from black), so the first seconds must grab. SOURCE LAYER (g.layer): a melting colour field (worldkit.field, stops in plum/violet/rose/peach/gold, warp ~1.6, colour cycle offset slowly sliding by 0.02 per bar, NOT a full-spectrum cycle) with the film's motifs flying through it: kites with ribbon tails, dandelion seeds, the banded moon, the spiral sun, waves of milk, gold rays. THE KALEIDOSCOPE: fx.kaleido of that layer with 8 wedges (12 after P.loudest), rotating slowly and jumping +15 degrees (eased over 0.15 s) on each downbeat; it fills the frame. At frame 3985 the sky SHATTERS into it: the first 0.4 s show shards of the previous gold sky flying outward (polygon shards with an echo trail) as the kaleidoscope opens behind them. FOREGROUND: a huge crowd of adult silhouettes (cast.crowdDesign(crowd, 'adult') stamped with puppet.puppetSprite, 300-600 figures in perspective rows across the bottom 45% of the frame) JUMPING IN UNISON on every beat (cycles.jump with u = beat_phase, quantised to 12 keys for sprite reuse), with KIT.adult in colour at the centre front, arms up. LIGHT BEAMS: 6 beams (worldkit.rays or long gradient wedges in beam colour) sweep across the sky, flicking to a new angle on each hit. KITES: on each snare, a kite streaks across the frame (a fast diagonal with a long ribbon). NUMB (F.ev.numb[2] frames 4372-4483 and [3] 4816-4926): the kaleidoscope MELTS (fx.melt with amount 0 -> 220 px following F.c.numb) and drains toward milk; the crowd FREEZES at the top of the jump (freeze clock tau(t) = t - 0.95*F.integral('numb', S.t0, t) drives every phase); after numb[2] ends (frame 4483) everything slams back on the beat. LOUDEST at P.loudest (frame 4777): a white-gold bloom burst (the engine flashes too) and the kaleidoscope opens to 12 wedges. The final numb window drains everything to milk white and freezes it; the engine hard-cuts at frame 4926 while it is still frozen. KEY FRAMES: 3970, 3985, 3990, 3998, 4050, 4150, 4300, 4372, 4420, 4483, 4486, 4600, 4777, 4780, 4816, 4870, 4925. Drums must drive it: jumps on beats, beams on hits, kites on snares, post zoom on kicks. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev)."
   },
@@ -343,7 +346,7 @@
    "t": "@key_changes[0].t",
    "dur": "0.6s",
    "params": {
-    "peak": 0.8,
+    "peak": 0.45,
     "tau": 0.18,
     "color": "#FFD27A"
    },
@@ -354,7 +357,7 @@
    "t": "@downbeats[71]",
    "dur": "0.25s",
    "params": {
-    "peak": 0.7,
+    "peak": 0.4,
     "tau": 0.07,
     "color": "#FFFFFF"
    },

@@ -150,6 +150,8 @@ test('VJ post effects: driven amounts, deterministic, no-ops at zero', async () 
   }
   const weak = card(); post.apply(weak, { invert: 1, invertBy: 'kick' }, { frame: 7, c: { kick: 0.4 } });
   assert.ok(px(weak).equals(base));
+  const gated = card(); post.apply(gated, { zoom: 0.1, vjGateBy: 'numb' }, { frame: 7, c: { numb: 1 } });
+  assert.ok(px(gated).equals(base));
   const p1 = card(), p2 = card();
   post.apply(p1, { paper: 0.4 }, F);
   post.apply(p2, { paper: 0.4 }, F);

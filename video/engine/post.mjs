@@ -12,7 +12,8 @@
 //   grain      fine film grain: applied in finishRGBA (midtone-weighted, keeps pure black black)
 // Parameters (all optional, 0 disables): the above plus bloomRadius and frostTint. Each of zoom,
 // shake, glitch, rgbSplit, invert and flash may name a feature column in <name>By (for example
-// "zoomBy": "kick") that multiplies it frame by frame.
+// "zoomBy": "kick") that multiplies it frame by frame; vjGateBy names a column that silences them all
+// as it rises ("vjGateBy": "numb" keeps the camera still while time freezes).
 
 import { createCanvas } from './canvas.mjs';
 import { css } from './color.mjs';
@@ -100,8 +101,12 @@ export class Post {
     const { w, h } = this;
     const frame = F && Number.isFinite(F.frame) ? F.frame : 0;
     const k = w / 1920;
-    const zoom = Math.max(0, vjAmount(P, 'zoom', F));
-    const shake = Math.abs(vjAmount(P, 'shake', F)) * k;
+    // vjGateBy names a column (e.g. 'numb') that silences every VJ effect as it rises to 1
+    const gc = P.vjGateBy && F && F.c ? F.c[P.vjGateBy] : 0;
+    const gate = typeof gc === 'number' ? 1 - Math.max(0, Math.min(1, gc)) : 1;
+    if (gate <= 0.001) return;
+    const zoom = Math.max(0, vjAmount(P, 'zoom', F)) * gate;
+    const shake = Math.abs(vjAmount(P, 'shake', F)) * k * gate;
     if (zoom > 1e-4 || shake > 0.05) {
       const dx = shake * (hash01(frame, 11) * 2 - 1), dy = shake * (hash01(frame, 12) * 2 - 1);
       const s = 1 + zoom + 2 * Math.max(Math.abs(dx) / w, Math.abs(dy) / h);
@@ -110,7 +115,7 @@ export class Post {
       ctx.drawImage(src, (w - w * s) / 2 + dx, (h - h * s) / 2 + dy, w * s, h * s);
       ctx.globalCompositeOperation = 'source-over';
     }
-    const gl = Math.min(1, vjAmount(P, 'glitch', F));
+    const gl = Math.min(1, vjAmount(P, 'glitch', F) * gate);
     if (gl > 0.01) {
       const src = this._copy(0, canvas);
       const seed = Math.floor(frame / 2);
@@ -125,7 +130,7 @@ export class Post {
         else ctx.drawImage(src, 0, y, -dx, sh, w + dx, y, -dx, sh);
       }
     }
-    const rs = Math.abs(vjAmount(P, 'rgbSplit', F)) * k;
+    const rs = Math.abs(vjAmount(P, 'rgbSplit', F)) * k * gate;
     if (rs > 0.3) {
       const ang = ((P.rgbSplitAngle ?? 0) * Math.PI) / 180;
       const ox = rs * Math.cos(ang), oy = rs * Math.sin(ang);
@@ -147,13 +152,13 @@ export class Post {
     }
     // A partial invert is a flat grey (x(1-a) + a(1-x) = 0.5 at a = 0.5), so invert is a strobe:
     // the whole frame flips while the amount is at least 0.5.
-    if (vjAmount(P, 'invert', F) >= 0.5) {
+    if (vjAmount(P, 'invert', F) * gate >= 0.5) {
       ctx.globalCompositeOperation = 'difference';
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, w, h);
       ctx.globalCompositeOperation = 'source-over';
     }
-    const fl = Math.min(1, vjAmount(P, 'flash', F));
+    const fl = Math.min(1, vjAmount(P, 'flash', F) * gate);
     if (fl > 0.004) {
       ctx.globalCompositeOperation = 'screen';
       ctx.fillStyle = css(P.flashColor || '#ffffff', fl);
