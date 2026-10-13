@@ -34,6 +34,7 @@ class Config:
     beats: str = "final0"              # final0 | small0 | librosa
     read: str | None = None            # song-read markdown to show in the PNG/HTML panel
     artifact_lyrics: str = "blocks"    # full | lines | blocks | none  (artifact.html only)
+    fps: float = 30.0                  # video frame rate for the motion stage
 
     def apply_fast(self) -> None:
         self.whisper = "small"
@@ -113,6 +114,9 @@ STAGES: dict[str, Stage] = {s.name: s for s in [
     Stage("digest", "digest", ("decode", "stems", "loudness", "rhythm", "notes", "tonal", "lyrics",
                                "structure"),
           lambda c: {}, lambda ctx: [ctx.path("analysis.json"), ctx.path("digest.md")]),
+    Stage("motion", "motion", ("decode", "stems", "loudness", "rhythm", "notes", "tonal", "lyrics",
+                               "structure"),
+          lambda c: {"fps": c.fps}, _own("motion")),
     Stage("png", "render_png", ("digest",), _read_param, lambda ctx: [ctx.path("tracks.png")]),
     Stage("html", "render_html", ("digest",),
           lambda c: {**_read_param(c), "artifact_lyrics": c.artifact_lyrics},

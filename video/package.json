@@ -1,0 +1,14 @@
+{
+  "name": "numb-video",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Motion-graphics music video renderer driven by audiotool's motion features",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.11"
+  }
+}

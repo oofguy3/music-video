@@ -31,6 +31,7 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--beats", choices=["final0", "small0", "librosa"], default="final0")
     p.add_argument("--fast", action="store_true", help="small Whisper + small beat model (about 2x faster)")
     p.add_argument("--read", type=Path, help="song-read markdown to show in the PNG/HTML 'what the song is about' panel")
+    p.add_argument("--fps", type=float, default=30.0, help="video frame rate for the motion stage")
     p.add_argument("--artifact-lyrics", choices=["full", "lines", "blocks", "none"], default="blocks",
                    help="how much lyric text artifact.html carries (index.html always has full lyrics)")
     return p
@@ -50,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     cfg = Config(threads=args.threads, separator=args.separator, whisper=args.whisper,
                  language=args.language, vad=not args.no_vad, beats=args.beats,
                  read=str(read) if read else None,
-                 artifact_lyrics=args.artifact_lyrics)
+                 artifact_lyrics=args.artifact_lyrics, fps=args.fps)
     if args.fast:
         cfg.apply_fast()
 

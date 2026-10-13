@@ -185,6 +185,64 @@ def signature_distance(k1: int, k2: int) -> int:
     return min(d, 12 - d)
 
 
+def _tonic_triad(key: str) -> str:
+    tonic, mode = parse_key(key)
+    return f"{PITCHES[tonic]}:{'min' if mode == 'minor' else 'maj'}"
+
+
+def _diatonic(label: str, key: str) -> bool:
+    """Is the triad `label` diatonic to `key` (natural minor, plus the major V in minor keys)?"""
+    if label == "N":
+        return False
+    tonic, mode = parse_key(key)
+    root, q = label.split(":")
+    iv = (PITCHES.index(root) - tonic) % 12
+    if mode == "major":
+        return (q == "maj" and iv in (0, 5, 7)) or (q == "min" and iv in (2, 4, 9))
+    return (q == "min" and iv in (0, 5, 7)) or (q == "maj" and iv in (3, 7, 8, 10))
+
+
+def refine_key_changes(keys: list[list], chords: list[list], downbeats: np.ndarray,
+                       look_bars: int = 4) -> tuple[list[list], list[dict]]:
+    """Windowed key estimates place a modulation late (they need a window of the new key). Move each
+    boundary back to the first chord on the new tonic within `look_bars` bars, provided the old tonic
+    does not return after it, and snap it to that chord's downbeat. Also report the pivot: the chords
+    just before the change that already belong to the new key but not to the old one."""
+    keys = [list(k) for k in keys]
+    db = np.asarray(downbeats, dtype=float)
+    bar = float(np.median(np.diff(db))) if len(db) > 1 else 2.0
+    changes = []
+    for i in range(len(keys) - 1):
+        old, new, tb = keys[i][2], keys[i + 1][2], keys[i][1]
+        old_tonic, new_tonic = _tonic_triad(old), _tonic_triad(new)
+        lo, hi = tb - look_bars * bar, tb + 2 * bar
+        t_change = tb
+        for c0, c1, label, *_ in chords:
+            if not (lo <= c0 <= hi) or label != new_tonic:
+                continue
+            if any(lab == old_tonic and c0 < d0 <= max(tb, c0) for d0, _, lab, *_ in chords):
+                continue  # the old key comes back after this chord: not the modulation yet
+            t_change = c0
+            break
+        if len(db):
+            k = int(np.argmin(np.abs(db - t_change)))
+            if abs(db[k] - t_change) <= 0.6 * bar / 4 + 0.03:   # within about half a beat
+                t_change = float(db[k])
+        pivot = None
+        for c0, c1, label, *_ in reversed([c for c in chords if c[0] < t_change]):
+            if _diatonic(label, new) and not _diatonic(label, old):
+                pivot = c0
+            else:
+                break
+        keys[i][1] = keys[i + 1][0] = round(t_change, 2)
+        a, b = parse_key(old)[0], parse_key(new)[0]
+        semis = (b - a) % 12
+        changes.append({"t": round(t_change, 2), "pivot": round(pivot, 2) if pivot is not None else None,
+                        "from": old, "to": new, "semis": semis - 12 if semis > 6 else semis,
+                        "window_t": round(tb, 2)})
+    return keys, changes
+
+
 def subdivide(grid: np.ndarray, max_step: float = 0.6) -> np.ndarray:
     """Split long beat intervals (half-time tracking, slow songs) so the chord decoder's per-step
     switching cost stays about the same per second."""
@@ -246,6 +304,7 @@ def run(ctx: Context) -> None:
     chords = estimate_chords(chroma, energy, times)
     key, conf, top = estimate_key(chroma, energy, chords)
     keys = key_timeline(chroma, energy, times, chords)
+    keys, key_changes = refine_key_changes(keys, chords, np.asarray(rhythm["downbeats"], dtype=float))
 
     def local_key(t: float) -> str:
         for k0, k1, k, _ in keys:
@@ -267,6 +326,7 @@ def run(ctx: Context) -> None:
         "key_conf": conf,
         "key_candidates": top,
         "keys": keys,
+        "key_changes": key_changes,
         "chords": chords,
         "chord_cols": ["t0", "t1", "label", "display"],
         "chord_usage_s": [[c, round(s, 1)] for c, s in common],

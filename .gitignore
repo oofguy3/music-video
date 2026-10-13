@@ -17,3 +17,10 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+
+# video renderer
+node_modules/
+*.mp4
+*.mov
+*.mkv
+*.m4v

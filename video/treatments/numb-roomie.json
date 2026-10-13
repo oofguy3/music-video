@@ -1,0 +1,62 @@
+{
+  "song": "numb-roomie",
+  "notes": "Motion-graphics video for 'Numb'. One dark plain under a horizon; everything is light. Warm round light = memory/feeling; cold screens = numbness; a silhouetted crowd moving in unison = 'we all'; two orbiting lights = young love; one light left = home. The key change lifts every hue by +30 deg (one semitone of the colour wheel). No text except the title card.",
+  "global": { "degPerSemi": 30, "seed": 7 },
+  "title": { "text": "Numb · Roomie", "t0": 1.76, "t1": 6.38, "fadeIn": 0.46, "fadeOut": 0.92, "x": 96, "y": 1000, "size": 30, "tracking": 0.3, "color": "#f4e9dc", "alpha": 0.7, "font": "Inter Light" },
+  "shortCut": { "start": "@downbeats[71]-0.5s", "fadeIn": 0.5 },
+  "palettes": {
+    "night":   { "sky0": "#05060f", "sky1": "#110f26", "horizon": "#1a1638", "fog": "#3b2a4a", "amber": "#ffb25e", "rose": "#ff8c7a", "star": "#cfd8ff", "ground": "#07070d" },
+    "screens": { "sky0": "#04070d", "back": "#123038", "backHi": "#7fb8c4", "screen": "#cfefff", "figure": "#000000", "frost": "#bfd4dc", "warm": "#ffb25e", "ground": "#05080b" },
+    "empty":   { "sky0": "#020205", "horizon": "#6a5a66", "seam": "#3a1446", "warm": "#ffb25e", "screen": "#cfefff" },
+    "lift":    { "sky0": "#0a0514", "sky1": "#1f0b2a", "horizon": "#3a1446", "gold": "#ffc46b", "rose": "#ff6fa0", "ring": "#ff9fc3", "friend": "#ffd9a8", "ground": "#09040f" },
+    "blaze":   { "sky0": "#06070a", "back": "#e8f6ff", "backHi": "#ffffff", "screen": "#ddf4ff", "warm": "#ffc46b", "rose": "#ff6fa0", "figure": "#000000", "frost": "#d6e6ee", "ground": "#040506" },
+    "home":    { "sky0": "#000000", "light": "#ffcf8a", "halo": "#ff9a5c" }
+  },
+  "post": { "bloom": 0.35, "bloomRadius": 28, "vignette": 0.35, "grain": 0.05, "frost": 0, "frostTint": "#bfd4dc" },
+  "timeline": [
+    {
+      "id": "memories", "scene": "memories", "t0": 0, "t1": "@downbeats[32]", "palette": "night",
+      "brief": "A1 verse, voice + pad only, Bb major. Night plain; each sung note lights a warm memory light in depth (height from vocal pitch, brightness from vocal level, fading to embers). Camera drifts forward with the pad. Breaths dim at the quiet dips (events.dips). From 40 s lights begin aligning into rows and the colour cools; in the last bar (from @downbeats[31]) they streak into the shared crowd slots (world.crowdLayout).",
+      "params": { "align": [[0, 0], [40.06, 0], [43.22, 0.35], [52.2, 0.6], ["@downbeats[31]", 0.75], ["@downbeats[32]", 1.0]], "cool": [[40.06, 0], ["@downbeats[32]", 0.5]] },
+      "post": { "bloom": 0.45 }
+    },
+    {
+      "id": "crowd_b1", "scene": "crowd", "t0": "@downbeats[32]", "t1": "@cuts[0]", "palette": "screens",
+      "brief": "B1 first chorus (the 'everyone goes numb together' idea). Lands with a cold flash and a ground shock ring on the bass entry. Each light becomes the screen of a black silhouette (~560 figures, rows, teal backlight) swaying in unison (mt). The quiet shaker build makes screens glint (hat_rel/hit_rel x drums_rel). Numb windows: a frost front sweeps down, colour drains, poses freeze, screens go white; residual cold accumulates (numb_accum). Dolly in through the last numb window to the swell.",
+      "params": { "variant": "dusk", "count": 560, "numbGain": 0.8 },
+      "post": { "frost": 0.8, "bloom": 0.4, "frostTint": "#bfd4dc" }
+    },
+    {
+      "id": "void", "scene": "void", "t0": "@cuts[0]", "t1": "@key_changes[0].t", "palette": "empty",
+      "brief": "A2 break: drums and bass stop on the cut. Black with a fading afterimage of the screens (snapshot of crowd_b1 just before the cut), a thin horizon breathing with the pad. A single warm light rises as the voice returns. From the pivot chord (@key_changes[0].pivot) a seam in the next key's colour fades in; the drum fill draws streaks to the centre.",
+      "params": {},
+      "post": { "bloom": 0.5, "vignette": 0.5 }
+    },
+    {
+      "id": "orbit", "scene": "orbit", "t0": "@key_changes[0].t", "t1": "@downbeats[71]", "palette": "lift",
+      "brief": "C1, key change up a semitone (+30 deg hue). Two lights (gold = voice, rose = pad) orbit once every 2 bars locked to the beat, with trails; each drum hit sends a ground ring. They drift apart (apart automation). Pairs of small lights settle on downbeats ('friends settling'). On the held ii chord the rose light dims; the home chord pushes in and they nearly touch on the held tonic.",
+      "params": { "apart": [["@key_changes[0].t", 0], [101.4, 0.15], [106.5, 0.45], [119.9, 0.8], [123.6, 1.0], [129.13, 1.0], [130.64, 0.05], ["@downbeats[71]", 0]] },
+      "post": { "bloom": 0.45 }
+    },
+    {
+      "id": "crowd_d1", "scene": "crowd", "t0": "@downbeats[71]", "t1": "@cuts[1]", "palette": "blaze",
+      "brief": "D1 final chorus, loudest. Flood: ~1300 figures, lower closer camera, white-cyan blaze behind. Unison jump landing on every beat; hits strobe the backlight; off-beat hats flicker the back rows; the blaze whites out at the loudest point. Full frost on the numb chords with the crowd frozen mid-air. In the last wave one warm light (the gold lover) turns cold; the other stays dimly warm.",
+      "params": { "variant": "blaze", "count": 1300, "numbGain": 1.0 },
+      "post": { "frost": 1.0, "bloom": 0.5, "frostTint": "#d6e6ee" }
+    },
+    {
+      "id": "ember", "scene": "ember", "t0": "@cuts[1]", "t1": "@end", "palette": "home",
+      "brief": "E1 outro. Hard cut: one warm light on black drifts to centre, lit by the voice then the held tonic chord, slow pull-back. Hard stop to black at @end_stop (the engine blacks out frames from there).",
+      "params": {},
+      "post": { "bloom": 0.55, "vignette": 0.45, "grain": 0.03 }
+    }
+  ],
+  "transitions": [
+    { "type": "fade_from_black", "t": 0, "dur": 0.3 },
+    { "type": "flash", "t": "@downbeats[32]", "dur": 0.6, "params": { "peak": 0.3, "tau": 0.22, "color": "#cfefff" } },
+    { "type": "cut", "t": "@cuts[0]", "dur": 0.1 },
+    { "type": "flash", "t": "@key_changes[0].t", "dur": 0.5, "params": { "peak": 0.25, "tau": 0.18, "color": "#ffffff" } },
+    { "type": "flash", "t": "@downbeats[71]", "dur": 0.5, "params": { "peak": 0.5, "tau": 0.15, "color": "#ffffff" } },
+    { "type": "cut", "t": "@cuts[1]", "dur": 0.1 }
+  ]
+}
