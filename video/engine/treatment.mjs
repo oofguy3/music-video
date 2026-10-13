@@ -8,7 +8,8 @@
 //
 // followed by any number of offsets: "+2b" (beats), "-1bar", "+0.5s", "-3f" (frames).
 // A parameter is a constant or keyframes [[time, value, ease?], ...]; the ease of a segment is the
-// one written on the key it moves towards. Values may be numbers, hex colours or number arrays.
+// one written on the key it moves towards. Values may be numbers, hex colours or number arrays. A
+// constant written as a reference ("@lines[23].t0") is resolved to the time of its landing frame.
 
 import fs from 'fs';
 import { mix } from './color.mjs';
@@ -82,6 +83,10 @@ export const snapToFrame = (t, fps) => Math.floor(t * fps + 0.5) / fps;
 /** Compile a parameter (constant or keyframes) into a function of t. Key times snap to landing
  *  frames, so a key on an event takes effect on exactly the frame where that event lands. */
 export function compileParam(spec, feats) {
+  if (typeof spec === 'string' && spec.startsWith('@')) {
+    const v = snapToFrame(resolveTime(spec, feats), feats.fps);   // a constant time reference
+    return () => v;
+  }
   const isKeys = Array.isArray(spec) && spec.length > 0 && Array.isArray(spec[0]) && spec[0].length >= 2 &&
     (typeof spec[0][0] === 'number' || (typeof spec[0][0] === 'string' && (spec[0][0].startsWith('@') || /^-?\d/.test(spec[0][0]))));
   if (!isKeys) return () => spec;

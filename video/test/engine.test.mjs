@@ -86,6 +86,9 @@ test('treatment: time references, durations, keyframes, coverage', () => {
   const p = compileParam([[0, 0], ['@downbeats[1]', 1, 'linear'], [2.0, '#ffffff']], F);
   assert.equal(p(0.4), 0.5);
   assert.equal(compileParam(7, F)(1), 7);
+  assert.ok(Math.abs(compileParam('@downbeats[1]', F)(0) - 0.8) < 1e-9);    // constant reference
+  assert.equal(compileParam('line', F)(0), 'line');
+  assert.equal(compileParam('#E6A930', F)(0), '#E6A930');
   const reg = { debug: { defaults: { a: 1 } } };
   const tr = new Treatment({ timeline: [
     { id: 'x', scene: 'debug', t0: 0, t1: '@sections.B1.t0' },

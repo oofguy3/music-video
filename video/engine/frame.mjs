@@ -75,6 +75,7 @@ export async function createRenderer({ width = 1920, height = 1080, motion, trea
     sc.setTransform(scale, 0, 0, scale, 0, 0);
     const tt = frame / feats.fps;
     drawEntry(sc, entry, tt, feats.at(tt), 1);
+    sc.getImageData(0, 0, 1, 1);   // rasterise now: an unflushed canvas costs ~2x per drawImage
     if (snapCache.size >= 4) snapCache.delete(snapCache.keys().next().value);
     snapCache.set(key, c);
     return c;
