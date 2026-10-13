@@ -18,10 +18,15 @@ export function draw(g, t, F, T) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color.css(T.color || '#f4e9dc', a);
   const tracking = (T.tracking ?? 0.3) * size;
+  const chars = [...T.text];
+  const widths = chars.map((ch) => ctx.measureText(ch).width);
+  const total = widths.reduce((s, w) => s + w, 0) + tracking * Math.max(0, chars.length - 1);
   let x = T.x ?? 96;
+  if (T.align === 'center') x -= total / 2;
+  else if (T.align === 'right') x -= total;
   const y = T.y ?? 1000;
-  for (const ch of T.text) {
+  chars.forEach((ch, k) => {
     ctx.fillText(ch, x, y);
-    x += ctx.measureText(ch).width + tracking;
-  }
+    x += widths[k] + tracking;
+  });
 }

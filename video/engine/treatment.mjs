@@ -104,7 +104,9 @@ export class Treatment {
     this.palettes = spec.palettes || {};
     this.global = { degPerSemi: 30, ...(spec.global || {}) };
     this.postFns = Object.fromEntries(Object.entries(spec.post || {}).map(([k, v]) => [k, compileParam(v, feats)]));
-    this.title = spec.title || null;
+    this.title = spec.title
+      ? { ...spec.title, t0: resolveTime(spec.title.t0 ?? 0, feats), t1: resolveTime(spec.title.t1 ?? 5, feats) }
+      : null;
     this.timeline = (spec.timeline || []).map((e, idx) => this._compileEntry(e, idx, registry));
     this.timeline.sort((a, b) => a.t0 - b.t0);
     this.transitions = (spec.transitions || []).map((tr) => ({

@@ -1,62 +1,786 @@
 {
-  "song": "numb-roomie",
-  "notes": "Motion-graphics video for 'Numb'. One dark plain under a horizon; everything is light. Warm round light = memory/feeling; cold screens = numbness; a silhouetted crowd moving in unison = 'we all'; two orbiting lights = young love; one light left = home. The key change lifts every hue by +30 deg (one semitone of the colour wheel). No text except the title card.",
-  "global": { "degPerSemi": 30, "seed": 7 },
-  "title": { "text": "Numb · Roomie", "t0": 1.76, "t1": 6.38, "fadeIn": 0.46, "fadeOut": 0.92, "x": 96, "y": 1000, "size": 30, "tracking": 0.3, "color": "#f4e9dc", "alpha": 0.7, "font": "Inter Light" },
-  "shortCut": { "start": "@downbeats[71]-0.5s", "fadeIn": 0.5 },
-  "palettes": {
-    "night":   { "sky0": "#05060f", "sky1": "#110f26", "horizon": "#1a1638", "fog": "#3b2a4a", "amber": "#ffb25e", "rose": "#ff8c7a", "star": "#cfd8ff", "ground": "#07070d" },
-    "screens": { "sky0": "#04070d", "back": "#123038", "backHi": "#7fb8c4", "screen": "#cfefff", "figure": "#000000", "frost": "#bfd4dc", "warm": "#ffb25e", "ground": "#05080b" },
-    "empty":   { "sky0": "#020205", "horizon": "#6a5a66", "seam": "#3a1446", "warm": "#ffb25e", "screen": "#cfefff" },
-    "lift":    { "sky0": "#0a0514", "sky1": "#1f0b2a", "horizon": "#3a1446", "gold": "#ffc46b", "rose": "#ff6fa0", "ring": "#ff9fc3", "friend": "#ffd9a8", "ground": "#09040f" },
-    "blaze":   { "sky0": "#06070a", "back": "#e8f6ff", "backHi": "#ffffff", "screen": "#ddf4ff", "warm": "#ffc46b", "rose": "#ff6fa0", "figure": "#000000", "frost": "#d6e6ee", "ground": "#040506" },
-    "home":    { "sky0": "#000000", "light": "#ffcf8a", "halo": "#ff9a5c" }
+ "song": "numb-roomie",
+ "notes": "One bone hairline crosses an ink frame for the whole film, and it is the home note (the tonic). The singer is a small amber dot whose height above the line is its pitch distance from home (18 px per semitone). Questions hang above the line, confessions land on it, and only notes held on home leave amber marks. 'We' is the dot copied into a row, then a grid of identical cut-paper figures that sways as one body. Each borrowed minor-iv chord is a rule wiping down the grid; behind it figures brake to a stop, drain to grey and lose their differences, and the colour never fully returns (numb_accum, a quarter per window). At the first hard cut the frozen crowd drops through the line and out of frame while the home line, the pad, stays. In the break a gold line appears one semitone above home. Each drum-fill hit stretches it wider, and on the key change it becomes home. Young love is a filled disc and a hollow ring orbiting the line, joined by a tether that snaps and then braking to rest side by side on home. The last chorus floods the frame edge to edge and inverts to ink on bone, brightening to white at the loudest point. In its numb windows the jumping crowd hangs at the top of the jump: once it comes down on the home chord with the hardest landing in the film, and the last time it is still in the air when the cut lands. What remains is her ring. The voice's dot slides into it on the tonic, it fills gold, and the engine hard-blacks the frame on the pad's stop.",
+ "global": {
+  "degPerSemi": 20,
+  "seed": 7
+ },
+ "title": {
+  "text": "Numb · Roomie",
+  "t0": "@entries[1].t",
+  "t1": "@downbeats[3]",
+  "fadeIn": 0.46,
+  "fadeOut": 0.92,
+  "x": 960,
+  "y": 690,
+  "align": "center",
+  "size": 22,
+  "tracking": 0.42,
+  "color": "#EDE7DA",
+  "alpha": 0.6,
+  "font": "Inter Light"
+ },
+ "shortCut": {
+  "start": "@downbeats[71]-0.5s",
+  "fadeIn": 0.5
+ },
+ "palettes": {},
+ "post": {
+  "bloom": 0.08,
+  "bloomRadius": 14,
+  "vignette": 0.12,
+  "grain": 0.035,
+  "frost": 0,
+  "frostTint": "#9A9C9E"
+ },
+ "timeline": [
+  {
+   "id": "memories",
+   "scene": "memories",
+   "t0": 0,
+   "t1": "@downbeats[32]",
+   "palette": {
+    "ink": "#0E0D0C",
+    "bone": "#EDE7DA",
+    "ghost": "#5A5650",
+    "amber": "#F0A23B"
+   },
+   "budgetMs": 4,
+   "brief": "A1 verse (voice + pad). Flat ink field: no camera, glow or drift. SHARED GEOMETRY: home line y=620, x 192..1728, 2 px bone. Pitch height h(m)=620-18*(m-P.tonicMidi), where m is the median of voc_midi at t..t-4f, clamped to ±8 semitones; ignore notes shorter than 0.08 s. SELF: amber disc at x=960, y=h, r=7+5*voc_lvl. When voc_midi<0 it eases (0.25 s) onto the line as a 2 px hollow ring. TRAIL: one polyline of the dot's last 6 s, 180 samples re-evaluated from F.col, scrolling left at 256 px/s. It breaks at silences; 1.5 px bone fading to 0. HOME TOUCHES: each voc_note in the last 6 s on the tonic pitch class lasting at least 0.8 s lays a 3 px amber dash on the line under its span. These mark both confessions. HOVERS: an off-tonic note held 1.5 s or longer drops a dashed 1 px plumb line from the dot to home (the unanswered self-question ~12.7 s, again ~42.3 s). LINE: alpha 0.35+0.4*pad_lvl, drawn from centre by P.lineDraw. It vanishes while pad_active=0 and redraws from centre when the pad returns. BREATHS (F.ev.dips): a centred gap 60*depth px wide, attack 0.3 s, release 0.7 s; at the second dip it cuts through every row. WE: dots r=5 at x=192+32c; P.weCols selects every 8th/4th/2nd/all column. Each copies the self pitch delayed |c-24|*0.035 s times P.follow. P.body grows each into a figure (head r=4.5 over an 8x24 capsule on its row). Rows y=620±44r slide in per P.rowP1/rowM1/rowPM2. P.twitch hops everything 3 px on the drum pre-hit. P.dotDrop lands the amber dot in the empty column-24 slot, matching crowd_b1's first frame. Frost: none. Must NOT add particles, glow, ambient motion or any text.",
+   "params": {
+    "tonicMidi": 58,
+    "pxPerSemi": 18,
+    "homeY": 620,
+    "homeX0": 192,
+    "homeX1": 1728,
+    "semiClamp": 8,
+    "trailSec": 6,
+    "colPitch": 32,
+    "rowGap": 44,
+    "ripple": 0.035,
+    "homeTouchMin": 0.8,
+    "hoverMin": 1.5,
+    "lineDraw": [
+     [
+      "@entries[1].t",
+      0
+     ],
+     [
+      "@entries[1].t+1bar",
+      1,
+      "outExpo"
+     ]
+    ],
+    "weCols": [
+     [
+      0,
+      0
+     ],
+     [
+      "@lines[7].t0",
+      7,
+      "step"
+     ],
+     [
+      "@lines[8].t0",
+      13,
+      "step"
+     ],
+     [
+      "@lines[9].t0",
+      25,
+      "step"
+     ],
+     [
+      "@lines[10].t0",
+      49,
+      "step"
+     ]
+    ],
+    "follow": [
+     [
+      "@lines[10].t0",
+      1
+     ],
+     [
+      "@lines[10].t1",
+      0,
+      "smooth"
+     ]
+    ],
+    "body": [
+     [
+      "@lines[10].t0",
+      0
+     ],
+     [
+      "@lines[10].t1",
+      1,
+      "smooth"
+     ]
+    ],
+    "rowP1": [
+     [
+      "@lines[11].t0",
+      0
+     ],
+     [
+      "@lines[11].t0+1bar",
+      1,
+      "outExpo"
+     ]
+    ],
+    "rowM1": [
+     [
+      "@lines[12].t0",
+      0
+     ],
+     [
+      "@lines[12].t0+1bar",
+      1,
+      "outExpo"
+     ]
+    ],
+    "rowPM2": [
+     [
+      "@lines[13].t0",
+      0
+     ],
+     [
+      "@lines[13].t0+1bar",
+      1,
+      "outExpo"
+     ]
+    ],
+    "twitch": [
+     [
+      "@entries[2].t-1f",
+      0
+     ],
+     [
+      "@entries[2].t",
+      1,
+      "step"
+     ],
+     [
+      "@entries[2].t+0.25s",
+      0,
+      "outQuad"
+     ]
+    ],
+    "dotDrop": [
+     [
+      "@downbeats[31]",
+      0
+     ],
+     [
+      "@downbeats[32]-1f",
+      1,
+      "inOutCubic"
+     ]
+    ],
+    "amberSat": [
+     [
+      "@downbeats[31]",
+      1
+     ],
+     [
+      "@downbeats[32]",
+      0.6
+     ]
+    ]
+   },
+   "post": {
+    "bloom": 0.08,
+    "bloomRadius": 14,
+    "vignette": 0.12,
+    "grain": 0.035,
+    "frost": 0
+   }
   },
-  "post": { "bloom": 0.35, "bloomRadius": 28, "vignette": 0.35, "grain": 0.05, "frost": 0, "frostTint": "#bfd4dc" },
-  "timeline": [
-    {
-      "id": "memories", "scene": "memories", "t0": 0, "t1": "@downbeats[32]", "palette": "night",
-      "brief": "A1 verse, voice + pad only, Bb major. Night plain; each sung note lights a warm memory light in depth (height from vocal pitch, brightness from vocal level, fading to embers). Camera drifts forward with the pad. Breaths dim at the quiet dips (events.dips). From 40 s lights begin aligning into rows and the colour cools; in the last bar (from @downbeats[31]) they streak into the shared crowd slots (world.crowdLayout).",
-      "params": { "align": [[0, 0], [40.06, 0], [43.22, 0.35], [52.2, 0.6], ["@downbeats[31]", 0.75], ["@downbeats[32]", 1.0]], "cool": [[40.06, 0], ["@downbeats[32]", 0.5]] },
-      "post": { "bloom": 0.45 }
-    },
-    {
-      "id": "crowd_b1", "scene": "crowd", "t0": "@downbeats[32]", "t1": "@cuts[0]", "palette": "screens",
-      "brief": "B1 first chorus (the 'everyone goes numb together' idea). Lands with a cold flash and a ground shock ring on the bass entry. Each light becomes the screen of a black silhouette (~560 figures, rows, teal backlight) swaying in unison (mt). The quiet shaker build makes screens glint (hat_rel/hit_rel x drums_rel). Numb windows: a frost front sweeps down, colour drains, poses freeze, screens go white; residual cold accumulates (numb_accum). Dolly in through the last numb window to the swell.",
-      "params": { "variant": "dusk", "count": 560, "numbGain": 0.8 },
-      "post": { "frost": 0.8, "bloom": 0.4, "frostTint": "#bfd4dc" }
-    },
-    {
-      "id": "void", "scene": "void", "t0": "@cuts[0]", "t1": "@key_changes[0].t", "palette": "empty",
-      "brief": "A2 break: drums and bass stop on the cut. Black with a fading afterimage of the screens (snapshot of crowd_b1 just before the cut), a thin horizon breathing with the pad. A single warm light rises as the voice returns. From the pivot chord (@key_changes[0].pivot) a seam in the next key's colour fades in; the drum fill draws streaks to the centre.",
-      "params": {},
-      "post": { "bloom": 0.5, "vignette": 0.5 }
-    },
-    {
-      "id": "orbit", "scene": "orbit", "t0": "@key_changes[0].t", "t1": "@downbeats[71]", "palette": "lift",
-      "brief": "C1, key change up a semitone (+30 deg hue). Two lights (gold = voice, rose = pad) orbit once every 2 bars locked to the beat, with trails; each drum hit sends a ground ring. They drift apart (apart automation). Pairs of small lights settle on downbeats ('friends settling'). On the held ii chord the rose light dims; the home chord pushes in and they nearly touch on the held tonic.",
-      "params": { "apart": [["@key_changes[0].t", 0], [101.4, 0.15], [106.5, 0.45], [119.9, 0.8], [123.6, 1.0], [129.13, 1.0], [130.64, 0.05], ["@downbeats[71]", 0]] },
-      "post": { "bloom": 0.45 }
-    },
-    {
-      "id": "crowd_d1", "scene": "crowd", "t0": "@downbeats[71]", "t1": "@cuts[1]", "palette": "blaze",
-      "brief": "D1 final chorus, loudest. Flood: ~1300 figures, lower closer camera, white-cyan blaze behind. Unison jump landing on every beat; hits strobe the backlight; off-beat hats flicker the back rows; the blaze whites out at the loudest point. Full frost on the numb chords with the crowd frozen mid-air. In the last wave one warm light (the gold lover) turns cold; the other stays dimly warm.",
-      "params": { "variant": "blaze", "count": 1300, "numbGain": 1.0 },
-      "post": { "frost": 1.0, "bloom": 0.5, "frostTint": "#d6e6ee" }
-    },
-    {
-      "id": "ember", "scene": "ember", "t0": "@cuts[1]", "t1": "@end", "palette": "home",
-      "brief": "E1 outro. Hard cut: one warm light on black drifts to centre, lit by the voice then the held tonic chord, slow pull-back. Hard stop to black at @end_stop (the engine blacks out frames from there).",
-      "params": {},
-      "post": { "bloom": 0.55, "vignette": 0.45, "grain": 0.03 }
-    }
+  {
+   "id": "crowd_b1",
+   "scene": "crowd",
+   "t0": "@downbeats[32]",
+   "t1": "@cuts[0]",
+   "palette": {
+    "ink": "#0E0D0C",
+    "bone": "#E4DED2",
+    "rule": "#EDE7DA",
+    "numb": "#7E8083",
+    "amber": "#F0A23B"
+   },
+   "budgetMs": 6,
+   "brief": "B1 first chorus, crowd variant 'line'. Uses the memories geometry: ink field, home line y=620 (row 0 ground), 49 columns at x=192+32c, rows y=620+44r up to |r|=5 (539 figures). Each figure is a cached sprite (head r=4.5 over an 8x24 capsule), one per drain step (16 steps), drawn with translate+rotate about its feet. Never use one big path. INDIVIDUALITY from hash01(seed,i): height ±6 px, sway phase ±0.35 beat, lightness ±8%, all scaled by I=(1-drain_i)*(1-0.7*numb_accum). SWAY: angle = P.swayDeg*sin(pi*(mt+phase_i*I)/2)*(0.3+0.7*bass_rel)*(0.35+0.65*join), with join=clamp(1.6*drums_rel-|r|/6,0,1), so the quiet percussion build recruits rows outward from home. bass_on thumps the home line 2→6 px (tau 0.18 s). SELF: column 24, row 0, amber. It is the only figure that grows with the voice: +3 px per semitone above the tonic. At @downbeats[32] the sway starts and rows ±3 punch in (P.rowIn3); rows ±4 and ±5 slide in from the edges (P.rowIn4, P.rowIn5). NUMB (each F.ev.numb window, hard-gated on t0/t1): a 2 px bone rule descends linearly from y=380 to 860 over the window. Figures it has passed drain to grey (OKLab, 0.2 s edge), I→0, and their pose time brakes: tau=tp+0.12*(1-exp(-(t-tp)/0.12)). The self goes grey at standard height. After t1, colour and motion return over 1 bar, but only to 1-0.7*numb_accum. P.shudder: fill hits in F.between('hit', t-0.15, t) jolt the frozen grid 2 px. Frost 0.25 adds a faint grey haze. Must NOT add screens, glow, camera moves or per-kick motion.",
+   "params": {
+    "variant": "line",
+    "count": 539,
+    "tonicMidi": 58,
+    "homeY": 620,
+    "colPitch": 32,
+    "rowGap": 44,
+    "swayDeg": 5,
+    "selfPxPerSemi": 3,
+    "numbGain": 1,
+    "residue": 0.7,
+    "brake": 0.12,
+    "ruleY0": 380,
+    "ruleY1": 860,
+    "drainEdge": 0.2,
+    "rowIn3": [
+     [
+      "@downbeats[32]-1f",
+      0
+     ],
+     [
+      "@downbeats[32]",
+      1,
+      "step"
+     ]
+    ],
+    "rowIn4": [
+     [
+      "@numb[0].t1",
+      0
+     ],
+     [
+      "@numb[0].t1+1bar",
+      1,
+      "outExpo"
+     ]
+    ],
+    "rowIn5": [
+     [
+      "@lines[19].t0",
+      0
+     ],
+     [
+      "@lines[19].t0+1bar",
+      1,
+      "outExpo"
+     ]
+    ],
+    "shudder": [
+     [
+      "@entries[4].t-1f",
+      0
+     ],
+     [
+      "@entries[4].t",
+      1,
+      "step"
+     ]
+    ]
+   },
+   "post": {
+    "bloom": 0.06,
+    "bloomRadius": 14,
+    "vignette": 0.12,
+    "grain": 0.035,
+    "frost": 0.25,
+    "frostTint": "#9A9C9E"
+   }
+  },
+  {
+   "id": "void",
+   "scene": "void",
+   "t0": "@cuts[0]",
+   "t1": "@key_changes[0].t",
+   "palette": {
+    "ink": "#070707",
+    "bone": "#CFC9BE",
+    "ghost": "#7E8083",
+    "gold": "#E6A930"
+   },
+   "budgetMs": 4,
+   "brief": "A2 break, ink #070707. FALL: at @cuts[0], hold g.snapshot('crowd_b1', @cuts[0]-1f) perfectly still for P.holdFrames. Then slice it with source-rect drawImage (no clipping). Each row strip spans y=620+44r-40 to 620+44r-1, which excludes the home line, and is cut into 7 blocks of 7 figures; mind the device scale. Release each piece 0.06*|r| + 0.04*hash01 s after the hold. It falls y=0.5*P.fallG*dt² with alpha 1→0.6 and is out of frame within about 1 s. The numbed crowd drops through home while the line stays (the pad holds the tonic). The snapshot is fixed-time, so the engine cache keeps it cheap. HOME: 1 px bone line centred, alpha 0.25+0.5*pad_lvl, length P.lineLen. VOICE: a bone dot (r=5, no amber) at median-filtered pitch height (tonic 58, 18 px/semitone). It sits on home for the restarted opening question, becomes a hollow ring at the voice exit, and fills and rides pitch again from the voice return. NEW HOME: from the pivot a 240 px gold line fades in exactly 18 px above home (P.goldIn). Each drum hit in F.between('hit', key_changes[0].pivot, key_changes[0].t) steps its width toward 1536 (step k of n, outExpo 0.12 s), reaching full width on the last hit at the key change. The voice's B3 just before the change sits on the gold line. Over the last beat P.shift slides the whole drawing down 18 px while P.boneOut fades the old line, so the gold line lands at y=620. Frost: none. Must NOT use shards, glow, white flash or text.",
+   "params": {
+    "tonicMidi": 58,
+    "pxPerSemi": 18,
+    "homeY": 620,
+    "holdFrames": 2,
+    "fallG": 2600,
+    "lineLen": [
+     [
+      "@cuts[0]",
+      1536
+     ],
+     [
+      "@key_changes[0].pivot",
+      240,
+      "smooth"
+     ]
+    ],
+    "goldIn": [
+     [
+      "@key_changes[0].pivot",
+      0
+     ],
+     [
+      "@key_changes[0].pivot+2b",
+      1,
+      "smooth"
+     ]
+    ],
+    "shift": [
+     [
+      "@key_changes[0].t-1b",
+      0
+     ],
+     [
+      "@key_changes[0].t",
+      18,
+      "inOutCubic"
+     ]
+    ],
+    "boneOut": [
+     [
+      "@key_changes[0].t-1b",
+      1
+     ],
+     [
+      "@key_changes[0].t",
+      0,
+      "linear"
+     ]
+    ]
+   },
+   "post": {
+    "bloom": 0.1,
+    "bloomRadius": 14,
+    "vignette": 0.2,
+    "grain": 0.035,
+    "frost": 0
+   }
+  },
+  {
+   "id": "orbit",
+   "scene": "orbit",
+   "t0": "@key_changes[0].t",
+   "t1": "@downbeats[71]",
+   "palette": {
+    "ink": "#0F0D0B",
+    "bone": "#EDE7DA",
+    "amber": "#F0A23B"
+   },
+   "budgetMs": 3,
+   "brief": "C1 in the new key. Ink field. Home line y=620, 1536 px, width 1.5+1.5*bass_lvl, bone. Amber is authored and the engine lift (global degPerSemi 20) settles it to gold over the first beat. SELF: filled disc r=20+4*voc_lvl+3*kick*drums_rel. HER: hollow ring r=22, stroke 1+2.5*pad_lvl, alpha P.ringAlpha. The pair orbits (960,620) at R=26+400*P.apart, angle=2*pi*mtw/8: one turn per 2 bars, level on the line every downbeat. Trails are the last 90 deg of each path as a 1.5 px arc in 24 segments fading to 0. TETHER: a 1 px bone line joins the centres while P.tether=1. When it drops to 0 on the feelings-gone line it snaps at the midpoint and each half retracts into its body (outExpo 0.4 s). The orbit then widens. FRIENDS: P.friends steps once per downbeat (count n). Pair k starts on the downbeat (n-1-k) before F.last('downbeats', t). Two touching bone dots (r=6) drop from y=300 onto the line (outExpo, 1 beat) at x=960±(480+64*floor(k/2)), alternating sides. Landed pairs never move again. While the voice holds the tonic (voc_midi=59) the disc gets a 1 px bone outline. BRAKE: with u=P.brake (linear across 2 bars), tStart=t-u*8*F.beatS and mtw=F.col('mt',tStart)+4*(2u-u²). Speed is continuous and the pair stops level on the line at @downbeats[70]. apart closes to 0, so disc and ring rest side by side on home through the held tonic. Frost: none. Must NOT add drum rings, floor grids, glow or a collision.",
+   "params": {
+    "homeY": 620,
+    "tonicMidi": 59,
+    "apart": [
+     [
+      "@key_changes[0].t",
+      0
+     ],
+     [
+      "@lines[22].t0",
+      0.08
+     ],
+     [
+      "@lines[23].t0",
+      0.15
+     ],
+     [
+      "@lines[23].t1",
+      0.45,
+      "outExpo"
+     ],
+     [
+      "@lines[27].t0",
+      0.8
+     ],
+     [
+      "@downbeats[66]",
+      1
+     ],
+     [
+      "@lines[29].t0",
+      1
+     ],
+     [
+      "@downbeats[70]",
+      0,
+      "inOutCubic"
+     ]
+    ],
+    "ringAlpha": [
+     [
+      "@lines[23].t0",
+      1
+     ],
+     [
+      "@lines[23].t1",
+      0.6
+     ],
+     [
+      "@downbeats[66]",
+      0.6
+     ],
+     [
+      "@downbeats[69]-1b",
+      0.2
+     ],
+     [
+      "@downbeats[69]",
+      1,
+      "outExpo"
+     ]
+    ],
+    "tether": [
+     [
+      "@lines[23].t0-1f",
+      1
+     ],
+     [
+      "@lines[23].t0",
+      0,
+      "step"
+     ]
+    ],
+    "brake": [
+     [
+      "@downbeats[68]",
+      0,
+      "linear"
+     ],
+     [
+      "@downbeats[70]",
+      1,
+      "linear"
+     ]
+    ],
+    "friends": [
+     [
+      "@downbeats[59]-1f",
+      0
+     ],
+     [
+      "@downbeats[59]",
+      1,
+      "step"
+     ],
+     [
+      "@downbeats[60]",
+      2,
+      "step"
+     ],
+     [
+      "@downbeats[61]",
+      3,
+      "step"
+     ],
+     [
+      "@downbeats[62]",
+      4,
+      "step"
+     ],
+     [
+      "@downbeats[63]",
+      5,
+      "step"
+     ],
+     [
+      "@downbeats[64]",
+      6,
+      "step"
+     ],
+     [
+      "@downbeats[65]",
+      7,
+      "step"
+     ],
+     [
+      "@downbeats[66]",
+      8,
+      "step"
+     ],
+     [
+      "@downbeats[67]",
+      9,
+      "step"
+     ],
+     [
+      "@downbeats[68]",
+      10,
+      "step"
+     ]
+    ]
+   },
+   "post": {
+    "bloom": 0.1,
+    "bloomRadius": 14,
+    "vignette": 0.12,
+    "grain": 0.035,
+    "frost": 0
+   }
+  },
+  {
+   "id": "crowd_d1",
+   "scene": "crowd",
+   "t0": "@downbeats[71]",
+   "t1": "@cuts[1]",
+   "palette": {
+    "field": "#EDE7DA",
+    "fieldHot": "#FFFFFF",
+    "ink": "#0B0B0B",
+    "numbField": "#9A9C9E",
+    "numbFigure": "#6E7072",
+    "rule": "#0B0B0B",
+    "amber": "#F0A23B"
+   },
+   "budgetMs": 9,
+   "brief": "D1 final chorus, crowd variant 'flood'. Inverted: bone field, ink figures. The lattice fills the frame: 81 columns at x=12+24c and 33 rows at y=620+33r (r -18..14), figures at 0.7 scale, giving 2,673 drawImage calls of two cached sprites (upright and pre-squashed). Translate only, no rotation, never one path. Field = mix(bone, #FFFFFF, loud²) and ink stays #0B0B0B, so contrast peaks at @loudest. Ink home line at y=620. JUMP: every figure rises J=P.jump*drums_rel*4u(1-u) with u=beat_phase, scaled ×1.25 on beats 1 and 3 and ×0.8 on beats 2 and 4, landing exactly on the beat. It uses the squash sprite for 0.1 s after a landing when kick>0.3. Individuality (height and phase jitter) is scaled by 1-numb_accum. COUPLE: columns 39 and 40 of row 0. The self has a filled gold head and stands +2 px per semitone above tonic 59; hers is a hollow gold head ring. They are the only colour. SUSPENSION (numb windows, hard-gated): a 2 px ink rule sweeps y -10→1090 over the window. Each figure it passes blends over 0.2 s to the apex pose and hangs there. Behind the rule the field drains to #9A9C9E and figures to #6E7072, and the gold drains, while her ring keeps P.ringKeep. At @numb[2].t1-0.18s every hanging figure falls (inQuad) and lands on the t1 downbeat with the squash sprite and P.slam, an 8 px home-line thump; colour returns over 1 bar. In @numb[3] they are still hanging at the cut. Frost 0.35 softens the frozen frame. Must NOT strobe, flicker, shake the camera or glow.",
+   "params": {
+    "variant": "flood",
+    "count": 2673,
+    "cols": 81,
+    "colPitch": 24,
+    "rowMin": -18,
+    "rowMax": 14,
+    "rowGap": 33,
+    "homeY": 620,
+    "figScale": 0.7,
+    "jump": 14,
+    "accent13": 1.25,
+    "accent24": 0.8,
+    "tonicMidi": 59,
+    "selfPxPerSemi": 2,
+    "coupleCols": [
+     39,
+     40
+    ],
+    "numbGain": 1,
+    "ruleY0": -10,
+    "ruleY1": 1090,
+    "apexBlend": 0.2,
+    "dropDur": 0.18,
+    "slamPx": 8,
+    "ringKeep": [
+     [
+      "@numb[2].t0",
+      0.6
+     ],
+     [
+      "@numb[3].t0",
+      0.6
+     ],
+     [
+      "@numb[3].t1",
+      0.35
+     ]
+    ],
+    "slam": [
+     [
+      "@numb[2].t1-1f",
+      0
+     ],
+     [
+      "@numb[2].t1",
+      1,
+      "step"
+     ],
+     [
+      "@numb[2].t1+0.3s",
+      0,
+      "outQuad"
+     ]
+    ]
+   },
+   "post": {
+    "bloom": 0,
+    "bloomRadius": 14,
+    "vignette": 0.06,
+    "grain": 0.04,
+    "frost": 0.35,
+    "frostTint": "#9A9C9E"
+   }
+  },
+  {
+   "id": "ember",
+   "scene": "ember",
+   "t0": "@cuts[1]",
+   "t1": "@end",
+   "palette": {
+    "ink": "#050505",
+    "bone": "#CFC9BE",
+    "amber": "#F0A23B"
+   },
+   "budgetMs": 1,
+   "brief": "E1 outro. The hard cut is honoured: the first P.blackFrames frames are pure ink. Then two things appear. A 1 px bone home line (alpha 0.3+0.5*pad_lvl, length P.lineLen, centred), and her hollow gold ring (r=22, 2 px) at (960,620), the one thing carried out of the crowd. The voice is already on the tonic: a bone dot (r=5, drained of colour since the last wipe) sits on the line 60 px left of the ring and swells with voc_lvl on each final syllable onset. P.merge slides it into the ring by the voice exit (@exits[6].t). Then the ring fills from inside: an inner gold disc of radius 22*sqrt(P.fill), full by @end_stop-1bar. The self regains colour only by becoming one disc with what it still wants, resting on home. Ring stroke breathes 2+pad_rel. The whole drawing scales about (960,620) by P.pull (a slow pull-back). The engine blacks out every frame from @end_stop, on the pad's hard stop. Nothing fades and nothing drifts. Frost: none. Must NOT add a halo glow, falling afterimages, a fade or any text.",
+   "params": {
+    "tonicMidi": 59,
+    "homeY": 620,
+    "blackFrames": 2,
+    "lineLen": [
+     [
+      "@cuts[1]",
+      1536
+     ],
+     [
+      "@end_stop",
+      420,
+      "smooth"
+     ]
+    ],
+    "pull": [
+     [
+      "@cuts[1]",
+      1
+     ],
+     [
+      "@end_stop",
+      0.82,
+      "smooth"
+     ]
+    ],
+    "merge": [
+     [
+      "@exits[6].t-0.3s",
+      0
+     ],
+     [
+      "@exits[6].t",
+      1,
+      "inOutCubic"
+     ]
+    ],
+    "fill": [
+     [
+      "@exits[6].t",
+      0
+     ],
+     [
+      "@end_stop-1bar",
+      1,
+      "smooth"
+     ]
+    ]
+   },
+   "post": {
+    "bloom": 0.15,
+    "bloomRadius": 14,
+    "vignette": 0.18,
+    "grain": 0.03,
+    "frost": 0
+   }
+  }
+ ],
+ "transitions": [
+  {
+   "type": "fade_from_black",
+   "t": "0",
+   "dur": "0.3s",
+   "why": "The amber dot emerges with the first sung syllable (@entries[0].t = 0.11); nothing else is on screen yet."
+  },
+  {
+   "type": "cut",
+   "t": "@downbeats[32]",
+   "dur": "0.1s",
+   "why": "The bass entry is staged in-scene: the layout continues from memories and the grid starts swaying as one body. Rows ±3 punch in, and the home line thumps to 6 px on bass_on. A flash would blur the match frame."
+  },
+  {
+   "type": "cut",
+   "t": "@cuts[0]",
+   "dur": "0.1s",
+   "why": "Drums and bass stop together. The frozen grey grid holds for 2 frames, then drops through the home line, which stays because the pad holds the tonic. Silence is shown as a stop, not a hit."
+  },
+  {
+   "type": "flash",
+   "t": "@key_changes[0].t",
+   "dur": "0.4s",
+   "params": {
+    "peak": 0.15,
+    "tau": 0.12,
+    "color": "#E6A930"
+   },
+   "why": "A small warm punctuation on the frame where the gold line reaches full width on the last fill hit and becomes home. The semitone lift itself is the in-scene 18 px slide."
+  },
+  {
+   "type": "flash",
+   "t": "@downbeats[71]",
+   "dur": "2f",
+   "params": {
+    "peak": 0.12,
+    "tau": 0.03,
+    "color": "#EDE7DA"
+   },
+   "why": "The ink-to-bone inversion is the real flash. Two bone frames only sharpen the flood cut."
+  },
+  {
+   "type": "cut",
+   "t": "@cuts[1]",
+   "dur": "0.1s",
+   "why": "Band out: from a bone frame of figures hanging mid-air to 2 frames of pure ink, then one hairline and her ring. The engine's blackout at @end_stop is the final hard stop, so no fade is added."
+  }
+ ],
+ "credits": {
+  "scores": [
+   {
+    "angle": "BASELINE (video/treatments/numb-roomie.json): light-in-the-dark metaphor, silhouetted phone-screen crowd, orbiting lights, frost post for numbness",
+    "sync": 6,
+    "theme": 7,
+    "distinct": 6,
+    "feasible": 6,
+    "staging": 5,
+    "cliche_free": 4,
+    "total": 34,
+    "notes": "Coherent metaphor and correct @refs, but the briefs are thin and the main beats are mostly generic white flashes. Numbness relies on the 33 ms frost pass at gain 0.8-1.0, which washes every window the same way. The 'lift' palette is authored already hue-lifted and the engine then adds another +30 deg, so it is lifted twice and goes olive. A backlit concert crowd holding phone screens is a stock image. The hard cuts and the key change get the same flash language as the section entries. The 'align' params hard-code seconds (40.06, 43.22) where line refs exist."
+   },
+   {
+    "angle": "graphic-minimal: home hairline = tonic, amber dot = self at pitch height, grid of cut-paper figures = 'we all', numbness by reduction",
+    "sync": 9,
+    "theme": 9,
+    "distinct": 7,
+    "feasible": 9,
+    "staging": 7,
+    "cliche_free": 9,
+    "total": 50,
+    "notes": "Strongest concept. Pitch measured against the tonic is a literal, readable picture of the lyric's questions hanging off home and its confessions landing on it. The key change becomes the line moving up exactly one semitone, and the ending resolves onto the held tonic. It is cheap (about 22 ms total), fully pure, and has no visualizer tropes. Weaknesses: the first hard cut is undersold (a 0.16-alpha ghost), the key change has no physical punch, and the B1 'tightening' is too subtle to read. A few moments are mis-timed against the notes: the voice sits on the tonic right after the cut and on the tonic through the final syllables before the outro cut. Removing frost entirely leaves the numb texture to the rule alone."
+   },
+   {
+    "angle": "kinetic-physical: weighted bodies, beat-grid impacts, freeze as time braking, crowd hanging in mid-air, crane launch at the key change",
+    "sync": 8,
+    "theme": 8,
+    "distinct": 8,
+    "feasible": 5,
+    "staging": 9,
+    "cliche_free": 5,
+    "total": 43,
+    "notes": "Best staging ideas: a time-warp brake into the freeze instead of a pop, front-to-back recruitment as the quiet percussion builds, apex suspension in the numb windows with gravity returning on the I-chord downbeat, a crowd that never comes down at the second cut, and a loaded crouch before the lift. Costs are high: a 14-20 ms scene plus the 33 ms frost, a 36-shard clipped snapshot, and 1,300 LOD figures. The 3D phone-screen festival crowd, camera shake, crane, bokeh and hat strobes drift toward stock music-video and visualizer looks. The light collision at the flood reads as an explosion cliche."
+   }
   ],
-  "transitions": [
-    { "type": "fade_from_black", "t": 0, "dur": 0.3 },
-    { "type": "flash", "t": "@downbeats[32]", "dur": 0.6, "params": { "peak": 0.3, "tau": 0.22, "color": "#cfefff" } },
-    { "type": "cut", "t": "@cuts[0]", "dur": 0.1 },
-    { "type": "flash", "t": "@key_changes[0].t", "dur": 0.5, "params": { "peak": 0.25, "tau": 0.18, "color": "#ffffff" } },
-    { "type": "flash", "t": "@downbeats[71]", "dur": 0.5, "params": { "peak": 0.5, "tau": 0.15, "color": "#ffffff" } },
-    { "type": "cut", "t": "@cuts[1]", "dur": 0.1 }
+  "grafts": [
+   "Base: graphic-minimal (the home line is the tonic, the dot's pitch height is measured against it, the 'we' row becomes a figure grid, numbness is a rule wipe with permanent residue, the key change is the line rising a semitone, the D1 ink-on-bone flood, the ring filling on the held tonic).",
+   "From kinetic-physical: the time-warp brake into each freeze (tau = tp + r(1 - exp(-(t - tp)/r)), r = 0.12 s) instead of a pose pop, applied per figure when the rule passes it in crowd_b1.",
+   "From kinetic-physical: front-to-back recruitment (join = clamp(1.6*drums_rel - |r|/6)), so the quiet percussion build spreads the sway outward from home. It replaces graphic-minimal's grid tightening.",
+   "From kinetic-physical: the frozen frame holds 2 frames at the first cut, then falls under analytic gravity. It is rebuilt as row strips of the crowd_b1 snapshot dropping through the home line, so it costs no clipping.",
+   "From kinetic-physical: the loaded spring before the lift, recast as each drum-fill hit between the pivot and the key change stepping the new gold home line wider, reaching full width on the hit at the key change.",
+   "From kinetic-physical: D1 apex suspension. The crowd hangs mid-air in the numb windows, gravity returns on the @numb[2].t1 downbeat with the hardest landing (squash plus home-line slam), and at @cuts[1] it is still in the air: they never come down.",
+   "From kinetic-physical: jump accents of ×1.25 on beats 1 and 3 and ×0.8 on 2 and 4, so the unison jump reads as groove rather than a metronome.",
+   "From kinetic-physical: the twitch on the drum pre-hit (@entries[2].t) anticipating the bass, and a shudder of the frozen grid on the B1 drum fill before the cut.",
+   "From kinetic-physical: the tether between the lovers that snaps on the feelings-gone line, drawn as a 1 px Saul Bass line.",
+   "From kinetic-physical: 2 frames of pure black after the second cut before the last image appears.",
+   "From BASELINE: the apart automation shape for the C1 orbit (re-keyed to line refs), the friends settling on downbeats, the light frost kept as texture during numb windows (gain 0.25/0.35, neutral grey) rather than as the main device, and the title timing at the pad entry.",
+   "Judge fixes from measured notes: the voice sits on the tonic (Bb3) right after the first cut and on B3 for the last syllables, so the dot rests on home there. The voice's B3 at 97.32 already sits on the semitone-up gold line. The orbit brake runs over 2 bars (@downbeats[68] to [70]) with mtw = mtStart + 4(2u - u²), so speed stays continuous and the pair stops level on the line. global degPerSemi = 20 and the void gold is authored #E6A930 (amber +10 deg) so it matches the engine's half-landed lift on the key-change frame."
+  ],
+  "rejected": [
+   "Kinetic: 3D silhouetted concert crowd holding glowing phone screens with a teal or white blaze backlight. It is a stock festival image (the baseline shares it) and breaks the flat graphic language.",
+   "Kinetic: camera shake, crane up/down, dolly and roll. They read as handheld music-video cliche and visualizer energy, and they conflict with the fixed home line that carries the pitch metaphor.",
+   "Kinetic: falling memory lights with bokeh, glow pools and stars in A1. Off-language, and glow and bokeh are generic.",
+   "Kinetic: 36-shard triangulated shatter of the snapshot. A glass-shatter cliche, and 36 clipped full-frame draws risk the budget. Replaced by row strips falling.",
+   "Kinetic: hat glints, backlight strobes on hits and per-hit floor rings and tile grids. Audio-reactive decoration that carries no story (visualizer).",
+   "Kinetic: the two lights colliding at @downbeats[71]. An explosion cliche; the pair resting side by side on home over the confession sung on the tonic is truer to the song.",
+   "Kinetic: an afterimage of 1,300 cold points falling in the outro. It contradicts 'they never come down'.",
+   "Baseline: white or cold flashes on every boundary, which flatten the hierarchy. The flood flash is cut to 2 frames, the key-change flash to a small gold 0.15, and the bass-entry flash is removed.",
+   "Baseline: frost at 0.8-1.0 as the main numb device. It is expensive and washes every window the same way; the rule wipe now carries numbness and frost is a light haze.",
+   "Baseline: the 'lift' palette authored already hue-lifted under degPerSemi 30. It is lifted twice and the amber goes olive (#CCB630).",
+   "Graphic-minimal: the 0.16-alpha ghost at the first hard cut. Too weak for one of the strongest beats.",
+   "Graphic-minimal: grid tightening driven by integrated drums_rel. Too subtle to read, and it moves the lattice that the wipe and snapshot geometry rely on.",
+   "Graphic-minimal: no flash at all at the key change. A tiny gold accent is kept so the lift lands as a beat.",
+   "Graphic-minimal: rows ±3 sliding in at 67.66. Moved to punch in on the bass downbeat to strengthen the chorus landing.",
+   "Graphic-minimal: the ember fill as a normalised pad integral. Replaced by keyframes ending at @end_stop-1bar, which is simpler and exact; pad_rel still breathes the stroke.",
+   "Any lyric-quoting or word-shaped visuals. Words and lines are used only as onset triggers (row reveals, tether snap, apart keys)."
   ]
+ }
 }

@@ -11,7 +11,8 @@ import { fixtureMotion } from './fixture.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
 const read = (p) => fs.readFileSync(p, 'utf8');
-const sceneFiles = () => fs.readdirSync(path.join(ROOT, 'scenes')).filter((f) => f.endsWith('.mjs')).map((f) => path.join(ROOT, 'scenes', f));
+const listMjs = (dir) => fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.mjs')).map((f) => path.join(dir, f)) : [];
+const sceneFiles = () => [...listMjs(path.join(ROOT, 'scenes')), ...listMjs(path.join(ROOT, 'scenes', 'lib'))];
 const engineFiles = () => fs.readdirSync(path.join(ROOT, 'engine')).filter((f) => f.endsWith('.mjs')).map((f) => path.join(ROOT, 'engine', f));
 const strip = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 
