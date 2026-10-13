@@ -9,7 +9,8 @@
 //   node render.mjs review                    the whole review pack (sheets, strips, filmstrip, metrics)
 //   node render.mjs hashes --frames 1,2,3     SHA-256 of rendered RGBA (determinism checks)
 //   node render.mjs cut                       short cut (final chorus + outro) from the full render
-//   node render.mjs bench                     ms/frame per timeline entry at 1080p
+//   node render.mjs bench [--entry id]        ms/frame per timeline entry at 1080p
+//   node render.mjs purity --entry id         same frames forward/1 worker vs reverse/2 workers
 //
 // Common options: --motion PATH --treatment PATH --out DIR --workers N --range a:b
 //                 --scenes debug (override every scene) --size WxH --no-dither --no-post
@@ -121,18 +122,27 @@ async function encode(kind) {
   return out;
 }
 
-async function writeMetrics(frames, ms, file, seconds) {
+async function writeMetrics(frames, ms, file, seconds, sceneMs = null) {
   const tr = await treatment();
   const per = {};
+  const perScene = {};
   frames.forEach((i, j) => {
     const t = i / feats().fps;
     const act = tr.activeAt(t);
     const id = act.length ? act[act.length - 1].entry.id : 'none';
     (per[id] ||= []).push(ms[j]);
+    if (sceneMs) (perScene[id] ||= []).push(sceneMs[j]);
   });
   const pct = (a, p) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
   const out = { seconds, frames: frames.length, width: null, entries: {} };
-  for (const [id, a] of Object.entries(per)) out.entries[id] = { n: a.length, p50: +pct(a, 0.5).toFixed(1), p95: +pct(a, 0.95).toFixed(1), max: +Math.max(...a).toFixed(1) };
+  for (const [id, a] of Object.entries(per)) {
+    out.entries[id] = { n: a.length, p50: +pct(a, 0.5).toFixed(1), p95: +pct(a, 0.95).toFixed(1), max: +Math.max(...a).toFixed(1) };
+    if (perScene[id]) {
+      const sm = perScene[id];
+      out.entries[id].scene_p50 = +pct(sm, 0.5).toFixed(1);
+      out.entries[id].scene_p95 = +pct(sm, 0.95).toFixed(1);
+    }
+  }
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(out, null, 1));
   return out;
@@ -144,7 +154,7 @@ async function renderTo(frames, w, h, onImage, nWorkers = workers) {
 
 async function stills() {
   const [w, h] = size('960x540');
-  const frames = framesFrom(feats().n);
+  const frames = typeof args.entry === 'string' && !args.frames ? await entryFrames(args.entry, Number(args.count || 8)) : framesFrom(feats().n);
   const dir = path.join(outDir, 'stills', args.label || 'misc');
   guardIgnored(dir);
   await renderTo(frames, w, h, (i, c) => fs.writeFileSync(path.join(dir, `f${String(i).padStart(5, '0')}.png`), c.toBuffer('image/png')));
@@ -255,8 +265,8 @@ async function review() {
     const a = Math.ceil(e.t0 * fps), b = Math.floor(e.t1 * fps) - 1;
     for (let k = 0; k < 6; k++) sample.push(Math.round(a + ((b - a) * k) / 5));
   }
-  const { ms, seconds } = await renderFrames({ frames: sample, workers: 1, opts: opts(1920, 1080), onFrame: () => {} });
-  const metrics = await writeMetrics(sample, ms, path.join(dir, 'metrics.json'), seconds);
+  const { ms, sceneMs, seconds } = await renderFrames({ frames: sample, workers: 1, opts: opts(1920, 1080, { timing: true }), onFrame: () => {} });
+  const metrics = await writeMetrics(sample, ms, path.join(dir, 'metrics.json'), seconds, sceneMs);
   fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify({ files: made.map((m) => path.relative(dir, m)), metrics }, null, 1));
   log(`review pack -> ${dir} (${made.length} images)`);
 }
@@ -288,21 +298,47 @@ async function bench() {
   const tr = await treatment();
   const fps = feats().fps;
   const sample = [];
-  for (const e of tr.timeline) {
+  for (const e of tr.timeline.filter((x) => typeof args.entry !== 'string' || x.id === args.entry)) {
     const a = Math.ceil(e.t0 * fps), b = Math.floor(e.t1 * fps) - 1;
     for (let k = 0; k < 8; k++) sample.push(Math.round(a + ((b - a) * k) / 7));
   }
   const [w, h] = size('1920x1080');
-  const { ms, seconds } = await renderFrames({ frames: sample, workers: 1, opts: opts(w, h), onFrame: () => {} });
-  const m = await writeMetrics(sample, ms, path.join(outDir, 'work', 'bench.json'), seconds);
+  const { ms, sceneMs, seconds } = await renderFrames({ frames: sample, workers: 1, opts: opts(w, h, { timing: true }), onFrame: () => {} });
+  const m = await writeMetrics(sample, ms, path.join(outDir, 'work', `bench${typeof args.entry === 'string' ? '-' + args.entry : ''}.json`), seconds, sceneMs);
   console.log(JSON.stringify(m, null, 1));
+}
+
+function entryFrames(id, n) {
+  return treatment().then((tr) => {
+    const e = tr.timeline.find((x) => x.id === id);
+    if (!e) throw new Error(`no timeline entry "${id}"`);
+    const fps = feats().fps;
+    const a = Math.ceil(e.t0 * fps), b = Math.floor(e.t1 * fps) - 1;
+    return Array.from({ length: n }, (_, k) => Math.round(a + ((b - a) * k) / Math.max(1, n - 1)));
+  });
+}
+
+/** Purity: the same frames rendered forward with 1 worker and in reverse with 2 must be identical. */
+async function purity() {
+  const [w, h] = size('480x270');
+  const frames = typeof args.entry === 'string' ? await entryFrames(args.entry, Number(args.count || 10)) : framesFrom(feats().n);
+  const hashOf = async (list, nw) => {
+    const out = {};
+    await renderFrames({ frames: list, workers: nw, opts: opts(w, h), onFrame: (i, buf) => { out[i] = crypto.createHash('sha256').update(buf).digest('hex'); } });
+    return out;
+  };
+  const a = await hashOf(frames, 1);
+  const b = await hashOf([...frames].reverse(), Math.min(2, frames.length));
+  const bad = frames.filter((i) => a[i] !== b[i]);
+  console.log(JSON.stringify({ frames: frames.length, identical: bad.length === 0, mismatched: bad }));
+  if (bad.length) process.exitCode = 1;
 }
 
 async function probe() {
   console.log(JSON.stringify(ffprobe(path.resolve(args._[1]), { countFrames: !!args.count }), null, 1));
 }
 
-const COMMANDS = { full: () => encode('full'), preview: () => encode('preview'), stills, sheet, strip, review, hashes, cut, bench, probe };
+const COMMANDS = { full: () => encode('full'), preview: () => encode('preview'), stills, sheet, strip, review, hashes, cut, bench, purity, probe };
 
 if (!COMMANDS[cmd]) {
   console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 17).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));

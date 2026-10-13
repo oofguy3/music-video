@@ -17,7 +17,7 @@ parentPort.on('message', (m) => {
 });
 
 try {
-  const r = await createRenderer(opts);
+  const r = await createRenderer({ ...opts, clock: opts.timing ? () => performance.now() : null });
   for (let j = k; j < frames.length; j += nw) {
     const t0 = performance.now();
     const buf = r.renderFrame(frames[j]);
@@ -26,7 +26,7 @@ try {
     while (!free.length) await new Promise((res) => { wake = res; });
     const slot = free.shift();
     new Uint8Array(sab, (k * slots + slot) * frameBytes, frameBytes).set(buf);
-    parentPort.postMessage({ j, slot, ms });
+    parentPort.postMessage({ j, slot, ms, sceneMs: r.sceneMs() });
   }
   parentPort.postMessage({ done: true });
 } catch (e) {

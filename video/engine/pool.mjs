@@ -8,6 +8,7 @@ export async function renderFrames({ frames, workers = 3, opts, onFrame, log = (
   const sab = new SharedArrayBuffer(frameBytes * slots * nw);
   const ready = new Map();
   const ms = new Float64Array(frames.length);
+  const sceneMs = new Float64Array(frames.length);
   let wakeMain = null;
   let failure = null;
   const pool = [];
@@ -17,7 +18,7 @@ export async function renderFrames({ frames, workers = 3, opts, onFrame, log = (
     });
     w.on('message', (m) => {
       if (m.error) failure = new Error(`worker ${k}: ${m.error}`);
-      else if (m.j !== undefined) { ready.set(m.j, { k, slot: m.slot }); ms[m.j] = m.ms; }
+      else if (m.j !== undefined) { ready.set(m.j, { k, slot: m.slot }); ms[m.j] = m.ms; sceneMs[m.j] = m.sceneMs || 0; }
       if (wakeMain) { const f = wakeMain; wakeMain = null; f(); }
     });
     w.on('error', (e) => { failure = e; if (wakeMain) { const f = wakeMain; wakeMain = null; f(); } });
@@ -52,5 +53,5 @@ export async function renderFrames({ frames, workers = 3, opts, onFrame, log = (
   } finally {
     await Promise.all(pool.map((w) => w.terminate()));
   }
-  return { ms, seconds: (performance.now() - t0) / 1000 };
+  return { ms, sceneMs, seconds: (performance.now() - t0) / 1000 };
 }

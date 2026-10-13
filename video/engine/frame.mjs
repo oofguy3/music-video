@@ -20,7 +20,7 @@ export const LOGICAL_H = 1080;
 
 const strSeed = (s) => noise.hash32(...String(s).split('').map((ch) => ch.charCodeAt(0)));
 
-export async function createRenderer({ width = 1920, height = 1080, motion, treatment, sceneOverride = null, dither = true, post = true, allowMissing = true }) {
+export async function createRenderer({ width = 1920, height = 1080, motion, treatment, sceneOverride = null, dither = true, post = true, allowMissing = true, clock = null }) {
   ensureFonts();
   const feats = motion instanceof Features ? motion : typeof motion === 'string' ? Features.load(motion) : new Features(motion);
   const loaded = await loadScenes();
@@ -101,7 +101,11 @@ export async function createRenderer({ width = 1920, height = 1080, motion, trea
     targetCtx.restore();
   }
 
+  /** Milliseconds spent drawing the scene layer of the last frame (only measured when a clock is given). */
+  let lastSceneMs = 0;
+
   function renderFrame(i) {
+    const tStart = clock ? clock() : 0;
     const t = i / feats.fps;
     const F = feats.at(t);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -147,6 +151,10 @@ export async function createRenderer({ width = 1920, height = 1080, motion, trea
       ctx.restore();
     }
 
+    if (clock) {
+      ctx.getImageData(0, 0, 1, 1);   // force Skia to rasterise the scene now so the timing is real
+      lastSceneMs = clock() - tStart;
+    }
     const postP = tr.postParams(primary, t);
     if (post) postFx.apply(canvas, postP, F);
 
@@ -165,5 +173,5 @@ export async function createRenderer({ width = 1920, height = 1080, motion, trea
     return buf;
   }
 
-  return { renderFrame, canvas, feats, treatment: tr, registry, width, height };
+  return { renderFrame, canvas, feats, treatment: tr, registry, width, height, sceneMs: () => lastSceneMs };
 }
