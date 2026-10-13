@@ -64,6 +64,7 @@ export function sky(g, stops, { dither = 1.2 } = {}) {
       }
     }
     cx.putImageData(img, 0, 0);
+    cx.getImageData(0, 0, 1, 1);
     if (skyCache.size > 24) skyCache.delete(skyCache.keys().next().value);
     skyCache.set(key, c);
   }

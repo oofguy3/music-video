@@ -199,7 +199,7 @@ async function sheet() {
     const e = tr.timeline.find((x) => x.id === args.entry);
     if (!e) throw new Error(`no timeline entry "${args.entry}"`);
     const n = Number(args.count || 16);
-    const a = Math.ceil(e.t0 * F.fps), b = Math.floor(e.t1 * F.fps) - 1;
+    const a = Math.round(e.t0 * F.fps), b = Math.min(F.n - 1, Math.round(e.t1 * F.fps) - 1);
     frames = Array.from({ length: n }, (_, k) => Math.round(a + ((b - a) * k) / Math.max(1, n - 1)));
     name ||= `sheet-${e.id}.png`;
   } else {
@@ -233,7 +233,7 @@ async function review() {
   const made = [];
   for (const e of tr.timeline) {
     const n = 16;
-    const a = Math.ceil(e.t0 * F.fps), b = Math.floor(e.t1 * F.fps) - 1;
+    const a = Math.round(e.t0 * F.fps), b = Math.min(F.n - 1, Math.round(e.t1 * F.fps) - 1);
     const frames = Array.from({ length: n }, (_, k) => Math.round(a + ((b - a) * k) / (n - 1)));
     made.push(await sheetOf(frames, path.join(dir, `sheet-${e.id}.png`), { title: `${e.id} (${e.scene}) ${stamp(e.t0)}-${stamp(e.t1)}` }));
   }
@@ -262,7 +262,7 @@ async function review() {
   // timing at 1080p on a sample of frames per entry
   const sample = [];
   for (const e of tr.timeline) {
-    const a = Math.ceil(e.t0 * fps), b = Math.floor(e.t1 * fps) - 1;
+    const a = Math.round(e.t0 * fps), b = Math.min(feats().n - 1, Math.round(e.t1 * fps) - 1);
     for (let k = 0; k < 6; k++) sample.push(Math.round(a + ((b - a) * k) / 5));
   }
   const { ms, sceneMs, seconds } = await renderFrames({ frames: sample, workers: 1, opts: opts(1920, 1080, { timing: true }), onFrame: () => {} });
@@ -297,14 +297,18 @@ async function cut() {
 async function bench() {
   const tr = await treatment();
   const fps = feats().fps;
-  const sample = [];
+  // Each entry: 4 warm-up frames (JIT, sprite caches; excluded) then `count` evenly spaced frames.
+  const n = Number(args.count || 24);
+  const sample = [], keep = [];
   for (const e of tr.timeline.filter((x) => typeof args.entry !== 'string' || x.id === args.entry)) {
-    const a = Math.ceil(e.t0 * fps), b = Math.floor(e.t1 * fps) - 1;
-    for (let k = 0; k < 8; k++) sample.push(Math.round(a + ((b - a) * k) / 7));
+    const a = Math.round(e.t0 * fps), b = Math.min(feats().n - 1, Math.round(e.t1 * fps) - 1);
+    for (let k = 0; k < 4; k++) { sample.push(a + k); keep.push(false); }
+    for (let k = 0; k < n; k++) { sample.push(Math.round(a + ((b - a) * k) / Math.max(1, n - 1))); keep.push(true); }
   }
   const [w, h] = size('1920x1080');
   const { ms, sceneMs, seconds } = await renderFrames({ frames: sample, workers: 1, opts: opts(w, h, { timing: true }), onFrame: () => {} });
-  const m = await writeMetrics(sample, ms, path.join(outDir, 'work', `bench${typeof args.entry === 'string' ? '-' + args.entry : ''}.json`), seconds, sceneMs);
+  const pick = (arr) => Float64Array.from(arr.filter((_, j) => keep[j]));
+  const m = await writeMetrics(sample.filter((_, j) => keep[j]), pick(ms), path.join(outDir, 'work', `bench${typeof args.entry === 'string' ? '-' + args.entry : ''}.json`), seconds, pick(sceneMs));
   console.log(JSON.stringify(m, null, 1));
 }
 
@@ -313,7 +317,7 @@ function entryFrames(id, n) {
     const e = tr.timeline.find((x) => x.id === id);
     if (!e) throw new Error(`no timeline entry "${id}"`);
     const fps = feats().fps;
-    const a = Math.ceil(e.t0 * fps), b = Math.floor(e.t1 * fps) - 1;
+    const a = Math.round(e.t0 * fps), b = Math.min(feats().n - 1, Math.round(e.t1 * fps) - 1);
     return Array.from({ length: n }, (_, k) => Math.round(a + ((b - a) * k) / Math.max(1, n - 1)));
   });
 }

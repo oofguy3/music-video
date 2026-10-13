@@ -416,11 +416,17 @@ def build(inputs: dict, fps: float = 30.0) -> dict:
     bpb = int(str(rhy.get("meter") or "4/4").split("/")[0])
     grid, first_idx = beat_grid(rhy["beats"], rhy["downbeats"], bpb, duration,
                                 onsets=[e[0] for e in drums["hit"]])
-    mt = np.interp(t, grid, np.arange(len(grid))) - first_idx
+    # The beat count is interpolated between beats' LANDING frames, so beat_phase is exactly 0 on the
+    # frame where each beat lands (jumps and pulses hit on the frame, not 0.4 frame later).
+    grid_land = np.floor(np.round(grid, 4) * fps + 0.5) / fps
+    for i in range(1, len(grid_land)):
+        if grid_land[i] <= grid_land[i - 1]:
+            grid_land[i] = grid_land[i - 1] + 1.0 / fps
+    mt = np.interp(t, grid_land, np.arange(len(grid))) - first_idx
     # extrapolate linearly outside the grid
     beat_s = float(np.median(np.diff(grid))) if len(grid) > 1 else 0.5
-    mt = np.where(t < grid[0], (t - grid[0]) / beat_s - first_idx, mt)
-    mt = np.where(t > grid[-1], (t - grid[-1]) / beat_s + (len(grid) - 1 - first_idx), mt)
+    mt = np.where(t < grid_land[0], (t - grid_land[0]) / beat_s - first_idx, mt)
+    mt = np.where(t > grid_land[-1], (t - grid_land[-1]) / beat_s + (len(grid) - 1 - first_idx), mt)
     cols["mt"] = mt
     cols["beat"] = np.floor(mt)
     cols["beat_phase"] = mt - np.floor(mt)

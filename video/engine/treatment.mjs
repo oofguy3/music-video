@@ -76,7 +76,11 @@ function lerpValue(a, b, t) {
   return t < 1 ? a : b;
 }
 
-/** Compile a parameter (constant or keyframes) into a function of t. */
+/** The time of the frame an event at t lands on (frames show i / fps; landing = nearest frame). */
+export const snapToFrame = (t, fps) => Math.floor(t * fps + 0.5) / fps;
+
+/** Compile a parameter (constant or keyframes) into a function of t. Key times snap to landing
+ *  frames, so a key on an event takes effect on exactly the frame where that event lands. */
 export function compileParam(spec, feats) {
   const isKeys = Array.isArray(spec) && spec.length > 0 && Array.isArray(spec[0]) && spec[0].length >= 2 &&
     (typeof spec[0][0] === 'number' || (typeof spec[0][0] === 'string' && (spec[0][0].startsWith('@') || /^-?\d/.test(spec[0][0]))));
@@ -84,7 +88,7 @@ export function compileParam(spec, feats) {
   const keys = spec.map(([time, value, ease]) => {
     const e = EASES[ease || 'smooth'];
     if (!e) throw new Error(`unknown ease "${ease}"`);
-    return { t: resolveTime(time, feats), value, ease: e };
+    return { t: snapToFrame(resolveTime(time, feats), feats.fps), value, ease: e };
   }).sort((p, q) => p.t - q.t);
   return (t) => {
     if (t <= keys[0].t) return keys[0].value;
@@ -105,13 +109,13 @@ export class Treatment {
     this.global = { degPerSemi: 30, ...(spec.global || {}) };
     this.postFns = Object.fromEntries(Object.entries(spec.post || {}).map(([k, v]) => [k, compileParam(v, feats)]));
     this.title = spec.title
-      ? { ...spec.title, t0: resolveTime(spec.title.t0 ?? 0, feats), t1: resolveTime(spec.title.t1 ?? 5, feats) }
+      ? { ...spec.title, t0: snapToFrame(resolveTime(spec.title.t0 ?? 0, feats), feats.fps), t1: snapToFrame(resolveTime(spec.title.t1 ?? 5, feats), feats.fps) }
       : null;
     this.timeline = (spec.timeline || []).map((e, idx) => this._compileEntry(e, idx, registry));
     this.timeline.sort((a, b) => a.t0 - b.t0);
     this.transitions = (spec.transitions || []).map((tr) => ({
       ...tr,
-      t: resolveTime(tr.t, feats),
+      t: snapToFrame(resolveTime(tr.t, feats), feats.fps),
       dur: tr.dur === undefined ? 0.5 : resolveDuration(tr.dur, feats),
       pre: tr.pre === undefined ? 0 : resolveDuration(tr.pre, feats),
       params: Object.fromEntries(Object.entries(tr.params || {}).map(([k, v]) => [k, compileParam(v, feats)])),
@@ -124,8 +128,10 @@ export class Treatment {
 
   _compileEntry(e, idx, registry) {
     if (!e.id || !e.scene) throw new Error(`timeline entry ${idx} needs "id" and "scene"`);
-    const t0 = resolveTime(e.t0, this.feats);
-    const t1 = resolveTime(e.t1, this.feats);
+    const fps = this.feats.fps;
+    const t0 = snapToFrame(resolveTime(e.t0, this.feats), fps);
+    let t1 = snapToFrame(resolveTime(e.t1, this.feats), fps);
+    if (t1 >= (this.feats.n - 1) / fps) t1 = this.feats.duration + 1;   // runs through the last frame
     if (!(t1 > t0)) throw new Error(`timeline entry "${e.id}" has t1 <= t0 (${t0}, ${t1})`);
     const sceneMod = registry ? registry[e.scene] : null;
     if (registry && !sceneMod) throw new Error(`timeline entry "${e.id}": unknown scene "${e.scene}"`);
@@ -183,7 +189,7 @@ export class Treatment {
     for (let i = 1; i < tl.length; i++) {
       if (tl[i].t0 > tl[i - 1].t1 + 1e-6) probs.push(`gap ${tl[i - 1].t1}..${tl[i].t0} between "${tl[i - 1].id}" and "${tl[i].id}"`);
     }
-    if (tl[tl.length - 1].t1 < end - 1e-6) probs.push(`gap at end: last scene ends at ${tl[tl.length - 1].t1} < ${end}`);
+    if (tl[tl.length - 1].t1 < end - 1 / this.feats.fps) probs.push(`gap at end: last scene ends at ${tl[tl.length - 1].t1} < ${end}`);
     return probs;
   }
 }

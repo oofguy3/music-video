@@ -16,7 +16,9 @@ export class Sprites {
     let c = this.cache.get(key);
     if (!c) {
       c = createCanvas(size, size);
-      paint(c.getContext('2d'), size);
+      const ctx = c.getContext('2d');
+      paint(ctx, size);
+      ctx.getImageData(0, 0, 1, 1);   // rasterise now: an unflushed canvas costs ~2x per drawImage
       this.cache.set(key, c);
     }
     return c;

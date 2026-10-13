@@ -89,6 +89,7 @@ export function figureSprite(g, { body = '#E4DED2', head = null, headHollow = fa
     x.fillStyle = head || body;
     x.fill();
   }
+  x.getImageData(0, 0, 1, 1);   // rasterise now: an unflushed canvas costs ~2x per drawImage
   spr = { canvas: c, w: w * scale, h: h * scale, foot: 1 * scale };
   if (spriteCache.size > 4000) spriteCache.clear();
   spriteCache.set(key, spr);
