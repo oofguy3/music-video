@@ -151,3 +151,31 @@ test('VJ post effects: driven amounts, deterministic, no-ops at zero', async () 
   const weak = card(); post.apply(weak, { invert: 1, invertBy: 'kick' }, { frame: 7, c: { kick: 0.4 } });
   assert.ok(px(weak).equals(base));
 });
+
+test('scene libraries draw deterministically (puppet, worldkit, fx)', async () => {
+  const { createCanvas } = await import('../engine/canvas.mjs');
+  const P = await import('../scenes/lib/puppet.mjs');
+  const WK = await import('../scenes/lib/worldkit.mjs');
+  const FX = await import('../scenes/lib/fx.mjs');
+  const draw = () => {
+    const c = createCanvas(192, 108), ctx = c.getContext('2d');
+    ctx.scale(0.1, 0.1);
+    const g = { ctx, W: 1920, H: 1080, scale: 0.1, createCanvas };
+    WK.drawField(g, WK.field(g, { key: 'test', t: 1.5, w: 64, h: 36, stops: [[0, '#102'], [1, '#f6a']], bands: 4 }));
+    const kid = P.design({ ...P.KID, height: 400, fill: '#ffd23f', outline: '#102', outlineW: 6, head: 'tv' });
+    P.drawPuppet(ctx, kid, P.cycles.dance(0.3, 'pump'), { x: 960, ground: 900, view: 'front' });
+    const s = P.puppetSprite(g, kid, P.cycles.walk(0.25), { key: 'w1', scale: 0.5 });
+    ctx.drawImage(s.canvas, 400 - s.ax, 900 - s.ay, s.w, s.h);
+    for (const p of WK.particles({ seed: 2, t: 3, rate: 20, life: 2, origin: () => [960, 540], vel: (k, r) => [200 * (r - 0.5), -150] })) ctx.fillRect(p.x, p.y, 8, 8);
+    FX.rings(ctx, { n: 4, gap: 120, phase: 0.3 });
+    return Buffer.from(ctx.getImageData(0, 0, 192, 108).data);
+  };
+  const a = draw(), b = draw();
+  assert.ok(a.equals(b));
+  const j = P.solve(P.design({ height: 300 }), P.poses.stand, { x: 100, ground: 500 });
+  assert.ok(Math.abs(j.feetY - 500) < 1e-6);
+  const ik = P.armTo(P.design({}), 0.2, 0.1);
+  assert.ok(Number.isFinite(ik.s) && Number.isFinite(ik.e));
+  assert.equal(FX.slam(1, 2), 0);
+  assert.ok(FX.slam(2.03, 2) > 0 && FX.slam(5, 2) > 0.99 && FX.slam(5, 2) < 1.01);
+});
