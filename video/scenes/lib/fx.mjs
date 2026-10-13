@@ -156,3 +156,19 @@ export function onGrid(mt, items, every = 4, offset = 0) {
   const i = Math.floor((mt + offset) / every);
   return items[((i % items.length) + items.length) % items.length];
 }
+
+/**
+ * Melt: redraw a device-size source canvas in vertical columns, each stretched downwards by
+ * amount x a smooth wave along x (drips), with the top edge anchored. amount in logical px.
+ * Columns of `colW` logical px: 96 columns at 1080p cost ~3 ms.
+ */
+export function melt(g, src, { amount = 80, t = 0, seed = 1, colW = 20, freq = 3, speed = 0.4 } = {}) {
+  const ctx = g.ctx, W = g.W, H = g.H, s = src.width / W;
+  for (let x = 0; x < W; x += colW) {
+    const u = x / W;
+    const wave = 0.5 + 0.5 * Math.sin(TAU * (u * freq + t * speed) + seed)
+      * Math.cos(TAU * (u * freq * 0.37 - t * speed * 0.6) + seed * 2.1);
+    const dy = amount * wave * wave;
+    ctx.drawImage(src, x * s, 0, colW * s, src.height, x, 0, colW, H + dy);
+  }
+}
