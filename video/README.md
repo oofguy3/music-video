@@ -72,6 +72,20 @@ whichever worker renders the frame and in whatever order. In practice:
 | `g.snapshot(entryId, t)` | the raw image of another timeline entry at time `t` (for afterimages) |
 | `g.createCanvas(w, h)` | for your own cached offscreen buffers |
 
+### Scene libraries (`scenes/lib/`)
+
+| module | what |
+|---|---|
+| `cast.mjs` | the film's characters (KIT, JUNE, FRIENDS at child/teen/adult ages, `crowdDesign(color)`), built on the puppet rig |
+| `puppet.mjs` | stylised figures from simple shapes: `design`, `poses`, `cycles` (walk, run, dance, jump, float), `blend`, `armTo` (IK), `solve` (joint positions), `drawPuppet`, `puppetSprite` (stamping crowds) |
+| `worldkit.mjs` | painterly noise fields through palettes (`field` + `drawField`), `ridge`, closed-form `particles`, `starfield`, `rays`, `blobPath`, `waves` |
+| `fx.mjs` | `kaleido`, `echo` (trails without state), `tunnel`, `mirror`, `halftone`, `stripes`, `rings`, `slam`, `melt`, `onGrid` |
+| `fractal.mjs` | Julia and Mandelbrot escape-time renders with smooth palette colouring |
+
+Post-processing is per timeline entry (`post` in the treatment): `bloom`, `bloomRadius`, `vignette`, `grain`, `paper`
+(painted grain), `frost`, plus the VJ effects `zoom`, `shake`, `glitch`, `rgbSplit`, `invert` (strobe) and `flash`, each
+of which can be driven by a feature column with `<name>By` (e.g. `"zoomBy": "kick"`).
+
 ### `F`: features at time `t` (from `motion.json`)
 
 `F.c.<column>` is every per-frame column at `t`. The main ones:

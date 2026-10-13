@@ -5,7 +5,7 @@
 // See video/README.md for the full contract. Missing modules are skipped so the registry works
 // while scenes are still being built.
 
-const NAMES = ['debug', 'title', 'transitions', 'memories', 'crowd', 'void', 'orbit', 'ember'];
+const NAMES = ['debug', 'title', 'transitions', 'dusk', 'milksea', 'deep', 'goldlake', 'storm', 'lastkite'];
 
 let cached = null;
 

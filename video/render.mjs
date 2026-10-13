@@ -4,7 +4,7 @@
 //   node render.mjs full                      1920x1080 final (x264 slow, crf 18) with audio
 //   node render.mjs preview                   960x540 quick look (veryfast) with audio
 //   node render.mjs stills --frames 100,2933  PNG stills (default 960x540; --size 1920x1080)
-//   node render.mjs sheet --entry crowd_b1    contact sheet of a timeline entry (or --range a:b)
+//   node render.mjs sheet --entry milksea     contact sheet of a timeline entry (or --range a:b)
 //   node render.mjs strip --around 2933       consecutive frames around an event (--radius 4)
 //   node render.mjs review                    the whole review pack (sheets, strips, filmstrip, metrics)
 //   node render.mjs hashes --frames 1,2,3     SHA-256 of rendered RGBA (determinism checks)

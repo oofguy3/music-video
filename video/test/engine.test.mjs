@@ -105,7 +105,7 @@ test('auto treatment covers the song with known scenes', () => {
   const m = fixtureMotion();
   const spec = autoTreatment(m);
   const F = new Features(m);
-  const names = ['memories', 'crowd', 'void', 'orbit', 'ember'];
+  const names = ['dusk', 'milksea', 'deep', 'goldlake', 'storm', 'lastkite'];
   const reg = Object.fromEntries(names.map((n) => [n, { defaults: {} }]));
   const tr = new Treatment(spec, F, reg);
   assert.deepEqual(tr.coverageProblems(F.duration), []);
@@ -120,7 +120,7 @@ test('the numb-roomie treatment resolves against the real analysis', { skip: !fs
   const proxy = new Proxy(reg, { get: (o, k) => (k in o ? o[k] : o.debug) });
   const tr = new Treatment(spec, F, proxy);
   assert.deepEqual(tr.coverageProblems(F.duration), []);
-  assert.equal(Math.floor(tr.timeline.find((e) => e.id === 'orbit').t0 * 30 + 0.5), 2933);
+  assert.equal(Math.floor(tr.timeline.find((e) => e.id === 'goldlake').t0 * 30 + 0.5), 2933);
 });
 
 test('VJ post effects: driven amounts, deterministic, no-ops at zero', async () => {

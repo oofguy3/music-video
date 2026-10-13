@@ -1,789 +1,381 @@
 {
  "song": "numb-roomie",
- "notes": "One bone hairline crosses an ink frame for the whole film, and it is the home note (the tonic). The singer is a small amber dot whose height above the line is its pitch distance from home (18 px per semitone). Questions hang above the line, confessions land on it, and only notes held on home leave amber marks. 'We' is the dot copied into a row, then a grid of identical cut-paper figures that sways as one body. Each borrowed minor-iv chord is a rule wiping down the grid; behind it figures brake to a stop, drain to grey and lose their differences, and the colour never fully returns (numb_accum, a quarter per window). At the first hard cut the frozen crowd drops through the line and out of frame while the home line, the pad, stays. In the break a gold line appears one semitone above home. Each drum-fill hit stretches it wider, and on the key change it becomes home. Young love is a filled disc and a hollow ring orbiting the line, joined by a tether that snaps and then braking to rest side by side on home. The last chorus floods the frame edge to edge and inverts to ink on bone, brightening to white at the loudest point. In its numb windows the jumping crowd hangs at the top of the jump: once it comes down on the home chord with the hardest landing in the film, and the last time it is still in the air when the cut lands. What remains is her ring. The voice's dot slides into it on the tonic, it fills gold, and the engine hard-blacks the frame on the pad's stop.",
+ "title_of_film": "Kite Season",
+ "notes": "KITE SEASON. A dreamy painted storybook that never sits still. Kit (yellow raincoat) flies glowing kites with friends from a little house on a floating island in a violet dusk sky; the kite strings are the promises. Growing up snaps them one by one. When the island lands on the Milk Sea, everyone marches across the water to the beat, and on every borrowed minor-iv chord the pale milk rises, the colour drains out of the world and time itself brakes to a stop: that is numbness, never a symbol. The first hard cut drops Kit under the milk, down to a gold light that cracks open on the drum fill and lifts the world a semitone into a golden mirror lake, where Kit and June dance until she blows away as dandelion seeds and the friends settle into lit houses. The final chorus is the one big trip: the sky shatters into a kaleidoscope of every world in the film while a crowd jumps on every beat, melting and freezing on the numb chords. Then silence: grown-up Kit on a rock in the night catches the last kite, and the pull-back reveals the twist: the string still runs all the way up to the little house in the sky, where the child Kit is holding the other end. Hard stop. Look: soft painterly fields, art-directed palettes per section, glowing light, hundreds of small living things (motes, seeds, fireflies, ripples), cast drawn with scenes/lib/cast.mjs. Calm and beautiful through C1, hits hard only in D1.",
  "global": {
-  "degPerSemi": 20,
-  "seed": 7
+  "degPerSemi": 0,
+  "seed": 11
  },
  "title": {
   "text": "Numb · Roomie",
   "t0": "@entries[1].t",
-  "t1": "@downbeats[3]",
-  "fadeIn": 0.46,
-  "fadeOut": 0.92,
+  "t1": "@downbeats[4]",
+  "fadeIn": 0.6,
+  "fadeOut": 1.0,
   "x": 960,
-  "y": 690,
+  "y": 1000,
   "align": "center",
-  "size": 22,
-  "tracking": 0.42,
-  "color": "#EDE7DA",
-  "alpha": 0.6,
+  "size": 28,
+  "tracking": 0.32,
+  "color": "#FFF2E0",
+  "alpha": 0.85,
   "font": "Inter Light"
  },
  "shortCut": {
   "start": "@downbeats[71]-0.5s",
   "fadeIn": 0.5
  },
- "palettes": {},
  "post": {
-  "bloom": 0.08,
-  "bloomRadius": 14,
-  "vignette": 0.12,
-  "grain": 0.035,
+  "bloom": 0.15,
+  "bloomRadius": 18,
+  "vignette": 0.16,
+  "grain": 0.03,
   "frost": 0,
-  "frostTint": "#9A9C9E"
+  "frostTint": "#C9C2E8",
+  "paper": 0.18
  },
  "timeline": [
   {
-   "id": "memories",
-   "scene": "memories",
+   "id": "dusk",
+   "scene": "dusk",
    "t0": 0,
    "t1": "@downbeats[32]",
+   "budgetMs": 130,
    "palette": {
-    "ink": "#0E0D0C",
-    "bone": "#EDE7DA",
-    "ghost": "#5A5650",
-    "amber": "#F0A23B"
+    "skyTop": "#2B0F54",
+    "skyMid": "#7B3FA0",
+    "skyLow": "#E77FA3",
+    "horizon": "#FFC9A3",
+    "moon": "#FFF2E0",
+    "cloud": "#F6B6C9",
+    "cloudShade": "#6E3F8F",
+    "island": "#3B2350",
+    "islandTop": "#5B3A7A",
+    "grass": "#8A5FB0",
+    "house": "#F3D9E8",
+    "roof": "#9C3F6E",
+    "window": "#FFD27A",
+    "string": "#FFE9B0",
+    "mote": "#FFE7A8",
+    "star": "#FFF6E0",
+    "sea": "#EDE6FA"
    },
-   "budgetMs": 4,
-   "brief": "A1 verse (voice + pad). Flat ink field: no camera, glow or drift. SHARED GEOMETRY: home line y=620, x 192..1728, 2 px bone. Pitch height h(m)=620-18*(m-P.tonicMidi), where m is the median of voc_midi at t..t-4f, clamped to ±8 semitones; ignore notes shorter than 0.08 s. SELF: amber disc at x=960, y=h, r=7+5*voc_lvl. When voc_midi<0 it eases (0.25 s) onto the line as a 2 px hollow ring. TRAIL: one polyline of the dot's last 6 s, 180 samples re-evaluated from F.col, scrolling left at 256 px/s. It breaks at silences; 1.5 px bone fading to 0. HOME TOUCHES: each voc_note in the last 6 s on the tonic pitch class lasting at least 0.8 s lays a 3 px amber dash on the line under its span. These mark both confessions. HOVERS: an off-tonic note held 1.5 s or longer drops a dashed 1 px plumb line from the dot to home (the unanswered self-question ~12.7 s, again ~42.3 s). LINE: alpha 0.35+0.4*pad_lvl, drawn from centre by P.lineDraw. It vanishes while pad_active=0 and redraws from centre when the pad returns. BREATHS (F.ev.dips): a centred gap 60*depth px wide, attack 0.3 s, release 0.7 s; at the second dip it cuts through every row. WE: dots r=5 at x=192+32c; P.weCols selects every 8th/4th/2nd/all column. Each copies the self pitch delayed |c-24|*0.035 s times P.follow. P.body grows each into a figure (head r=4.5 over an 8x24 capsule on its row). Rows y=620±44r slide in per P.rowP1/rowM1/rowPM2. P.twitch hops everything 3 px on the drum pre-hit. P.dotDrop lands the amber dot in the empty column-24 slot, matching crowd_b1's first frame. Frost: none. Must NOT add particles, glow, ambient motion or any text.",
    "params": {
-    "tonicMidi": 58,
-    "pxPerSemi": 18,
-    "homeY": 620,
-    "homeX0": 192,
-    "homeX1": 1728,
-    "semiClamp": 8,
-    "trailSec": 6,
-    "colPitch": 32,
-    "rowGap": 44,
-    "ripple": 0.035,
-    "homeTouchMin": 0.8,
-    "hoverMin": 1.5,
-    "lineDraw": [
-     [
-      "@entries[1].t",
-      0
-     ],
-     [
-      "@entries[1].t+1bar",
-      1,
-      "outExpo"
-     ]
-    ],
-    "weCols": [
-     [
-      0,
-      0
-     ],
-     [
-      "@lines[7].t0",
-      7,
-      "step"
-     ],
-     [
-      "@lines[8].t0",
-      13,
-      "step"
-     ],
-     [
-      "@lines[9].t0",
-      25,
-      "step"
-     ],
-     [
-      "@lines[10].t0",
-      49,
-      "step"
-     ]
-    ],
-    "follow": [
-     [
-      "@lines[10].t0",
-      1
-     ],
-     [
-      "@lines[10].t1",
-      0,
-      "smooth"
-     ]
-    ],
-    "body": [
+    "friendsIn": "@lines[7].t0",
+    "growT0": "@lines[10].t0",
+    "grow": [
      [
       "@lines[10].t0",
       0
      ],
      [
-      "@lines[10].t1",
-      1,
-      "smooth"
-     ]
-    ],
-    "rowP1": [
-     [
-      "@lines[11].t0",
-      0
-     ],
-     [
-      "@lines[11].t0+1bar",
-      1,
-      "outExpo"
-     ]
-    ],
-    "rowM1": [
-     [
-      "@lines[12].t0",
-      0
-     ],
-     [
-      "@lines[12].t0+1bar",
-      1,
-      "outExpo"
-     ]
-    ],
-    "rowPM2": [
-     [
-      "@lines[13].t0",
-      0
-     ],
-     [
-      "@lines[13].t0+1bar",
-      1,
-      "outExpo"
-     ]
-    ],
-    "twitch": [
-     [
-      "@entries[2].t-1f",
-      0
-     ],
-     [
-      "@entries[2].t",
-      1,
-      "step"
-     ],
-     [
-      "@entries[2].t+0.25s",
-      0,
-      "outQuad"
-     ]
-    ],
-    "dotDrop": [
-     [
-      "@downbeats[31]",
-      0
-     ],
-     [
-      "@downbeats[32]-1f",
+      "@lines[10].t0+2bar",
       1,
       "inOutCubic"
      ]
     ],
-    "amberSat": [
+    "snap0": "@downbeats[24]",
+    "snap1": "@downbeats[26]",
+    "snap2": "@downbeats[28]",
+    "snap3": "@downbeats[30]",
+    "tip": [
      [
-      "@downbeats[31]",
-      1
+      "@lines[15].t0",
+      0
      ],
      [
       "@downbeats[32]",
-      0.6
+      1,
+      "inCubic"
      ]
     ]
    },
    "post": {
-    "bloom": 0.08,
-    "bloomRadius": 14,
-    "vignette": 0.12,
-    "grain": 0.035,
-    "frost": 0
-   }
+    "bloom": 0.2,
+    "bloomRadius": 20,
+    "vignette": 0.18,
+    "grain": 0.03,
+    "paper": 0.22
+   },
+   "brief": "A1 verse (voice + pad only, no drums), frames 0-1824. KITE ISLAND AT THE VIOLET HOUR: a dreamy painted sky that is always gently alive. LAYERS back to front. (1) SKY: worldkit.field with stops [skyTop, skyMid, skyLow, horizon] (vertical bias: blend the field 60/40 with a vertical gradient so the top stays dark and the horizon warm), scale ~2, warp ~1, slow drift; overall brightness breathes with pad_lvl (+-8%). (2) STARS: ~250 tiny points (r 1-2.5) fading in over the first 30 s, each twinkling (hashed phase). (3) MOON: r 260 at (1420, 290), a cream disc cut into 9 horizontal bands with 10-14 px gaps showing the sky; alternate bands slide +-12 px on slow sines; a soft glow sprite behind (r 560, alpha 0.22 + 0.2*pad_lvl). (4) CLOUDS: three parallax banks of soft clouds (worldkit.blobPath shapes filled with cloud on top and cloudShade below, or clustered glow sprites) drifting left at 6, 12 and 22 px/s; the nearest bank passes partly in front of the island. (5) FAR ISLANDS: 5 small floating rock silhouettes (ridge tops, dangling roots) bobbing at different rates. (6) KITE ISLAND: a floating chunk of earth ~520 px wide whose grassy top is at y=700, centred at x=960; on it a little house (pale walls, pointed roof, one round glowing window, a door, a crooked chimney with a slow smoke curl), grass tufts; roots and a rope ladder dangle below and sway. The island bobs +-8 px over 4 bars. (7) CHARACTERS from scenes/lib/cast.mjs: KIT.child stands on the island flying a kite from the start. At P.friendsIn (frame 869, the I-to-we turn) FRIENDS[0..3].child and then JUNE.child run in from the island edges one per beat (puppet run cycle, then stand) and fly their own kites; between kites they hold hands in a line (armTo IK) on downbeats. GROWING UP: P.grow 0->1 (frames 1202-1313) scales every kid smoothly from child to teen height and switches to the .teen design at the midpoint. SNAPS: at P.snap0..P.snap3 (frames 1382, 1493, 1603, 1714) one friend's string snaps (a bright spark at the hand, the string whips and recoils in 0.3 s, the kite tumbles away up-left and shrinks into the sky over 3 s); that friend lowers the arm, turns and walks off the island edge out of frame over 2 s; JUNE's string snaps last (P.snap3) and she waves before leaving. Kit is left alone with one kite. TIP: P.tip 0->1 (frames 1739-1824): the camera pans down and rotates ~8 degrees, the island tilts forward, and a pale milky sea (sea colour, soft wave lines) rises from the bottom; on the last frame it fills the lower 60% of the frame (the next scene opens with the island splashing down on that sea). (8) KITES: a diamond kite (60 px tall, the owner's coat colour with a lighter cross and INK outline) high above (y 120-380) on a glowing string (a quadratic curve from the hand: use puppet.solve() joint wristR; 2 px, string colour, soft glow) with a ribbon tail of 6 bows that trails behind (draw the tail along the kite's positions at t - k*0.12 s, i.e. an echo). Kites swoop in slow figure-eights (Lissajous, period 2 bars, phase-shifted per kid) and dip on each downbeat (an impulse from F.c.since_down). (9) MOTES: every sung note (F.ev.voc_notes onsets) releases a glowing mote (glow sprite in mote colour, r 6-14 by velocity, warmer with higher pitch) from a point on Kit's kite string; it rises and drifts on a closed-form path (worldkit.particles with births from the note onsets) for 6 s and fades. Keep 40-120 alive. (10) FIREFLIES: ~60 near the island, slow wander, twinkling. MUSIC MAP: pad_lvl -> sky brightness and moon glow; voice onsets -> motes; voc_lvl -> string glow (alpha 0.5 + 0.5*voc_lvl); downbeats -> kite dips and an island bob accent; around each F.ev.dips time (frames 687 and 1564) the world holds its breath for 1.5 s (motion eases to half speed via an eased local clock, glow dims 30%). KEY FRAMES to check: 0, 60, 300, 687, 869, 900, 1100, 1202, 1260, 1313, 1382, 1400, 1493, 1564, 1603, 1714, 1740, 1790, 1824. The title card is drawn by the engine (bottom centre, 1.8-9.1 s): keep the bottom-centre area calm then. Calm and beautiful, gently moving everywhere. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev). No zoom punches, glitch or strobes."
   },
   {
-   "id": "crowd_b1",
-   "scene": "crowd",
+   "id": "milksea",
+   "scene": "milksea",
    "t0": "@downbeats[32]",
    "t1": "@cuts[0]",
+   "budgetMs": 150,
    "palette": {
-    "ink": "#0E0D0C",
-    "bone": "#E4DED2",
-    "rule": "#EDE7DA",
-    "numb": "#7E8083",
-    "amber": "#F0A23B"
+    "skyTop": "#5EC8D8",
+    "skyLow": "#FFD3B6",
+    "sun": "#FFF1C9",
+    "sunRing": "#FFB38A",
+    "sea": "#EDE6FA",
+    "seaDeep": "#B9A9E3",
+    "crest": "#FFFFFF",
+    "milk": "#F4F1FF",
+    "crowd": "#8C7FB8",
+    "sparkle": "#FFFFFF",
+    "island": "#3B2350",
+    "house": "#F3D9E8",
+    "roof": "#9C3F6E",
+    "window": "#FFD27A"
    },
-   "budgetMs": 6,
-   "brief": "B1 first chorus, crowd variant 'line'. Uses the memories geometry: ink field, home line y=620 (row 0 ground), 49 columns at x=192+32c, rows y=620+44r up to |r|=5 (539 figures). Each figure is a cached sprite (head r=4.5 over an 8x24 capsule), one per drain step (16 steps), drawn with translate+rotate about its feet. Never use one big path. INDIVIDUALITY from hash01(seed,i): height ±6 px, sway phase ±0.35 beat, lightness ±8%, all scaled by I=(1-drain_i)*(1-0.7*numb_accum). SWAY: angle = P.swayDeg*sin(pi*(mt+phase_i*I)/2)*(0.3+0.7*bass_rel)*(0.35+0.65*join), with join=clamp(1.6*drums_rel-|r|/6,0,1), so the quiet percussion build recruits rows outward from home. bass_on thumps the home line 2→6 px (tau 0.18 s). SELF: column 24, row 0, amber. It is the only figure that grows with the voice: +3 px per semitone above the tonic. At @downbeats[32] the sway starts and rows ±3 punch in (P.rowIn3); rows ±4 and ±5 slide in from the edges (P.rowIn4, P.rowIn5). NUMB (each F.ev.numb window, hard-gated on t0/t1): a 2 px bone rule descends linearly from y=380 to 860 over the window. Figures it has passed drain to grey (OKLab, 0.2 s edge), I→0, and their pose time brakes: tau=tp+0.12*(1-exp(-(t-tp)/0.12)). The self goes grey at standard height. After t1, colour and motion return over 1 bar, but only to 1-0.7*numb_accum. P.shudder: fill hits in F.between('hit', t-0.15, t) jolt the frozen grid 2 px. Frost 0.25 adds a faint grey haze. Must NOT add screens, glow, camera moves or per-kick motion.",
    "params": {
-    "variant": "line",
-    "count": 539,
-    "tonicMidi": 58,
-    "homeY": 620,
-    "colPitch": 32,
-    "rowGap": 44,
-    "swayDeg": 5,
-    "selfPxPerSemi": 3,
-    "numbGain": 1,
-    "residue": 0.7,
-    "brake": 0.12,
-    "ruleY0": 380,
-    "ruleY1": 860,
-    "drainEdge": 0.2,
-    "rowIn3": [
-     [
-      "@downbeats[32]-1f",
-      0
-     ],
-     [
-      "@downbeats[32]",
-      1,
-      "step"
-     ]
-    ],
-    "rowIn4": [
-     [
-      "@numb[0].t1",
-      0
-     ],
-     [
-      "@numb[0].t1+1bar",
-      1,
-      "outExpo"
-     ]
-    ],
-    "rowIn5": [
-     [
-      "@lines[19].t0",
-      0
-     ],
-     [
-      "@lines[19].t0+1bar",
-      1,
-      "outExpo"
-     ]
-    ],
-    "shudder": [
-     [
-      "@entries[4].t-1f",
-      0
-     ],
-     [
-      "@entries[4].t",
-      1,
-      "step"
-     ]
-    ]
+    "swell": "@lines[19].t0",
+    "crowdMax": 220
    },
    "post": {
-    "bloom": 0.06,
-    "bloomRadius": 14,
-    "vignette": 0.12,
-    "grain": 0.035,
-    "frost": 0.25,
-    "frostTint": "#9A9C9E"
-   }
+    "bloom": 0.16,
+    "bloomRadius": 18,
+    "vignette": 0.15,
+    "grain": 0.03,
+    "paper": 0.14,
+    "zoom": 0.012,
+    "zoomBy": "kick"
+   },
+   "brief": "B1 first chorus, frames 1825-2710: THE MILK SEA under a SPIRAL SUN, the first time the drums and bass are in (the bass enters on the first frame; quiet percussion builds all the way to the cut). SKY: a turquoise (skyTop) to peach (skyLow) gradient down to the horizon at y=430, with soft drifting clouds (worldkit.field low contrast or blobs). SPIRAL SUN at (960, 300), r 150: a cream disc with 6 concentric sunRing rings and a soft spiral of light (e.g. 12 curved wedges) turning slowly (one turn per 8 bars), pulsing 6% bigger on every downbeat. THE SEA: from the horizon to the bottom, 44 perspective wave strips (filled polylines, sea colour far to seaDeep near, each crest edged with a 2-5 px crest highlight), wave height = base + 30*bass_lvl px near the camera; slow travelling noise. LANDING (first 1.5 s): Kite Island from the previous scene is on the sea at (960, 600), splashing down on frame 1825: a crown of ~120 milk droplets (closed-form particles, gravity) and an expanding ring wave; then the island floats and drifts slowly right and away. CHARACTERS (cast.mjs, .teen designs): KIT, JUNE and FRIENDS step off the island and walk across the milk in a loose line toward the camera-left diagonal, in side view, walk phase locked to the beat grid (one stride per two beats: phase = F.c.mt/2), bobbing. Every kick (F.ev.kick) puts a ripple ring at the foot of the nearest walker (a perspective ellipse expanding over 0.8 s, fading). THE CROWD (we all): faceless figures (cast.crowdDesign(crowd colour, 'teen'), stamped with puppet.puppetSprite using phase-quantised keys) appear on the sea in rows behind them, recruited over the chorus from 12 to P.crowdMax (more from P.swell, frame 2457, the build), all marching in unison on the beat, smaller with distance (perspective). Hats -> sparkles: on each F.ev.hat hit, 3-6 star glints pop on random wave crests (scale up then fade over 0.25 s). Snares -> a quick shimmer along the crests. NUMB (the key idea, both windows F.ev.numb[0] frames 2157-2268 and [1] 2600-2711): THE MILK RISES. The sea surface climbs up the figures (waist-high when F.c.numb = 1; clip the lower bodies under the milk surface), the colour drains out of everything toward the milk colour (mix figures, sky and sun toward milk by 0.85*numb), the ripples stop, and TIME BRAKES: drive every animation phase (walk, waves, sun spin, clouds) with a freeze clock tau(t) = t - 0.92*F.integral('numb', S.t0, t) so the world slows to a near-stop; after each window colour returns but never fully (keep 0.25*F.c.numb_accum of the drain). The scene ends frozen and pale in the second window; the engine hard-cuts at frame 2711. KEY FRAMES: 1825, 1830, 1860, 1900, 2000, 2100, 2157, 2200, 2268, 2300, 2457, 2550, 2600, 2650, 2710. The drums must be visible: ripples on kicks, sparkles on hats, the subtle post zoom on kicks. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev)."
   },
   {
-   "id": "void",
-   "scene": "void",
+   "id": "deep",
+   "scene": "deep",
    "t0": "@cuts[0]",
    "t1": "@key_changes[0].t",
+   "budgetMs": 90,
    "palette": {
-    "ink": "#070707",
-    "bone": "#CFC9BE",
-    "ghost": "#7E8083",
-    "gold": "#E6A930"
+    "top": "#1E5FBF",
+    "mid": "#0C2E78",
+    "bottom": "#040B2E",
+    "caustic": "#9FE7FF",
+    "ray": "#BFEFFF",
+    "gold": "#FFC857",
+    "goldCore": "#FFF1C9",
+    "bubble": "#BDEBFF",
+    "snow": "#9FB8E8"
    },
-   "budgetMs": 4,
-   "brief": "A2 break, ink #070707. FALL: at @cuts[0], hold g.snapshot('crowd_b1', @cuts[0]-1f) perfectly still for P.holdFrames. Then slice it with source-rect drawImage (no clipping). Each row strip spans y=620+44r-40 to 620+44r-1, which excludes the home line, and is cut into 7 blocks of 7 figures; mind the device scale. Release each piece 0.06*|r| + 0.04*hash01 s after the hold. It falls y=0.5*P.fallG*dt² with alpha 1→0.6 and is out of frame within about 1 s. The numbed crowd drops through home while the line stays (the pad holds the tonic). The snapshot is fixed-time, so the engine cache keeps it cheap. HOME: 1 px bone line centred, alpha 0.25+0.5*pad_lvl, length P.lineLen. VOICE: a bone dot (r=5, no amber) at median-filtered pitch height (tonic 58, 18 px/semitone). It sits on home for the restarted opening question, becomes a hollow ring at the voice exit, and fills and rides pitch again from the voice return. NEW HOME: from the pivot a 240 px gold line fades in exactly 18 px above home (P.goldIn). Each drum hit in F.between('hit', key_changes[0].pivot, key_changes[0].t) steps its width toward 1536 (step k of n, outExpo 0.12 s), reaching full width on the last hit at the key change. The voice's B3 just before the change sits on the gold line. Over the last beat P.shift slides the whole drawing down 18 px while P.boneOut fades the old line, so the gold line lands at y=620. Frost: none. Must NOT use shards, glow, white flash or text.",
    "params": {
-    "tonicMidi": 58,
-    "pxPerSemi": 18,
-    "homeY": 620,
-    "holdFrames": 2,
-    "fallG": 2600,
-    "lineLen": [
-     [
-      "@cuts[0]",
-      1536
-     ],
-     [
-      "@key_changes[0].pivot",
-      240,
-      "smooth"
-     ]
-    ],
-    "goldIn": [
-     [
-      "@key_changes[0].pivot",
-      0
-     ],
-     [
-      "@key_changes[0].pivot+2b",
-      1,
-      "smooth"
-     ]
-    ],
-    "shift": [
-     [
-      "@key_changes[0].t-1b",
-      0
-     ],
-     [
-      "@key_changes[0].t",
-      18,
-      "inOutCubic"
-     ]
-    ],
-    "boneOut": [
-     [
-      "@key_changes[0].t-1b",
-      1
-     ],
-     [
-      "@key_changes[0].t",
-      0,
-      "linear"
-     ]
-    ]
+    "pivot": "@key_changes[0].pivot",
+    "voiceBack": "@entries[5].t"
    },
    "post": {
-    "bloom": 0.1,
-    "bloomRadius": 14,
-    "vignette": 0.2,
-    "grain": 0.035,
-    "frost": 0
-   }
+    "bloom": 0.28,
+    "bloomRadius": 22,
+    "vignette": 0.25,
+    "grain": 0.03,
+    "paper": 0.1,
+    "shake": 9,
+    "shakeBy": "hit"
+   },
+   "brief": "A2 break, frames 2711-2932: UNDER THE MILK. A hard cut from the frozen pale sea to deep water, silent (pad only; the voice drops out 91.3-96.1 s and returns at P.voiceBack, frame 2883). WATER: a vertical gradient top -> mid -> bottom; a bright rippling ceiling band at y<=110 (milk-lilac with ~30 caustic lines from worldkit.waves in caustic colour); 7 god rays fanning down from the ceiling (worldkit.rays, slowly swaying); ~300 drifting particles of marine snow (snow colour, tiny, slow) and soft depth haze. KIT (cast.KIT.teen, drained: mix his fill colours 60% toward #9FB8E8) sinks slowly from y=250 to y=520 over the section in the puppet float cycle (cycles.float), slowly rotating (+-20 degrees); a stream of bubbles rises from him (closed-form particles, wobble, r 3-12). His faint glow dims while the voice is out and pulses back warm at P.voiceBack. THE GOLD LIGHT: at P.pivot (frame 2877) a gold point opens far below at (960, 980) and grows (glow sprites gold over goldCore, r 0 -> 260 by frame 2915), warming the whole water toward teal-gold (mix the gradient 35% toward gold); 3 slow rays rise from it. THE FILL: on each of the 5 drum-fill hits (F.between('hit', P.pivot, F.ev.key_changes[0].t + 0.5/F.fps); frames 2916, 2919, 2922, 2925, 2932) the light bursts: a ring of 12 short rays flashes out, the light jumps 18% bigger, and Kit is pulled 30 px toward it (eased); the post shake on hits adds the punch. On the last frame (2932) the gold light fills ~70% of the frame (the engine's gold flash on 2933 completes it). KEY FRAMES: 2711, 2712, 2740, 2800, 2860, 2877, 2883, 2900, 2916, 2919, 2922, 2925, 2930, 2932. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev)."
   },
   {
-   "id": "orbit",
-   "scene": "orbit",
+   "id": "goldlake",
+   "scene": "goldlake",
    "t0": "@key_changes[0].t",
    "t1": "@downbeats[71]",
+   "budgetMs": 150,
    "palette": {
-    "ink": "#0F0D0B",
-    "bone": "#EDE7DA",
-    "amber": "#F0A23B"
+    "skyTop": "#6B3A8C",
+    "skyMid": "#FF7E6B",
+    "skyLow": "#FFB25C",
+    "sun": "#FFF0B3",
+    "sunGlow": "#FFC857",
+    "lake": "#5A2E6B",
+    "shore": "#3A2346",
+    "meadow": "#7A4A3A",
+    "stem": "#6B8F4E",
+    "seed": "#FFF7E0",
+    "firefly": "#FFE58A",
+    "houseWall": "#F7D6C1",
+    "roof": "#B04A5A",
+    "window": "#FFD27A",
+    "crack": "#FFFFFF"
    },
-   "budgetMs": 4,
-   "brief": "C1 in the new key. Ink field. Home line y=620, 1536 px, width 1.5+1.5*bass_lvl, bone. Amber is authored and the engine lift (global degPerSemi 20) settles it to gold over the first beat. SELF: filled disc r=20+4*voc_lvl+3*kick*drums_rel. HER: hollow ring r=22, stroke 1+2.5*pad_lvl, alpha P.ringAlpha. The pair orbits (960,620) at R=26+400*P.apart, angle=2*pi*mtw/8: one turn per 2 bars, level on the line every downbeat. Trails are the last 90 deg of each path as a 1.5 px arc in 24 segments fading to 0. TETHER: a 1 px bone line joins the centres while P.tether=1. When it drops to 0 at P.tetherSnap (the feelings-gone line) it snaps at the midpoint and each half retracts into its body (outExpo 0.4 s after P.tetherSnap). The orbit then widens. FRIENDS: P.friends steps once per downbeat (count n). Pair k (k = 0..n-1) starts on the k-th downbeat after P.friendsT0, i.e. F.ev.downbeats[i0 + k] where F.ev.downbeats[i0] lands on P.friendsT0 (never re-derive it from F.last, or the newest pair re-drops on every later downbeat). Two touching bone dots (r=6) drop from y=300 onto the line (outExpo, 1 beat) at x=960±(480+64*floor(k/2)), alternating sides. Landed pairs never move again. While the voice holds the tonic (voc_midi=59) the disc gets a 1 px bone outline. BRAKE: u=P.brake (linear across the 2 bars from P.brakeT0). mtw = F.c.mt before P.brakeT0, then F.col('mt', P.brakeT0)+4*(2u-u²), which holds at +4 once u=1. Speed is continuous and the pair stops level on the line at @downbeats[70] and stays there until the cut. apart closes to 0, so disc and ring rest side by side on home through the held tonic. Frost: none. Must NOT add drum rings, floor grids, glow or a collision. CONTINUITY: the void scene's gold line (one semitone above, sliding down 18 px over the last beat) has reached 4 of 5 fill steps on its last frame; the 5th fill hit lands on this entry's first frame. So on the first frame the home line is already full width, and it starts in S.palette.amber (which the lift turns to the void's gold) and blends to bone over the first beat.",
    "params": {
-    "homeY": 620,
-    "tonicMidi": 59,
-    "tetherSnap": "@lines[23].t0",
-    "friendsT0": "@downbeats[59]",
-    "brakeT0": "@downbeats[68]",
-    "apart": [
+    "feelingsGone": "@lines[23].t0",
+    "settle": "@lines[24].t0",
+    "heldIi": "@downbeats[66]",
+    "home": "@downbeats[69]",
+    "confess": "@lines[29].t0",
+    "crackT0": "@downbeats[70]",
+    "sunY": [
      [
       "@key_changes[0].t",
-      0
-     ],
-     [
-      "@lines[22].t0",
-      0.08
-     ],
-     [
-      "@lines[23].t0",
-      0.15
-     ],
-     [
-      "@lines[23].t1",
-      0.45,
-      "outExpo"
-     ],
-     [
-      "@lines[27].t0",
-      0.8
+      470
      ],
      [
       "@downbeats[66]",
-      1
-     ],
-     [
-      "@lines[29].t0",
-      1
-     ],
-     [
-      "@downbeats[70]",
-      0,
-      "inOutCubic"
-     ]
-    ],
-    "ringAlpha": [
-     [
-      "@lines[23].t0",
-      1
-     ],
-     [
-      "@lines[23].t1",
-      0.6
-     ],
-     [
-      "@downbeats[66]",
-      0.6
-     ],
-     [
-      "@downbeats[69]-1b",
-      0.2
+      520
      ],
      [
       "@downbeats[69]",
-      1,
-      "outExpo"
-     ]
-    ],
-    "tether": [
-     [
-      "@lines[23].t0-1f",
-      1
-     ],
-     [
-      "@lines[23].t0",
-      0,
-      "step"
-     ]
-    ],
-    "brake": [
-     [
-      "@downbeats[68]",
-      0,
-      "linear"
-     ],
-     [
-      "@downbeats[70]",
-      1,
-      "linear"
-     ]
-    ],
-    "friends": [
-     [
-      "@downbeats[59]-1f",
-      0
-     ],
-     [
-      "@downbeats[59]",
-      1,
-      "step"
-     ],
-     [
-      "@downbeats[60]",
-      2,
-      "step"
-     ],
-     [
-      "@downbeats[61]",
-      3,
-      "step"
-     ],
-     [
-      "@downbeats[62]",
-      4,
-      "step"
-     ],
-     [
-      "@downbeats[63]",
-      5,
-      "step"
-     ],
-     [
-      "@downbeats[64]",
-      6,
-      "step"
-     ],
-     [
-      "@downbeats[65]",
-      7,
-      "step"
-     ],
-     [
-      "@downbeats[66]",
-      8,
-      "step"
-     ],
-     [
-      "@downbeats[67]",
-      9,
-      "step"
-     ],
-     [
-      "@downbeats[68]",
-      10,
-      "step"
-     ]
-    ]
-   },
-   "post": {
-    "bloom": 0.1,
-    "bloomRadius": 14,
-    "vignette": 0.12,
-    "grain": 0.035,
-    "frost": 0
-   }
-  },
-  {
-   "id": "crowd_d1",
-   "scene": "crowd",
-   "t0": "@downbeats[71]",
-   "t1": "@cuts[1]",
-   "palette": {
-    "field": "#EDE7DA",
-    "fieldHot": "#FFFFFF",
-    "ink": "#0B0B0B",
-    "numbField": "#9A9C9E",
-    "numbFigure": "#6E7072",
-    "rule": "#0B0B0B",
-    "amber": "#F0A23B"
-   },
-   "budgetMs": 9,
-   "brief": "D1 final chorus, crowd variant 'flood'. Inverted: bone field, ink figures. The lattice fills the frame: 81 columns at x=12+24c and 33 rows at y=620+33r (r -18..14), figures at 0.7 scale, giving 2,673 drawImage calls of two cached sprites (upright and pre-squashed). Translate only, no rotation, never one path. Field = mix(bone, #FFFFFF, loud²) and ink stays #0B0B0B, so contrast peaks at @loudest. Ink home line at y=620. JUMP: every figure rises J=P.jump*drums_rel*4u(1-u) with u=beat_phase, scaled ×1.25 on beats 1 and 3 and ×0.8 on beats 2 and 4, landing exactly on the beat. It uses the squash sprite for 0.1 s after a landing when kick>0.3. Individuality (height and phase jitter) is scaled by 1-numb_accum. COUPLE: columns 39 and 40 of row 0. The self has a filled gold head and stands +2 px per semitone above tonic 59; hers is a hollow gold head ring. They are the only colour. SUSPENSION (numb windows, hard-gated): a 2 px ink rule sweeps y -10→1090 over the window. Each figure it passes blends over 0.2 s to the apex pose and hangs there. Behind the rule the field drains to #9A9C9E and figures to #6E7072, and the gold drains, while her ring keeps P.ringKeep. At @numb[2].t1-0.18s every hanging figure falls (inQuad) and lands on the t1 downbeat with the squash sprite and P.slam, an 8 px home-line thump; colour returns over 1 bar. In @numb[3] they are still hanging at the cut. Frost 0.35 softens the frozen frame. Must NOT strobe, flicker, shake the camera or glow.",
-   "params": {
-    "variant": "flood",
-    "count": 2673,
-    "cols": 81,
-    "colPitch": 24,
-    "rowMin": -18,
-    "rowMax": 14,
-    "rowGap": 33,
-    "homeY": 620,
-    "figScale": 0.7,
-    "jump": 14,
-    "accent13": 1.25,
-    "accent24": 0.8,
-    "tonicMidi": 59,
-    "selfPxPerSemi": 2,
-    "coupleCols": [
-     39,
-     40
-    ],
-    "numbGain": 1,
-    "ruleY0": -10,
-    "ruleY1": 1090,
-    "apexBlend": 0.2,
-    "dropDur": 0.18,
-    "slamPx": 8,
-    "ringKeep": [
-     [
-      "@numb[2].t0",
-      0.6
-     ],
-     [
-      "@numb[3].t0",
-      0.6
-     ],
-     [
-      "@numb[3].t1",
-      0.35
-     ]
-    ],
-    "slam": [
-     [
-      "@numb[2].t1-1f",
-      0
-     ],
-     [
-      "@numb[2].t1",
-      1,
-      "step"
-     ],
-     [
-      "@numb[2].t1+0.3s",
-      0,
-      "outQuad"
-     ]
-    ]
-   },
-   "post": {
-    "bloom": 0,
-    "bloomRadius": 14,
-    "vignette": 0.06,
-    "grain": 0.04,
-    "frost": 0.35,
-    "frostTint": "#9A9C9E"
-   }
-  },
-  {
-   "id": "ember",
-   "scene": "ember",
-   "t0": "@cuts[1]",
-   "t1": "@end",
-   "palette": {
-    "ink": "#050505",
-    "bone": "#CFC9BE",
-    "amber": "#F0A23B"
-   },
-   "budgetMs": 3,
-   "brief": "E1 outro. The hard cut is honoured: the first P.blackFrames frames are pure ink. Then two things appear. A 1 px bone home line (alpha 0.3+0.5*pad_lvl, length P.lineLen, centred), and her hollow gold ring (r=22, 2 px) at (960,620), the one thing carried out of the crowd. The voice is already on the tonic: a bone dot (r=5, drained of colour since the last wipe) sits on the line 60 px left of the ring and swells with voc_lvl on each final syllable onset. P.merge slides it into the ring by the voice exit (@exits[6].t). Then the ring fills from inside: an inner gold disc of radius 22*sqrt(P.fill), full by @end_stop-1bar. The self regains colour only by becoming one disc with what it still wants, resting on home. Ring stroke breathes 2+pad_rel. The whole drawing scales about (960,620) by P.pull (a slow pull-back). The engine blacks out every frame from @end_stop, on the pad's hard stop. Nothing fades and nothing drifts. Frost: none. Must NOT add a halo glow, falling afterimages, a fade or any text.",
-   "params": {
-    "tonicMidi": 59,
-    "homeY": 620,
-    "blackFrames": 2,
-    "lineLen": [
-     [
-      "@cuts[1]",
-      1536
-     ],
-     [
-      "@end_stop",
-      420,
+      600,
       "smooth"
      ]
-    ],
+    ]
+   },
+   "post": {
+    "bloom": 0.22,
+    "bloomRadius": 22,
+    "vignette": 0.15,
+    "grain": 0.03,
+    "paper": 0.15,
+    "zoom": 0.01,
+    "zoomBy": "kick"
+   },
+   "brief": "C1 verse in the new key, frames 2933-3984: THE GOLDEN MIRROR LAKE, the warmest, most beautiful world in the film (the young-love verse). Steady drums all through, felt gently. WORLD: a golden-hour sky (worldkit.field, stops skyTop/skyMid/skyLow, low contrast, slow) with a huge low sun (r 180, sun colour, big sunGlow glow, slow soft rays) whose height follows P.sunY; the horizon is at y=560; below it a still lake that MIRRORS the world: draw everything above the horizon into a layer (g.layer), then draw it flipped below the horizon, darkened 35% toward lake colour, with a horizontal ripple distortion (redraw it in ~60 thin horizontal slices offset by small sine waves, amplitude boosted by snare impulses). FOREGROUND: a dandelion meadow along the bottom (y > 860): ~260 stems (stem colour) swaying with the beat (a 4-degree sway on beat_phase, phase-shifted by x) topped by white seed puffs (stamped cached sprites); ~80 fireflies (firefly colour) wandering and twinkling on hats; loose seeds drifting across the frame all the time (closed-form particles). ARRIVAL: on the first frame Kit (KIT.teen) and June (JUNE.teen) burst up out of the lake at centre (splash rings on the water, droplets) and wade to the shore (2 s), then walk along the shore together hand in hand (side view, walk phase locked to mt/2, armTo IK for the joined hands), then from ~frame 3050 dance facing each other (cycles.dance 'sway', phase = beat_phase) in the middle third of the frame. DRUMS: each kick makes 1-3 nearby puffs release a burst of 10-20 seeds; snares ripple the reflection; hits pulse the sun glow +15%. FEELINGS GONE at P.feelingsGone (frame 3195): June dissolves into ~300 dandelion seeds sampled from her silhouette (head, body, limbs), which blow away up-right and out of frame over 3 s while Kit reaches after them (puppet.armTo toward the seeds). SETTLING at P.settle (frame 3310): along the far shore (y ~540-560, small in the distance) little houses appear one per downbeat (8 houses, from the left), their windows lighting warm; FRIENDS[0..3].teen sit in pairs on benches in front of the nearest two (poses.sit, placed with y). Kit walks alone along the shore (slow walk, phase mt/4). HELD ii (P.heldIi -> P.home, frames 3708-3874): the sun sinks (P.sunY) and the sky deepens toward plum. HOME at P.home and the confession P.confess (frames 3874-3897+): seeds swirl back out of the sky and form June's silhouette among the clouds for ~2 s (a ghostly constellation of seeds, alpha 0.7), then scatter. LAST BAR from P.crackT0 (frame 3929): fine bright cracks (crack colour, 1-3 px, branching polylines) spread across the sky from the sun, faster and faster, setting up the next scene's shatter on frame 3985. KEY FRAMES: 2933, 2940, 2990, 3050, 3100, 3195, 3220, 3260, 3310, 3400, 3500, 3708, 3800, 3874, 3897, 3929, 3960, 3984. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev). No strobes, glitch or kaleidoscope here (save them for the next scene)."
+  },
+  {
+   "id": "storm",
+   "scene": "storm",
+   "t0": "@downbeats[71]",
+   "t1": "@cuts[1]",
+   "budgetMs": 200,
+   "palette": {
+    "plum": "#2A0E3F",
+    "rose": "#E0478B",
+    "gold": "#FFC857",
+    "milk": "#EDE6FA",
+    "teal": "#5EC8D8",
+    "violet": "#7B3FA0",
+    "peach": "#FFB38A",
+    "crowd": "#1E1633",
+    "beam": "#FFF1C9"
+   },
+   "params": {
+    "loudest": "@loudest"
+   },
+   "post": {
+    "bloom": 0.22,
+    "bloomRadius": 20,
+    "vignette": 0.12,
+    "grain": 0.035,
+    "paper": 0.08,
+    "zoom": 0.035,
+    "zoomBy": "kick",
+    "rgbSplit": 6,
+    "rgbSplitBy": "snare",
+    "shake": 6,
+    "shakeBy": "hit"
+   },
+   "brief": "D1 final chorus, frames 3985-4925: THE KALEIDOSCOPE STORM, the ONE BIG TRIP of the film and the loudest section. It must stay beautiful and in the film's own palette (plum, rose, gold, milk, teal, violet, peach), never rainbow neon or raw fractal noise. The short cut of the video starts here (from frame 3970 with a fade from black), so the first seconds must grab. SOURCE LAYER (g.layer): a melting colour field (worldkit.field, stops in plum/violet/rose/peach/gold, warp ~1.6, colour cycle offset slowly sliding by 0.02 per bar, NOT a full-spectrum cycle) with the film's motifs flying through it: kites with ribbon tails, dandelion seeds, the banded moon, the spiral sun, waves of milk, gold rays. THE KALEIDOSCOPE: fx.kaleido of that layer with 8 wedges (12 after P.loudest), rotating slowly and jumping +15 degrees (eased over 0.15 s) on each downbeat; it fills the frame. At frame 3985 the sky SHATTERS into it: the first 0.4 s show shards of the previous gold sky flying outward (polygon shards with an echo trail) as the kaleidoscope opens behind them. FOREGROUND: a huge crowd of adult silhouettes (cast.crowdDesign(crowd, 'adult') stamped with puppet.puppetSprite, 300-600 figures in perspective rows across the bottom 45% of the frame) JUMPING IN UNISON on every beat (cycles.jump with u = beat_phase, quantised to 12 keys for sprite reuse), with KIT.adult in colour at the centre front, arms up. LIGHT BEAMS: 6 beams (worldkit.rays or long gradient wedges in beam colour) sweep across the sky, flicking to a new angle on each hit. KITES: on each snare, a kite streaks across the frame (a fast diagonal with a long ribbon). NUMB (F.ev.numb[2] frames 4372-4483 and [3] 4816-4926): the kaleidoscope MELTS (fx.melt with amount 0 -> 220 px following F.c.numb) and drains toward milk; the crowd FREEZES at the top of the jump (freeze clock tau(t) = t - 0.95*F.integral('numb', S.t0, t) drives every phase); after numb[2] ends (frame 4483) everything slams back on the beat. LOUDEST at P.loudest (frame 4777): a white-gold bloom burst (the engine flashes too) and the kaleidoscope opens to 12 wedges. The final numb window drains everything to milk white and freezes it; the engine hard-cuts at frame 4926 while it is still frozen. KEY FRAMES: 3970, 3985, 3990, 3998, 4050, 4150, 4300, 4372, 4420, 4483, 4486, 4600, 4777, 4780, 4816, 4870, 4925. Drums must drive it: jumps on beats, beams on hits, kites on snares, post zoom on kicks. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev)."
+  },
+  {
+   "id": "lastkite",
+   "scene": "lastkite",
+   "t0": "@cuts[1]",
+   "t1": "@end",
+   "budgetMs": 80,
+   "palette": {
+    "skyTop": "#05061A",
+    "skyLow": "#1B1446",
+    "star": "#FFF6E0",
+    "rock": "#2A2140",
+    "kite": "#FFC83D",
+    "string": "#FFE9B0",
+    "island": "#3B2350",
+    "house": "#F3D9E8",
+    "roof": "#9C3F6E",
+    "window": "#FFD27A",
+    "glow": "#FFD27A"
+   },
+   "params": {
+    "catch": "@exits[6].t",
     "pull": [
      [
       "@cuts[1]",
       1
      ],
      [
-      "@end_stop",
-      0.82,
-      "smooth"
-     ]
-    ],
-    "merge": [
-     [
-      "@exits[6].t-0.3s",
-      0
-     ],
-     [
-      "@exits[6].t",
-      1,
+      "@end_stop-0.2s",
+      0.32,
       "inOutCubic"
      ]
     ],
-    "fill": [
+    "tilt": [
      [
-      "@exits[6].t",
+      "@cuts[1]+1s",
       0
      ],
      [
-      "@end_stop-1bar",
+      "@end_stop-0.4s",
       1,
-      "smooth"
+      "inOutCubic"
      ]
     ]
    },
    "post": {
-    "bloom": 0.1,
-    "bloomRadius": 14,
-    "vignette": 0.18,
+    "bloom": 0.22,
+    "bloomRadius": 22,
+    "vignette": 0.22,
     "grain": 0.03,
-    "frost": 0
-   }
+    "paper": 0.18
+   },
+   "brief": "E1 outro, frames 4926-5146 (the engine blacks out every frame from 5099, the pad's hard stop; nothing needs drawing after that but draw normally anyway). THE LAST KITE, and the twist. A hard cut from the frozen white storm to a quiet night: a deep indigo sky (skyTop to skyLow) with ~400 stars, some twinkling; no drums. GROWN-UP KIT (cast.KIT.adult, front view, small: 160 px) stands alone on a small floating rock (rock colour, ~200 px wide) at the centre of the frame. A single glowing kite (kite colour, the same diamond with the ribbon tail as the first scene) drifts down from the top of the frame on a glowing string. The voice's last notes (F.ev.voc_notes after S.t0; onsets at frames 4939, 4946, 4949) each make the kite glow pulse. At P.catch (frame 4960, the voice's exit) Kit reaches up (puppet.armTo IK) and catches the string. THE TWIST (P.pull 1 -> 0.32 and P.tilt 0 -> 1 over the rest of the outro): the camera slowly pulls back and tilts up along the string. The string runs up and up into the sky, and at its top end is the little floating house from the first scene (same shapes and palette as the dusk scene's Kite Island: pale walls, pointed roof, one glowing round window), and in the glowing window the CHILD Kit (cast.KIT.child, small) is holding the other end of the same string. Both are visible together by ~frame 5080: the adult on the rock at the bottom, the child in the window at the top, one glowing string between them. Everything stays still and quiet except the kite's tail, the stars and a slow breathing glow on the string (pad_lvl). KEY FRAMES: 4926, 4930, 4939, 4960, 4990, 5030, 5080, 5098. Must NOT: no text or lyrics; no TV heads or symbolic heads; no rainbow-neon colour cycling or raw full-screen fractals; no Math.random/Date/performance or state between frames; no hard-coded song times (use P and F.ev). No fade (the engine's hard stop is the ending)."
   }
  ],
  "transitions": [
   {
    "type": "fade_from_black",
    "t": "0",
-   "dur": "0.3s",
-   "why": "The amber dot emerges with the first sung syllable (@entries[0].t = 0.11); nothing else is on screen yet."
+   "dur": "0.5s",
+   "why": "open on the dusk sky"
   },
   {
-   "type": "cut",
+   "type": "flash",
    "t": "@downbeats[32]",
-   "dur": "0.1s",
-   "why": "The bass entry is staged in-scene: the layout continues from memories and the grid starts swaying as one body. Rows ±3 punch in, and the home line thumps to 6 px on bass_on. A flash would blur the match frame."
+   "dur": "0.3s",
+   "params": {
+    "peak": 0.55,
+    "tau": 0.1,
+    "color": "#F3EEFF"
+   },
+   "why": "the island splashes down on the Milk Sea with the bass entry"
   },
   {
    "type": "cut",
    "t": "@cuts[0]",
    "dur": "0.1s",
-   "why": "Drums and bass stop together. The frozen grey grid holds for 2 frames, then drops through the home line, which stays because the pad holds the tonic. Silence is shown as a stop, not a hit."
+   "why": "drums and bass stop: hard cut under the milk"
   },
   {
    "type": "flash",
    "t": "@key_changes[0].t",
-   "dur": "0.4s",
+   "dur": "0.6s",
    "params": {
-    "peak": 0.15,
-    "tau": 0.12,
-    "color": "#E6A930"
+    "peak": 0.8,
+    "tau": 0.18,
+    "color": "#FFD27A"
    },
-   "why": "A small warm punctuation on the frame where the gold line reaches full width on the last fill hit and becomes home. The semitone lift itself is the in-scene 18 px slide."
+   "why": "the gold light bursts open on the key change"
   },
   {
    "type": "flash",
    "t": "@downbeats[71]",
-   "dur": "2f",
+   "dur": "0.25s",
    "params": {
-    "peak": 0.12,
-    "tau": 0.03,
-    "color": "#EDE7DA"
+    "peak": 0.7,
+    "tau": 0.07,
+    "color": "#FFFFFF"
    },
-   "why": "The ink-to-bone inversion is the real flash. Two bone frames only sharpen the flood cut."
+   "why": "the sky shatters into the final-chorus trip"
+  },
+  {
+   "type": "flash",
+   "t": "@loudest",
+   "dur": "0.5s",
+   "params": {
+    "peak": 0.45,
+    "tau": 0.15,
+    "color": "#FFF1C9"
+   },
+   "why": "the loudest moment blooms white-gold"
   },
   {
    "type": "cut",
    "t": "@cuts[1]",
    "dur": "0.1s",
-   "why": "Band out: from a bone frame of figures hanging mid-air to 2 frames of pure ink, then one hairline and her ring. The engine's blackout at @end_stop is the final hard stop, so no fade is added."
+   "why": "band out: hard cut to the night"
   }
- ],
- "credits": {
-  "scores": [
-   {
-    "angle": "BASELINE (video/treatments/numb-roomie.json): light-in-the-dark metaphor, silhouetted phone-screen crowd, orbiting lights, frost post for numbness",
-    "sync": 6,
-    "theme": 7,
-    "distinct": 6,
-    "feasible": 6,
-    "staging": 5,
-    "cliche_free": 4,
-    "total": 34,
-    "notes": "Coherent metaphor and correct @refs, but the briefs are thin and the main beats are mostly generic white flashes. Numbness relies on the 33 ms frost pass at gain 0.8-1.0, which washes every window the same way. The 'lift' palette is authored already hue-lifted and the engine then adds another +30 deg, so it is lifted twice and goes olive. A backlit concert crowd holding phone screens is a stock image. The hard cuts and the key change get the same flash language as the section entries. The 'align' params hard-code seconds (40.06, 43.22) where line refs exist."
-   },
-   {
-    "angle": "graphic-minimal: home hairline = tonic, amber dot = self at pitch height, grid of cut-paper figures = 'we all', numbness by reduction",
-    "sync": 9,
-    "theme": 9,
-    "distinct": 7,
-    "feasible": 9,
-    "staging": 7,
-    "cliche_free": 9,
-    "total": 50,
-    "notes": "Strongest concept. Pitch measured against the tonic is a literal, readable picture of the lyric's questions hanging off home and its confessions landing on it. The key change becomes the line moving up exactly one semitone, and the ending resolves onto the held tonic. It is cheap (about 22 ms total), fully pure, and has no visualizer tropes. Weaknesses: the first hard cut is undersold (a 0.16-alpha ghost), the key change has no physical punch, and the B1 'tightening' is too subtle to read. A few moments are mis-timed against the notes: the voice sits on the tonic right after the cut and on the tonic through the final syllables before the outro cut. Removing frost entirely leaves the numb texture to the rule alone."
-   },
-   {
-    "angle": "kinetic-physical: weighted bodies, beat-grid impacts, freeze as time braking, crowd hanging in mid-air, crane launch at the key change",
-    "sync": 8,
-    "theme": 8,
-    "distinct": 8,
-    "feasible": 5,
-    "staging": 9,
-    "cliche_free": 5,
-    "total": 43,
-    "notes": "Best staging ideas: a time-warp brake into the freeze instead of a pop, front-to-back recruitment as the quiet percussion builds, apex suspension in the numb windows with gravity returning on the I-chord downbeat, a crowd that never comes down at the second cut, and a loaded crouch before the lift. Costs are high: a 14-20 ms scene plus the 33 ms frost, a 36-shard clipped snapshot, and 1,300 LOD figures. The 3D phone-screen festival crowd, camera shake, crane, bokeh and hat strobes drift toward stock music-video and visualizer looks. The light collision at the flood reads as an explosion cliche."
-   }
-  ],
-  "grafts": [
-   "Base: graphic-minimal (the home line is the tonic, the dot's pitch height is measured against it, the 'we' row becomes a figure grid, numbness is a rule wipe with permanent residue, the key change is the line rising a semitone, the D1 ink-on-bone flood, the ring filling on the held tonic).",
-   "From kinetic-physical: the time-warp brake into each freeze (tau = tp + r(1 - exp(-(t - tp)/r)), r = 0.12 s) instead of a pose pop, applied per figure when the rule passes it in crowd_b1.",
-   "From kinetic-physical: front-to-back recruitment (join = clamp(1.6*drums_rel - |r|/6)), so the quiet percussion build spreads the sway outward from home. It replaces graphic-minimal's grid tightening.",
-   "From kinetic-physical: the frozen frame holds 2 frames at the first cut, then falls under analytic gravity. It is rebuilt as row strips of the crowd_b1 snapshot dropping through the home line, so it costs no clipping.",
-   "From kinetic-physical: the loaded spring before the lift, recast as each drum-fill hit between the pivot and the key change stepping the new gold home line wider, reaching full width on the hit at the key change.",
-   "From kinetic-physical: D1 apex suspension. The crowd hangs mid-air in the numb windows, gravity returns on the @numb[2].t1 downbeat with the hardest landing (squash plus home-line slam), and at @cuts[1] it is still in the air: they never come down.",
-   "From kinetic-physical: jump accents of ×1.25 on beats 1 and 3 and ×0.8 on 2 and 4, so the unison jump reads as groove rather than a metronome.",
-   "From kinetic-physical: the twitch on the drum pre-hit (@entries[2].t) anticipating the bass, and a shudder of the frozen grid on the B1 drum fill before the cut.",
-   "From kinetic-physical: the tether between the lovers that snaps on the feelings-gone line, drawn as a 1 px Saul Bass line.",
-   "From kinetic-physical: 2 frames of pure black after the second cut before the last image appears.",
-   "From BASELINE: the apart automation shape for the C1 orbit (re-keyed to line refs), the friends settling on downbeats, the light frost kept as texture during numb windows (gain 0.25/0.35, neutral grey) rather than as the main device, and the title timing at the pad entry.",
-   "Judge fixes from measured notes: the voice sits on the tonic (Bb3) right after the first cut and on B3 for the last syllables, so the dot rests on home there. The voice's B3 at 97.32 already sits on the semitone-up gold line. The orbit brake runs over 2 bars (@downbeats[68] to [70]) with mtw = mtStart + 4(2u - u²), so speed stays continuous and the pair stops level on the line. global degPerSemi = 20 and the void gold is authored #E6A930 (amber +10 deg) so it matches the engine's half-landed lift on the key-change frame."
-  ],
-  "rejected": [
-   "Kinetic: 3D silhouetted concert crowd holding glowing phone screens with a teal or white blaze backlight. It is a stock festival image (the baseline shares it) and breaks the flat graphic language.",
-   "Kinetic: camera shake, crane up/down, dolly and roll. They read as handheld music-video cliche and visualizer energy, and they conflict with the fixed home line that carries the pitch metaphor.",
-   "Kinetic: falling memory lights with bokeh, glow pools and stars in A1. Off-language, and glow and bokeh are generic.",
-   "Kinetic: 36-shard triangulated shatter of the snapshot. A glass-shatter cliche, and 36 clipped full-frame draws risk the budget. Replaced by row strips falling.",
-   "Kinetic: hat glints, backlight strobes on hits and per-hit floor rings and tile grids. Audio-reactive decoration that carries no story (visualizer).",
-   "Kinetic: the two lights colliding at @downbeats[71]. An explosion cliche; the pair resting side by side on home over the confession sung on the tonic is truer to the song.",
-   "Kinetic: an afterimage of 1,300 cold points falling in the outro. It contradicts 'they never come down'.",
-   "Baseline: white or cold flashes on every boundary, which flatten the hierarchy. The flood flash is cut to 2 frames, the key-change flash to a small gold 0.15, and the bass-entry flash is removed.",
-   "Baseline: frost at 0.8-1.0 as the main numb device. It is expensive and washes every window the same way; the rule wipe now carries numbness and frost is a light haze.",
-   "Baseline: the 'lift' palette authored already hue-lifted under degPerSemi 30. It is lifted twice and the amber goes olive (#CCB630).",
-   "Graphic-minimal: the 0.16-alpha ghost at the first hard cut. Too weak for one of the strongest beats.",
-   "Graphic-minimal: grid tightening driven by integrated drums_rel. Too subtle to read, and it moves the lattice that the wipe and snapshot geometry rely on.",
-   "Graphic-minimal: no flash at all at the key change. A tiny gold accent is kept so the lift lands as a beat.",
-   "Graphic-minimal: rows ±3 sliding in at 67.66. Moved to punch in on the bass downbeat to strengthen the chorus landing.",
-   "Graphic-minimal: the ember fill as a normalised pad integral. Replaced by keyframes ending at @end_stop-1bar, which is simpler and exact; pad_rel still breathes the stroke.",
-   "Any lyric-quoting or word-shaped visuals. Words and lines are used only as onset triggers (row reveals, tether snap, apart keys)."
-  ]
- }
+ ]
 }
