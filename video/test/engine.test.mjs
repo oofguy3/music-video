@@ -150,6 +150,10 @@ test('VJ post effects: driven amounts, deterministic, no-ops at zero', async () 
   }
   const weak = card(); post.apply(weak, { invert: 1, invertBy: 'kick' }, { frame: 7, c: { kick: 0.4 } });
   assert.ok(px(weak).equals(base));
+  const p1 = card(), p2 = card();
+  post.apply(p1, { paper: 0.4 }, F);
+  post.apply(p2, { paper: 0.4 }, F);
+  assert.ok(!px(p1).equals(base) && px(p1).equals(px(p2)));
 });
 
 test('scene libraries draw deterministically (puppet, worldkit, fx)', async () => {

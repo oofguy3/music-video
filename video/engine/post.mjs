@@ -7,6 +7,7 @@
 //   flash      0..1 a colour (flashColor) screened over the frame
 //   frost      the "numb" look: colour drains, a cold tint, a slight blur; amount = numb x gain
 //   bloom      quarter-res blurred copy screened back (soft glow around lights)
+//   paper      0..1 a fixed paper/canvas grain laid over the frame (overlay), so gradients read as painted
 //   vignette   darker corners
 //   grain      fine film grain: applied in finishRGBA (midtone-weighted, keeps pure black black)
 // Parameters (all optional, 0 disables): the above plus bloomRadius and frostTint. Each of zoom,
@@ -47,6 +48,37 @@ export class Post {
     }
     gctx.putImageData(img, 0, 0);
     this.vignetteCache = null;
+  }
+
+  /** The paper texture: mid-grey with soft blotches and fine fibrous grain, built once per size. */
+  _paper() {
+    if (this.paperTex) return this.paperTex;
+    const { w, h } = this;
+    const c = createCanvas(w, h), x = c.getContext('2d');
+    const img = x.createImageData(w, h), d = img.data;
+    const k = w / 1920;
+    const vn = (seed, px, py) => {                       // value noise on an integer lattice
+      const ix = Math.floor(px), iy = Math.floor(py), fx = px - ix, fy = py - iy;
+      const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+      const a = hash01(seed, ix, iy), b = hash01(seed, ix + 1, iy), cc = hash01(seed, ix, iy + 1), dd = hash01(seed, ix + 1, iy + 1);
+      return a + (b - a) * u + (cc - a) * v + (a - b - cc + dd) * u * v;
+    };
+    // coarse blotches on a small grid, upsampled by bilinear lookups; fine grain per pixel
+    const gs = 24 * k;
+    for (let y = 0, o = 0; y < h; y++) {
+      for (let xx = 0; xx < w; xx++, o += 4) {
+        const blot = vn(31, xx / (gs * 8), y / (gs * 8)) * 0.6 + vn(37, xx / (gs * 2), y / (gs * 2)) * 0.4;
+        const fibre = vn(41, xx / (3 * k), y / (9 * k));  // stretched: a faint vertical fibre
+        const grain = (hash32(xx, y, 43) & 255) / 255;
+        const val = 128 + (blot - 0.5) * 34 + (fibre - 0.5) * 18 + (grain - 0.5) * 22;
+        d[o] = d[o + 1] = d[o + 2] = Math.max(0, Math.min(255, val));
+        d[o + 3] = 255;
+      }
+    }
+    x.putImageData(img, 0, 0);
+    x.getImageData(0, 0, 1, 1);
+    this.paperTex = c;
+    return c;
   }
 
   /** A full-size scratch canvas holding a copy of `src` (or empty when src is null). */
@@ -156,6 +188,15 @@ export class Post {
       ctx.globalCompositeOperation = 'soft-light';
       ctx.fillStyle = css(P.frostTint || '#bfd4dc', 0.45 * frostAmt);
       ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    const paper = Math.min(1, P.paper ?? 0);
+    if (paper > 0.004) {
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = paper;
+      ctx.drawImage(this._paper(), 0, 0);
+      ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
 
