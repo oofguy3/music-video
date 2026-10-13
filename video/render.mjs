@@ -9,6 +9,7 @@
 //   node render.mjs review                    the whole review pack (sheets, strips, filmstrip, metrics)
 //   node render.mjs hashes --frames 1,2,3     SHA-256 of rendered RGBA (determinism checks)
 //   node render.mjs cut                       short cut (final chorus + outro) from the full render
+//   node render.mjs web --src FILE [--cap 29]  delivery copy that fits a size cap (two-pass, light denoise)
 //   node render.mjs bench [--entry id]        ms/frame per timeline entry at 1080p
 //   node render.mjs purity --entry id         same frames forward/1 worker vs reverse/2 workers
 //
@@ -23,7 +24,7 @@ import { fileURLToPath } from 'url';
 import { createCanvas, ImageData } from './engine/canvas.mjs';
 import { parseRange, stamp } from './engine/clock.mjs';
 import { Features } from './engine/features.mjs';
-import { cutArgs, encodeArgs, ffprobe, run, spawnEncoder, X264 } from './engine/ffmpeg.mjs';
+import { cutArgs, encodeArgs, ffprobe, run, spawnEncoder, webArgs, X264 } from './engine/ffmpeg.mjs';
 import { createRenderer } from './engine/frame.mjs';
 import { renderFrames } from './engine/pool.mjs';
 import { resolveTime, Treatment } from './engine/treatment.mjs';
@@ -294,6 +295,23 @@ async function cut() {
   log(`short cut frames ${startFrame}..${endFrame} -> ${out}`);
 }
 
+/** A delivery copy that fits a size cap (default 29 MiB): node render.mjs web --src FILE [--cap 29] [--name OUT]. */
+async function web() {
+  const src = path.resolve(args.src || path.join(outDir, `${slug}.mp4`));
+  const info = ffprobe(src);
+  const durationS = Number(info.format.duration);
+  const out = path.join(path.dirname(src), args.name || `${path.parse(src).name}-web.mp4`);
+  guardIgnored(path.dirname(out));
+  const passlog = path.join(outDir, 'work', `x264-${path.parse(out).name}`);
+  fs.mkdirSync(path.dirname(passlog), { recursive: true });
+  const w = webArgs({ src, out, durationS, capMiB: Number(args.cap || 29), denoise: !args['no-denoise'], preset: args.preset || 'slow', passlog });
+  log(`web: ${path.basename(src)} -> ${path.basename(out)} at ${w.videoK} kb/s video (${durationS.toFixed(2)} s)`);
+  run(w.pass1);
+  run(w.pass2);
+  for (const f of fs.readdirSync(path.dirname(passlog))) if (f.startsWith(path.basename(passlog))) fs.rmSync(path.join(path.dirname(passlog), f));
+  log(`wrote ${out} (${(fs.statSync(out).size / 1048576).toFixed(1)} MiB)`);
+}
+
 async function bench() {
   const tr = await treatment();
   const fps = feats().fps;
@@ -342,7 +360,7 @@ async function probe() {
   console.log(JSON.stringify(ffprobe(path.resolve(args._[1]), { countFrames: !!args.count }), null, 1));
 }
 
-const COMMANDS = { full: () => encode('full'), preview: () => encode('preview'), stills, sheet, strip, review, hashes, cut, bench, purity, probe };
+const COMMANDS = { full: () => encode('full'), preview: () => encode('preview'), stills, sheet, strip, review, hashes, cut, web, bench, purity, probe };
 
 if (!COMMANDS[cmd]) {
   console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 17).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));

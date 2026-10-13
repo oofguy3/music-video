@@ -57,6 +57,26 @@ export function cutArgs({ src, audio, sr = 44100, fps, startFrame, endFrame, fad
     '-c:a', 'aac', '-b:a', '256k', '-movflags', '+faststart', out];
 }
 
+/**
+ * A delivery copy of a finished render sized to fit a cap: two-pass x264 at the bitrate that fills
+ * `capMiB`, with a light temporal/spatial denoise (grain costs bits that a small file cannot afford).
+ * Returns the argument lists for pass 1 and pass 2. Frames, timing and colour tags are unchanged.
+ */
+export function webArgs({ src, out, durationS, capMiB = 29, audioK = 160, preset = 'slow', denoise = true, passlog }) {
+  const totalK = (capMiB * 1024 * 1024 * 8 * 0.96) / 1000 / durationS;
+  const videoK = Math.max(300, Math.floor(totalK - audioK));
+  const vf = [denoise ? 'hqdn3d=1.2:1.0:4:4' : null, 'format=yuv420p'].filter(Boolean).join(',');
+  const common = ['-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-vf', vf,
+    '-c:v', 'libx264', '-preset', preset, '-b:v', `${videoK}k`, '-maxrate', `${Math.round(videoK * 2.2)}k`, '-bufsize', `${videoK * 4}k`,
+    '-tune', 'film', '-profile:v', 'high', '-x264-params', 'aq-mode=3:aq-strength=0.9:keyint=120:min-keyint=15',
+    '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv', '-passlogfile', passlog];
+  return {
+    videoK,
+    pass1: [...common, '-pass', '1', '-an', '-f', 'mp4', '/dev/null'],
+    pass2: [...common, '-pass', '2', '-c:a', 'aac', '-b:a', `${audioK}k`, '-movflags', '+faststart', out],
+  };
+}
+
 export function run(args) {
   const r = spawnSync('ffmpeg', args, { stdio: ['ignore', 'inherit', 'inherit'] });
   if (r.status !== 0) throw new Error(`ffmpeg failed (${r.status})`);
