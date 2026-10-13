@@ -363,7 +363,7 @@
     "bone": "#EDE7DA",
     "amber": "#F0A23B"
    },
-   "budgetMs": 3,
+   "budgetMs": 4,
    "brief": "C1 in the new key. Ink field. Home line y=620, 1536 px, width 1.5+1.5*bass_lvl, bone. Amber is authored and the engine lift (global degPerSemi 20) settles it to gold over the first beat. SELF: filled disc r=20+4*voc_lvl+3*kick*drums_rel. HER: hollow ring r=22, stroke 1+2.5*pad_lvl, alpha P.ringAlpha. The pair orbits (960,620) at R=26+400*P.apart, angle=2*pi*mtw/8: one turn per 2 bars, level on the line every downbeat. Trails are the last 90 deg of each path as a 1.5 px arc in 24 segments fading to 0. TETHER: a 1 px bone line joins the centres while P.tether=1. When it drops to 0 at P.tetherSnap (the feelings-gone line) it snaps at the midpoint and each half retracts into its body (outExpo 0.4 s after P.tetherSnap). The orbit then widens. FRIENDS: P.friends steps once per downbeat (count n). Pair k (k = 0..n-1) starts on the k-th downbeat after P.friendsT0, i.e. F.ev.downbeats[i0 + k] where F.ev.downbeats[i0] lands on P.friendsT0 (never re-derive it from F.last, or the newest pair re-drops on every later downbeat). Two touching bone dots (r=6) drop from y=300 onto the line (outExpo, 1 beat) at x=960±(480+64*floor(k/2)), alternating sides. Landed pairs never move again. While the voice holds the tonic (voc_midi=59) the disc gets a 1 px bone outline. BRAKE: u=P.brake (linear across the 2 bars from P.brakeT0). mtw = F.c.mt before P.brakeT0, then F.col('mt', P.brakeT0)+4*(2u-u²), which holds at +4 once u=1. Speed is continuous and the pair stops level on the line at @downbeats[70] and stays there until the cut. apart closes to 0, so disc and ring rest side by side on home through the held tonic. Frost: none. Must NOT add drum rings, floor grids, glow or a collision. CONTINUITY: the void scene's gold line (one semitone above, sliding down 18 px over the last beat) has reached 4 of 5 fill steps on its last frame; the 5th fill hit lands on this entry's first frame. So on the first frame the home line is already full width, and it starts in S.palette.amber (which the lift turns to the void's gold) and blends to bone over the first beat.",
    "params": {
     "homeY": 620,
@@ -609,7 +609,7 @@
     "bone": "#CFC9BE",
     "amber": "#F0A23B"
    },
-   "budgetMs": 1,
+   "budgetMs": 3,
    "brief": "E1 outro. The hard cut is honoured: the first P.blackFrames frames are pure ink. Then two things appear. A 1 px bone home line (alpha 0.3+0.5*pad_lvl, length P.lineLen, centred), and her hollow gold ring (r=22, 2 px) at (960,620), the one thing carried out of the crowd. The voice is already on the tonic: a bone dot (r=5, drained of colour since the last wipe) sits on the line 60 px left of the ring and swells with voc_lvl on each final syllable onset. P.merge slides it into the ring by the voice exit (@exits[6].t). Then the ring fills from inside: an inner gold disc of radius 22*sqrt(P.fill), full by @end_stop-1bar. The self regains colour only by becoming one disc with what it still wants, resting on home. Ring stroke breathes 2+pad_rel. The whole drawing scales about (960,620) by P.pull (a slow pull-back). The engine blacks out every frame from @end_stop, on the pad's hard stop. Nothing fades and nothing drifts. Frost: none. Must NOT add a halo glow, falling afterimages, a fade or any text.",
    "params": {
     "tonicMidi": 59,
@@ -661,7 +661,7 @@
     ]
    },
    "post": {
-    "bloom": 0.15,
+    "bloom": 0.1,
     "bloomRadius": 14,
     "vignette": 0.18,
     "grain": 0.03,
