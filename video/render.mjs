@@ -295,7 +295,7 @@ async function cut() {
   log(`short cut frames ${startFrame}..${endFrame} -> ${out}`);
 }
 
-/** A delivery copy that fits a size cap (default 29 MiB): node render.mjs web --src FILE [--cap 29] [--name OUT]. */
+/** A delivery copy that fits a size cap (default 29 MiB): node render.mjs web --src FILE [--cap 29] [--size 1280x720] [--name OUT]. */
 async function web() {
   const src = path.resolve(args.src || path.join(outDir, `${slug}.mp4`));
   const info = ffprobe(src);
@@ -304,7 +304,8 @@ async function web() {
   guardIgnored(path.dirname(out));
   const passlog = path.join(outDir, 'work', `x264-${path.parse(out).name}`);
   fs.mkdirSync(path.dirname(passlog), { recursive: true });
-  const w = webArgs({ src, out, durationS, capMiB: Number(args.cap || 29), denoise: !args['no-denoise'], preset: args.preset || 'slow', passlog });
+  const w = webArgs({ src, out, durationS, capMiB: Number(args.cap || 29), denoise: !args['no-denoise'], preset: args.preset || 'slow', passlog,
+    size: typeof args.size === 'string' ? args.size : null });
   log(`web: ${path.basename(src)} -> ${path.basename(out)} at ${w.videoK} kb/s video (${durationS.toFixed(2)} s)`);
   run(w.pass1);
   run(w.pass2);

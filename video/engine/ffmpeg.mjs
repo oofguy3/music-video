@@ -62,10 +62,12 @@ export function cutArgs({ src, audio, sr = 44100, fps, startFrame, endFrame, fad
  * `capMiB`, with a light temporal/spatial denoise (grain costs bits that a small file cannot afford).
  * Returns the argument lists for pass 1 and pass 2. Frames, timing and colour tags are unchanged.
  */
-export function webArgs({ src, out, durationS, capMiB = 29, audioK = 160, preset = 'slow', denoise = true, passlog }) {
+export function webArgs({ src, out, durationS, capMiB = 29, audioK = 160, preset = 'slow', denoise = true, passlog, size = null }) {
   const totalK = (capMiB * 1024 * 1024 * 8 * 0.96) / 1000 / durationS;
   const videoK = Math.max(300, Math.floor(totalK - audioK));
-  const vf = [denoise ? 'hqdn3d=1.2:1.0:4:4' : null, 'format=yuv420p'].filter(Boolean).join(',');
+  // size "1280x720": a smaller frame holds up far better than 1080p at low bitrates
+  const scale = size ? `scale=${size.replace('x', ':')}:flags=lanczos+accurate_rnd+full_chroma_int:out_color_matrix=bt709:out_range=tv` : null;
+  const vf = [denoise ? 'hqdn3d=1.2:1.0:4:4' : null, scale, 'format=yuv420p'].filter(Boolean).join(',');
   const common = ['-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-vf', vf,
     '-c:v', 'libx264', '-preset', preset, '-b:v', `${videoK}k`, '-maxrate', `${Math.round(videoK * 2.2)}k`, '-bufsize', `${videoK * 4}k`,
     '-tune', 'film', '-profile:v', 'high', '-x264-params', 'aq-mode=3:aq-strength=0.9:keyint=120:min-keyint=15',

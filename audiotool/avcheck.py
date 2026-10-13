@@ -205,7 +205,14 @@ def main(argv=None) -> int:
         report["stop"] = stop_check(Y, int(math.floor(stop * fps + 0.5)))
     if a.plot:
         report["plot"] = plot_timeline(Y, D, motion, a.plot)
-    report["av"] = av_offset(a.video, a.mix, start_sample_44k=int(round(a.start_frame * motion["sr"] / fps)))
+    # sample windows that fit the video (a short cut is shorter than the default 30/90/150 s windows)
+    dur = float(report["probe"]["duration"] or 0)
+    windows, span = (30.0, 90.0, 150.0), 10.0
+    if dur and dur < 170:
+        span = min(10.0, dur * 0.2)
+        windows = tuple(round(dur * f, 2) for f in (0.12, 0.42, 0.7))
+    report["av"] = av_offset(a.video, a.mix, start_sample_44k=int(round(a.start_frame * motion["sr"] / fps)),
+                             windows=windows, span=span)
     text = json.dumps(report, indent=1)
     if a.json:
         Path(a.json).write_text(text)
