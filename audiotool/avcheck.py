@@ -6,6 +6,7 @@
 - events: each listed frame shows a picture spike within +-1 frame
 - stop: the hard-stop frame is black while the frame before it is not
 - av: the video's audio lines up with mix.wav (cross-correlation lag in samples at 48 kHz)
+- plot: a timeline chart of picture level and change against the song's sections and events
 """
 
 from __future__ import annotations
@@ -128,6 +129,53 @@ def av_offset(video: str | Path, mix: str | Path, start_sample_44k: int = 0, sr:
     return {"lags_48k": lags, "ok": bool(lags) and all(abs(lag) <= 48 for lag in lags)}
 
 
+def plot_timeline(Y: np.ndarray, D: np.ndarray, motion: dict, path: str | Path) -> str:
+    """One PNG of the film's shape: mean picture level, picture change against the drum hits, and the
+    energy, voice and numb envelopes, with sections, cuts, the key change, numb windows and the stop."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fps = motion["fps"]
+    ev = motion["events"]
+    cols = motion["columns"]
+    n = min(len(Y), len(cols["hit"]))
+    x = np.arange(n) / fps
+    fig, axes = plt.subplots(3, 1, figsize=(18, 8), sharex=True, dpi=100)
+    luma = Y[:n].reshape(n, -1).mean(axis=1)
+    axes[0].plot(x, luma, lw=0.8, color="#333")
+    axes[0].set_ylabel("mean luma")
+    axes[1].plot(x, D[:n], lw=0.6, color="#1f5fbf", label="picture change")
+    hit = np.asarray(cols["hit"][:n], dtype=float)
+    axes[1].plot(x, hit * max(1e-6, float(np.percentile(D[:n], 99))), lw=0.5, color="#d0632a", alpha=0.7,
+                 label="hit (scaled)")
+    axes[1].set_ylabel("change")
+    axes[1].legend(loc="upper left", fontsize=8)
+    for name, color in (("energy", "#333"), ("voc_lvl", "#2a9d5c"), ("numb", "#7e8083"), ("pad_lvl", "#b08a2e")):
+        if name in cols:
+            axes[2].plot(x, np.asarray(cols[name][:n], dtype=float), lw=0.8, color=color, label=name)
+    axes[2].set_ylabel("features")
+    axes[2].legend(loc="upper left", fontsize=8, ncol=4)
+    for ax in axes:
+        for s in ev.get("sections", []):
+            ax.axvline(s["t0"], color="#999", lw=0.6, ls=":")
+        for nb in ev.get("numb", []):
+            ax.axvspan(nb[0], nb[1], color="#9aa0a6", alpha=0.18, lw=0)
+        for c in ev.get("cuts", []):
+            ax.axvline(c, color="#c0392b", lw=1.0)
+        for kc in ev.get("key_changes", []):
+            ax.axvline(kc["t"], color="#e6a930", lw=1.4)
+        if ev.get("end_stop") is not None:
+            ax.axvline(ev["end_stop"], color="#000", lw=1.2)
+    for s in ev.get("sections", []):
+        axes[0].text(s["t0"] + 0.4, axes[0].get_ylim()[1] * 0.92, s["label"], fontsize=9, color="#555")
+    axes[2].set_xlabel("seconds (red: hard cuts, gold: key change, black: stop, grey bands: numb windows)")
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+    return str(path)
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("video")
@@ -137,6 +185,7 @@ def main(argv=None) -> int:
     p.add_argument("--events", default="", help="comma-separated frames that must show a picture spike")
     p.add_argument("--start-frame", type=int, default=0, help="first song frame in this video (short cut)")
     p.add_argument("--json", help="write the report here")
+    p.add_argument("--plot", help="write a timeline chart (PNG) of picture level and change against the song")
     a = p.parse_args(argv)
     motion = json.loads(Path(a.motion).read_text())
     fps = motion["fps"]
@@ -154,6 +203,8 @@ def main(argv=None) -> int:
     stop = motion["events"].get("end_stop")
     if stop is not None:
         report["stop"] = stop_check(Y, int(math.floor(stop * fps + 0.5)))
+    if a.plot:
+        report["plot"] = plot_timeline(Y, D, motion, a.plot)
     report["av"] = av_offset(a.video, a.mix, start_sample_44k=int(round(a.start_frame * motion["sr"] / fps)))
     text = json.dumps(report, indent=1)
     if a.json:

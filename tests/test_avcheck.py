@@ -2,7 +2,7 @@ import subprocess
 
 import numpy as np
 
-from audiotool.avcheck import av_offset, event_frames, frame_diff, probe, stop_check, sync
+from audiotool.avcheck import av_offset, event_frames, frame_diff, plot_timeline, probe, stop_check, sync
 from audiotool.io import write_wav
 
 
@@ -34,6 +34,18 @@ def test_sync_finds_zero_lag():
     assert res[0]["best_lag"] == 0 and res[0]["r"] > 0.9
     late = np.roll(rise, 2)
     assert sync(late * 10, motion)[0]["best_lag"] == 2
+
+
+def test_plot_timeline_writes_a_png(tmp_path):
+    n = 120
+    Y = np.zeros((n, 4, 4), dtype=np.uint8)
+    Y[60:] = 150
+    cols = {k: [0.0] * n for k in ("hit", "energy", "voc_lvl", "numb", "pad_lvl")}
+    motion = {"fps": 30, "columns": cols, "events": {
+        "sections": [{"label": "A", "t0": 0, "t1": 2}, {"label": "B", "t0": 2, "t1": 4}],
+        "numb": [[1.0, 1.5, 1.0]], "cuts": [2.0], "key_changes": [{"t": 3.0}], "end_stop": 3.9}}
+    out = plot_timeline(Y, frame_diff(Y), motion, tmp_path / "t.png")
+    assert (tmp_path / "t.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n" and out.endswith("t.png")
 
 
 def test_probe_and_av_offset_on_a_tiny_render(tmp_path):
