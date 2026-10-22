@@ -1,0 +1,567 @@
+{
+ "song": "kaiser-emperor",
+ "title_of_film": "The Emperor",
+ "notes": "THE EMPEROR. A hype anime-edit music video for a Michael Kaiser (Blue Lock) character song: an original stylised version of the emperor striker (blond hair blue underneath, blue eyes, a smirk, a blue rose tattoo on the neck) in his black-and-red kit, his burgundy suit, and a red ermine-trimmed royal cape. Motifs: blue roses, the crown, chains, the ball, floodlit night stadiums, manga speed lines. Arc: a blue rose blooms in the dark and turns out to be the tattoo on his neck; a crown of light assembles as he claims the throne; he cuts through defenders under floodlights; the first KAISER IMPACT volley freezes time and blows the net into rose petals; he lounges on his throne among bouquets; a neon-blue night city; manga panels slam in on the beat; a rival's silhouette shatters inside his head; the second KAISER IMPACT is fired from the sky above a stadium and a giant crown descends; the outro is his quiet reign on the throne as the music fades. Every drum hit should move something.",
+ "global": {
+  "degPerSemi": 0,
+  "seed": 10
+ },
+ "title": {
+  "text": "The Emperor · 7emralds",
+  "t0": 1.5,
+  "t1": 9.0,
+  "fadeIn": 0.6,
+  "fadeOut": 0.8,
+  "x": 960,
+  "y": 1000,
+  "align": "center",
+  "size": 30,
+  "tracking": 0.36,
+  "color": "#F4E6A6",
+  "alpha": 0.9,
+  "font": "Inter Light"
+ },
+ "shortCut": {
+  "start": "@sections.A4.t0-2bar",
+  "fadeIn": 0.5
+ },
+ "post": {
+  "bloom": 0.2,
+  "bloomRadius": 18,
+  "vignette": 0.2,
+  "grain": 0.04,
+  "frost": 0,
+  "paper": 0
+ },
+ "timeline": [
+  {
+   "id": "rise",
+   "scene": "kzRise",
+   "t0": 0,
+   "t1": 24.81,
+   "budgetMs": 150,
+   "palette": {
+    "navy": "#05081F",
+    "royal": "#1F4FD8",
+    "rose": "#2E6BFF",
+    "roseGlow": "#7FB0FF",
+    "gold": "#FFD45A",
+    "chain": "#C9D2E0",
+    "fog": "#16205A"
+   },
+   "params": {
+    "humEnd": 10.5,
+    "revealT": "@entries[3].t",
+    "rapT": 12.85,
+    "visionT": 15.07,
+    "futureT": 19.99,
+    "rulerT": 21.61,
+    "kingT": 23.21
+   },
+   "post": {
+    "bloom": 0.28,
+    "bloomRadius": 22,
+    "vignette": 0.3,
+    "grain": 0.04,
+    "zoom": 0.02,
+    "zoomBy": "kick"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. A1 intro, frames 0-743 (bass and pad from the start, humming vocal 2.9-10 s, a short drum burst at P.revealT = 11.47 s (frame 344) to 13.3 s, the rap starting at P.rapT = 12.85 s). THE EMPEROR RISES. 0-10 s: deep navy darkness with drifting fog (worldkit.field, very dark, low contrast) and a few slow blue petals; hanging chains fade in and out of the dark at the edges (drawChain). At the centre a single BLUE ROSE (drawRose, large, r ~170) blooms: each humming note (F.ev.voc_notes onsets) opens it a step further and sends a soft ring of blue light outward; thorny vines (curved strokes with small thorn triangles) grow from it across the frame on each note. P.revealT (frame 344): the drum burst rattles the chains (they swing) and a white light flash. From P.rapT (frame 386) the camera PULLS BACK from the rose: it is the tattoo on the neck of Kaiser (KAISER_SUIT), seen in an extreme close-up portrait (use puppet.solve to place the head large: head radius ~250 px at first, shrinking as the camera pulls back), side-lit in blue, eyes closed... at P.visionT (frame 452) his eyes open: a cold blue glint (sparkle) in each eye. 17-22 s: keep pulling back to a waist-up and then full-figure shot of him standing in a dark hall, smirking, the rose on his neck glowing; behind him a giant CROWN made of gold light lines assembles: one segment on P.futureT (frame 600), more on P.rulerT (frame 648), and on P.kingT (frame 696) it completes with a gold burst and light rays, and the chains around the hall snap (drawChain broken 0->1). The last frames (696-743) push in on him with speed lines (speedLines, white, alpha 0.4) building to the engine's white flash at 24.81 s (frame 744). The engine draws the title card at the bottom centre from 1.5 to 9 s: keep that area dark and calm then. KEY FRAMES: 0, 90, 150, 240, 300, 344, 360, 386, 420, 452, 520, 600, 648, 696, 720, 743. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "field",
+   "scene": "kzField",
+   "t0": 24.81,
+   "t1": "@sections.A2.t0",
+   "budgetMs": 170,
+   "palette": {
+    "sky": "#060B2A",
+    "pitch": "#0E5A3A",
+    "pitchDeep": "#073322",
+    "line": "#E8F2FF",
+    "flood": "#EAF4FF",
+    "crowd": "#151A3A",
+    "rival": "#F2F4FA",
+    "rivalShorts": "#1B2340",
+    "gold": "#FFD45A"
+   },
+   "params": {
+    "kaiserT": 37.51,
+    "emperorT": 39.27
+   },
+   "post": {
+    "bloom": 0.22,
+    "bloomRadius": 18,
+    "vignette": 0.18,
+    "grain": 0.04,
+    "zoom": 0.03,
+    "zoomBy": "kick",
+    "shake": 5,
+    "shakeBy": "hit",
+    "rgbSplit": 4,
+    "rgbSplitBy": "snare"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. B1, frames 744-1202 (the beat is in from 25.29 s: about 150 BPM, kicks and snares all the way). THE FIELD: a NIGHT STADIUM. Build a shared stadium drawing in scenes/lib/kzstadium.mjs (you own it; kzImpact uses it too): tiered stands full of crowd (stamped silhouettes, crowd colour, phone-flash sparkles), four floodlight towers with big glowing lamps and light cones, the pitch in perspective (stripes, white lines, penalty box), a goal with a net. Kaiser (KAISER, the kit) dribbles the ball (drawBall, rolling at his feet) toward the camera in a low tracking shot (he stays centred and large, about 420 px tall; the pitch and stands scroll past). Rival defenders (rivalDesign in rival colours) rush in from the sides one or two per bar; on a beat he skips past each with a sharp sidestep: an echo trail of after-images (fx.echo of his figure in blue, alpha decaying), a burst of speed lines, and the defender spins away and falls. Floodlights flare on every kick, crowd flashes sparkle on hats, white streak lines (streakLines) rush past on snares. Cut the framing every 4 bars on a downbeat between: the low tracking shot, a side-on run (side view, full stride, running cycle locked to the beat), and a high wide shot of the whole stadium with him tiny and the defenders scattering. At P.kaiserT (frame 1125) he stops dead with his foot on the ball and spreads his arms (poses.armsUp variant), the crowd goes wild; at P.emperorT (frame 1178) a gold crown (drawCrown) flashes above his head with light rays until the end of the entry. KEY FRAMES: 744, 760, 800, 860, 920, 1000, 1060, 1125, 1150, 1178, 1202. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "impact",
+   "scene": "kzImpact",
+   "t0": "@sections.A2.t0",
+   "t1": 50.4,
+   "budgetMs": 200,
+   "palette": {
+    "sky": "#060B2A",
+    "pitch": "#0E5A3A",
+    "freeze": "#1B3A9E",
+    "comet": "#3DE0FF",
+    "cometCore": "#FFFFFF",
+    "rose": "#2E6BFF",
+    "roseDeep": "#14329A",
+    "gold": "#FFD45A"
+   },
+   "params": {
+    "powerT": 40.81,
+    "nameT": 41.79,
+    "strikeT": 42.37,
+    "goalT": 44.5,
+    "futureT": 45.62,
+    "rulerT": 47.22,
+    "kingT": 48.82
+   },
+   "post": {
+    "bloom": 0.28,
+    "bloomRadius": 22,
+    "vignette": 0.22,
+    "grain": 0.05,
+    "invert": [
+     [
+      42.37,
+      0
+     ],
+     [
+      42.37,
+      1,
+      "step"
+     ],
+     [
+      "42.37+2f",
+      0,
+      "step"
+     ],
+     [
+      "42.37+3f",
+      1,
+      "step"
+     ],
+     [
+      "42.37+4f",
+      0,
+      "step"
+     ]
+    ],
+    "shake": [
+     [
+      40.1,
+      0
+     ],
+     [
+      44.5,
+      0
+     ],
+     [
+      44.5,
+      14,
+      "step"
+     ],
+     [
+      46.5,
+      6,
+      "smooth"
+     ]
+    ],
+    "shakeBy": "hit",
+    "zoom": [
+     [
+      40.1,
+      0
+     ],
+     [
+      44.5,
+      0
+     ],
+     [
+      44.5,
+      0.035,
+      "step"
+     ]
+    ],
+    "zoomBy": "kick"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. A2, frames 1203-1511: the FIRST KAISER IMPACT. The drums drop out at the start (40.16 s) and slam back at P.goalT = 44.5 s (frame 1335). Use scenes/lib/kzstadium.mjs (written concurrently by the same builder who owns this scene). FREEZE (1203-1270): time slows almost to a stop: the stadium drains to a blue monochrome (freeze colour), speed lines hang still, dust motes float; Kaiser (KAISER) leaps into the air above the pitch, the ball rising in front of him, his body coiling for a scissor volley (blend poses: one leg drawn back high, arms out). On P.powerT (frame 1224) and P.nameT (frame 1254) blue energy rings converge on the ball. STRIKE at P.strikeT (frame 1271): his leg whips through and hits the ball: IMPACT FRAMES (the engine inverts frames 1271-1272 and 1274), a huge circular blue shockwave, radial impact lines (speedLines, dense, black and white), cracks in the air. 1272-1334: the ball becomes a COMET: a blue-white core with a long glowing trail (comet colours) flying toward the goal in slow motion, the camera following it; the shockwave ripples the pitch. GOAL at P.goalT (frame 1335, the drums return; the engine flashes white): the ball tears through the net, which EXPLODES into a storm of hundreds of blue rose petals (drawRose small, closed-form particles) and the stadium snaps back to full colour; the crowd erupts. 1335-1511: Kaiser lands and walks away from the goal toward the camera through the falling petals, smirking, the crowd chanting (stands pulsing on beats); on P.futureT, P.rulerT and P.kingT the petals swirl and flash gold; the crown (drawCrown) appears above him on P.kingT. KEY FRAMES: 1203, 1210, 1240, 1254, 1270, 1271, 1272, 1275, 1300, 1334, 1335, 1338, 1360, 1417, 1465, 1500, 1511. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "throne",
+   "scene": "kzThrone",
+   "t0": 50.4,
+   "t1": "@cuts[0]",
+   "budgetMs": 160,
+   "palette": {
+    "wall": "#0A1238",
+    "damask": "#1A2A6E",
+    "gold": "#FFD45A",
+    "goldDeep": "#B8860B",
+    "velvet": "#B3122B",
+    "velvetDeep": "#5E0A16",
+    "rose": "#2E6BFF",
+    "roseDeep": "#14329A",
+    "candle": "#FFC870",
+    "chain": "#C9D2E0"
+   },
+   "params": {},
+   "post": {
+    "bloom": 0.22,
+    "bloomRadius": 20,
+    "vignette": 0.26,
+    "grain": 0.035,
+    "zoom": 0.015,
+    "zoomBy": "kick"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. B2, frames 1512-2119 (beat in all through; the drums cut out at the end, frame 2120). THE THRONE ROOM. Build a shared drawing in scenes/lib/kzroyal.mjs (you own it; kzReign uses it too): a grand dark throne hall: deep blue walls with gold damask patterns (cached pattern), tall arched windows with moonlight, golden candelabras with flickering flames, chains hanging from the ceiling, a red carpet leading up steps to a huge gold-and-crimson THRONE, and bouquets of blue roses (drawRose clusters wrapped in white paper with gold ribbons) piled around it. Kaiser (KAISER, the kit, with drawCape: the red cape with the ermine collar draped over the throne) lounges sideways on the throne: one leg crossed over the other, chin resting on his hand, smirking (build this lounging pose with the rig: poses.sit plus arm angles; use armTo to rest the hand at the chin), the ball at his feet. Cut the framing every 4 bars on a downbeat: a wide symmetric shot of the hall, a medium shot of him lounging, a close-up of his face and hand (head large), a low angle from the floor past the ball, a slow dolly along the rose bouquets. Beats: on kicks the candle flames flare and the rose bouquets pulse 6%; on snares gold dust sparkles burst; chains swing to the beat; petals drift down all the time. KEY FRAMES: 1512, 1530, 1600, 1700, 1800, 1900, 2000, 2060, 2119. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "city",
+   "scene": "kzCity",
+   "t0": "@cuts[0]",
+   "t1": "@sections.C1.t0",
+   "budgetMs": 150,
+   "palette": {
+    "night": "#050A24",
+    "bokehBlue": "#2E6BFF",
+    "bokehCyan": "#3DE0FF",
+    "bokehGold": "#FFD45A",
+    "bokehRed": "#E2364B",
+    "glow": "#DCEBFF",
+    "rose": "#2E6BFF"
+   },
+   "params": {
+    "shootT": 72.05,
+    "lightT": 74.65,
+    "chainT": 77.61,
+    "crownT": 78.11,
+    "skyT": 79.65,
+    "drumsT": "@entries[11].t",
+    "armageddonT": 81.81,
+    "coverT": 84.07
+   },
+   "post": {
+    "bloom": 0.32,
+    "bloomRadius": 24,
+    "vignette": 0.26,
+    "grain": 0.045,
+    "zoom": [
+     [
+      70.65,
+      0
+     ],
+     [
+      80.92,
+      0
+     ],
+     [
+      80.92,
+      0.025,
+      "step"
+     ]
+    ],
+    "zoomBy": "kick"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. A3, frames 2120-2523: a fast rap verse over no drums until P.drumsT = 80.92 s (frame 2428), then the beat returns. NIGHT CITY CLOSE-UP. A cinematic close-up of Kaiser's face in three-quarter view (KAISER_SUIT head, very large: place it with puppet.solve), lit by the cold glow of a phone screen held near his cheek (a rounded rectangle of light in his hand at the lower left, its light washing his face; the hand from the rig), the blue rose tattoo on his neck glowing softly; behind him a night city out of focus: dozens of big soft bokeh circles (blue, cyan, gold, a few red) drifting slowly, rain streaks. Story beats on the words (frame = floor(t*30+0.5)): P.shootT (2162): a white sniper-line streaks across the frame. P.lightT (2240): the bokeh stretch into light-speed streaks for a beat. P.chainT (2328) and P.crownT (2343): a chain and then a gold crown flash as glowing icons over his hand. P.skyT (2390): the camera tilts up into the night sky (stars, a huge moon) and back down. P.drumsT (2428): the beat returns: the bokeh pulse on every kick. P.armageddonT (2454): the city lights turn red, flare and shake. P.coverT (2522): the frame FREEZES and turns into a manga cover: his face in high-contrast black and white with halftone shading (fx.halftone) and a bold border, ready for the next scene's panels. KEY FRAMES: 2120, 2140, 2162, 2200, 2240, 2290, 2328, 2343, 2390, 2428, 2454, 2490, 2520, 2523. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "panels",
+   "scene": "kzPanels",
+   "t0": "@sections.C1.t0",
+   "t1": "@sections.C2.t0",
+   "budgetMs": 170,
+   "palette": {
+    "paper": "#F2F4FA",
+    "ink": "#0B0B18",
+    "royal": "#1F4FD8",
+    "red": "#D11F35",
+    "gold": "#FFD45A",
+    "rose": "#2E6BFF",
+    "pitch": "#0E5A3A"
+   },
+   "params": {
+    "kingT": 85.09,
+    "gardenT": 86.01,
+    "scoreT": 93.03,
+    "glowT": 95.25,
+    "cameT": 100.08,
+    "sawT": 100.42,
+    "conqueredT": 100.8,
+    "kingT2": 102.08,
+    "smokedT": 103.6,
+    "sliceT": 106.48,
+    "eyeT": 107.42,
+    "boxT": 110.1
+   },
+   "post": {
+    "bloom": 0.12,
+    "bloomRadius": 16,
+    "vignette": 0.1,
+    "grain": 0.05,
+    "zoom": 0.025,
+    "zoomBy": "kick",
+    "rgbSplit": 5,
+    "rgbSplitBy": "snare",
+    "shake": 4,
+    "shakeBy": "hit"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. C1 and D1, frames 2524-3338, the beat in all through. MANGA PANELS: the screen is a comic page. Every bar (on the downbeat) the page re-lays out into 2-4 panels with bold black borders on a paper-white or royal-blue background; panels SLAM in (fx.slam scale overshoot) one per beat, with speed lines and halftone shading inside. Each panel is a little animated shot drawn with the rig and kaiser.mjs: Kaiser dribbling in side view (KAISER), defenders falling, the ball spinning toward the camera, an extreme close-up of his eyes, his smirk, his hand with the crown, the blue rose, chains snapping, the goal net rippling. Story beats: P.kingT (2553): a big panel with the crown. P.gardenT (2580): a panel full of blue roses. P.scoreT (2791): a panel where a cascade of balls pours into a net. P.glowT (2858): his hair glows with rim light. CAME, SAW, CONQUERED at P.cameT, P.sawT, P.conqueredT (frames 3002, 3013, 3024): three vertical panels slam in one after another (his eyes, his stride, him standing over fallen defenders). P.kingT2 (3062): the crown again. P.smokedT (3108): defenders vanish in puffs of smoke. D1 from 105 s: P.sliceT (3194): a diagonal SWORD-SLASH of white light splits the page in two along a line and the halves slide apart; P.eyeT (3223): a full-frame extreme close-up of one blue eye with a predator glint; P.boxT (3303): a top-down panel of the penalty box with him entering it. Keep it readable: at most 4 panels at once, each with one clear subject. KEY FRAMES: 2524, 2553, 2580, 2650, 2715, 2791, 2858, 2900, 3002, 3013, 3024, 3062, 3108, 3150, 3194, 3223, 3260, 3303, 3338. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "rival",
+   "scene": "kzRival",
+   "t0": "@sections.C2.t0",
+   "t1": "@sections.A4.t0",
+   "budgetMs": 160,
+   "palette": {
+    "void": "#04061A",
+    "royal": "#1F4FD8",
+    "cyan": "#3DE0FF",
+    "rivalGlow": "#7FE3FF",
+    "gold": "#FFD45A",
+    "glass": "#DCEBFF",
+    "board": "#0B1450",
+    "boardHi": "#1F2F8E"
+   },
+   "params": {
+    "rivalT": 111.58,
+    "heavenT": 113.7,
+    "visionT": 115.3,
+    "headT": 120.48,
+    "deadT": 122.1,
+    "lookT": 124.4,
+    "nameT": 124.94
+   },
+   "post": {
+    "bloom": 0.24,
+    "bloomRadius": 20,
+    "vignette": 0.3,
+    "grain": 0.05,
+    "zoom": 0.02,
+    "zoomBy": "kick",
+    "glitch": 0.3,
+    "glitchBy": "snare"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. C2, frames 3339-3771, the beat in all through. IN YOUR HEAD: a mind-game duel. An infinite dark CHESSBOARD pitch in perspective (navy and blue squares, glowing grid lines) under a void sky. Kaiser (KAISER) stands on one side, smirking; at P.rivalT (3347) a RIVAL appears opposite: an original rival striker drawn as a dark silhouette (rivalDesign with dark fills) with one glowing cyan eye (his 'vision', a light trail behind it). They circle each other on the board; on each beat a square lights up under one of them. P.heavenT (3411): a column of heavenly light falls on Kaiser. P.visionT (3459): the rival's eye flares and draws glowing predictive lines across the board (his vision), which Kaiser simply walks through. From 117 s Kaiser's afterimages multiply around the rival (fx.echo, blue), crowding him. P.headT (3614): the rival's silhouette CRACKS like glass (white crack lines spreading over his figure); P.deadT (3663): it SHATTERS into shards that fall and fade. P.lookT (3732) to the end: everything goes dark except a single spotlight on Kaiser; on P.nameT (3748) he looks straight at the camera (front view) and the rose on his neck glows. KEY FRAMES: 3339, 3347, 3380, 3411, 3459, 3500, 3560, 3614, 3630, 3663, 3700, 3732, 3748, 3771. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "crown",
+   "scene": "kzCrown",
+   "t0": "@sections.A4.t0",
+   "t1": "@sections.D2.t0",
+   "budgetMs": 200,
+   "palette": {
+    "sky": "#060B2A",
+    "skyHi": "#1F4FD8",
+    "comet": "#3DE0FF",
+    "cometCore": "#FFFFFF",
+    "gold": "#FFD45A",
+    "goldDeep": "#B8860B",
+    "rose": "#2E6BFF",
+    "stadiumLight": "#EAF4FF",
+    "cape": "#B3122B"
+   },
+   "params": {
+    "emperorT": 126.52,
+    "powerT": 128.06,
+    "nameT": 129.66,
+    "strikeT": 130.0,
+    "boomT": "@sections.C3.t0",
+    "chosenT": 132.84,
+    "numberT": 134.52,
+    "loudT": "@loudest"
+   },
+   "post": {
+    "bloom": 0.3,
+    "bloomRadius": 22,
+    "vignette": 0.15,
+    "grain": 0.04,
+    "zoom": 0.04,
+    "zoomBy": "kick",
+    "shake": 10,
+    "shakeBy": "hit",
+    "rgbSplit": 7,
+    "rgbSplitBy": "snare",
+    "invert": [
+     [
+      130.0,
+      0
+     ],
+     [
+      130.0,
+      1,
+      "step"
+     ],
+     [
+      "130.0+2f",
+      0,
+      "step"
+     ],
+     [
+      "130.0+3f",
+      1,
+      "step"
+     ],
+     [
+      "130.0+4f",
+      0,
+      "step"
+     ]
+    ]
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. A4 and C3, frames 3772-4108: the SECOND KAISER IMPACT and the CORONATION, the climax (C3 is the loudest section; @loudest is 135.93 s). A4 (3772-3916): high in a night sky above a stadium (seen from far above as a glowing oval ring of floodlights and crowd far below; draw it yourself in this scene), Kaiser (KAISER with drawCape billowing in the wind) RISES slowly into the air with the ball floating before him; P.emperorT (3796): the cape snaps open and light rays burst behind him; P.powerT (3842): blue energy rings converge on the ball, which starts glowing; P.nameT (3890): he draws his leg back, time slows, streak lines. STRIKE at P.strikeT (3900): impact frames (the engine inverts 3900-3901 and 3903), a gigantic shockwave ring across the sky, the ball becomes a blue comet diving down toward the stadium. BOOM at P.boomT (130.58 s, frame 3917; the engine flashes): the comet hits: a huge blue dome of light erupts over the stadium, rings of shockwaves roll across the stands, the sky fills with blue rose petals and gold confetti. CORONATION (3917-4108): Kaiser hovers above the light; at P.chosenT (3985) a GIANT CROWN (drawCrown, huge) descends from the sky and settles on his head, gold light pouring down; at P.numberT (4036) fireworks burst in gold and blue around the stadium; at P.loudT (4078) a white-gold bloom and the crown flares. The drums drive it: shockwave pulses and firework bursts on kicks, petals scatter on snares. KEY FRAMES: 3772, 3796, 3842, 3890, 3899, 3900, 3901, 3904, 3910, 3917, 3920, 3950, 3985, 4000, 4036, 4078, 4108. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  },
+  {
+   "id": "reign",
+   "scene": "kzReign",
+   "t0": "@sections.D2.t0",
+   "t1": "@end",
+   "budgetMs": 140,
+   "palette": {
+    "wall": "#0A1238",
+    "damask": "#1A2A6E",
+    "gold": "#FFD45A",
+    "velvet": "#B3122B",
+    "rose": "#2E6BFF",
+    "candle": "#FFC870",
+    "spot": "#DCEBFF"
+   },
+   "params": {
+    "voiceOut": "@exits[10].t",
+    "voiceIn": "@entries[14].t",
+    "voiceOut2": "@exits[11].t",
+    "padOut": "@exits[12].t",
+    "drumsOut": "@exits[13].t",
+    "bassOut": "@exits[14].t"
+   },
+   "post": {
+    "bloom": 0.24,
+    "bloomRadius": 20,
+    "vignette": 0.3,
+    "grain": 0.035,
+    "zoom": 0.012,
+    "zoomBy": "kick"
+   },
+   "brief": "LOOK: a polished anime-edit music video in a bold graphic style: deep royal blue and navy, gold, crimson and burgundy, white light, ink outlines; glow, rim light, depth and atmosphere; manga effects (speed lines, impact lines, halftone) used with taste; the character always readable and the focus. D2 outro, frames 4109-4803 (the song ends at 160.1 s; the engine fades to black from 157.49 s, frame 4725). THE REIGN: the aftermath, calm but alive. Use scenes/lib/kzroyal.mjs (the throne hall, built by the same builder). Kaiser (KAISER_SUIT, crowned with drawCrown on his head, the cape with drawCape) sits on the throne, relaxed, in a single cool spotlight; rose petals fall slowly; candles flicker; the beat still pulses in the lights on kicks. P.voiceOut (138.42 s, frame 4153) to P.voiceIn (143.73 s, frame 4312): the vocal is out: the camera slowly circles the throne (wide), the hall dim, only the beat in the candle flares. From P.voiceIn: a slow push-in toward his face; his smirk, the rose on his neck glowing brighter on each vocal note (F.ev.voc_notes). P.voiceOut2 (151.31 s, frame 4539): close-up of his eyes; one last glint. P.padOut and P.drumsOut (154.5 s / 154.67 s, frames 4635, 4640): the candles go out one by one on the last beats; P.bassOut (157.49 s, frame 4725): only the crown and his eyes glow as the engine fades to black. KEY FRAMES: 4109, 4150, 4200, 4312, 4400, 4500, 4539, 4600, 4640, 4700, 4725, 4790. Must NOT: no text, letters, numbers, logos or lyrics anywhere (only the engine's title card draws text); no copying of official anime art: use scenes/lib/kaiser.mjs (KAISER kit, KAISER_SUIT, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines, streakLines) and the puppet rig; no raw full-screen fractal noise or rainbow cycling; no Math.random/Date/performance or state between frames; no hard-coded song times in code (use P and F.ev)."
+  }
+ ],
+ "transitions": [
+  {
+   "type": "fade_from_black",
+   "t": "0",
+   "dur": "0.4s"
+  },
+  {
+   "type": "flash",
+   "t": 24.81,
+   "dur": "0.35s",
+   "params": {
+    "peak": 0.75,
+    "tau": 0.1,
+    "color": "#DCEBFF"
+   },
+   "why": "the crown completes on his name: into the stadium"
+  },
+  {
+   "type": "cut",
+   "t": "@sections.A2.t0",
+   "dur": "0.1s",
+   "why": "the drums drop out: time freezes"
+  },
+  {
+   "type": "flash",
+   "t": 44.5,
+   "dur": "0.45s",
+   "params": {
+    "peak": 0.9,
+    "tau": 0.12,
+    "color": "#FFFFFF"
+   },
+   "why": "the volley hits the net as the drums slam back"
+  },
+  {
+   "type": "flash",
+   "t": 50.4,
+   "dur": "0.3s",
+   "params": {
+    "peak": 0.45,
+    "tau": 0.1,
+    "color": "#FFD45A"
+   },
+   "why": "his name: into the throne room"
+  },
+  {
+   "type": "cut",
+   "t": "@cuts[0]",
+   "dur": "0.1s",
+   "why": "drums out: the night city"
+  },
+  {
+   "type": "flash",
+   "t": "@sections.C1.t0",
+   "dur": "0.3s",
+   "params": {
+    "peak": 0.6,
+    "tau": 0.08,
+    "color": "#FFFFFF"
+   },
+   "why": "the cover freeze opens into manga panels"
+  },
+  {
+   "type": "cut",
+   "t": "@sections.C2.t0",
+   "dur": "0.1s"
+  },
+  {
+   "type": "cut",
+   "t": "@sections.A4.t0",
+   "dur": "0.1s"
+  },
+  {
+   "type": "flash",
+   "t": "@sections.C3.t0",
+   "dur": "0.6s",
+   "params": {
+    "peak": 1.0,
+    "tau": 0.18,
+    "color": "#DCEBFF"
+   },
+   "why": "the second impact explodes over the stadium"
+  },
+  {
+   "type": "flash",
+   "t": "@loudest",
+   "dur": "0.45s",
+   "params": {
+    "peak": 0.5,
+    "tau": 0.12,
+    "color": "#FFD45A"
+   },
+   "why": "the loudest moment: gold"
+  },
+  {
+   "type": "cut",
+   "t": "@sections.D2.t0",
+   "dur": "0.1s"
+  },
+  {
+   "type": "fade_to_black",
+   "t": 157.49,
+   "dur": "2.6s",
+   "why": "the bass leaves: fade with the last note"
+  }
+ ]
+}

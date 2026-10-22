@@ -5,7 +5,8 @@
 // See video/README.md for the full contract. Missing modules are skipped so the registry works
 // while scenes are still being built.
 
-const NAMES = ['debug', 'title', 'transitions', 'dusk', 'milksea', 'deep', 'goldlake', 'storm', 'lastkite'];
+const NAMES = ['debug', 'title', 'transitions', 'dusk', 'milksea', 'deep', 'goldlake', 'storm', 'lastkite',
+  'kzRise', 'kzField', 'kzImpact', 'kzThrone', 'kzCity', 'kzPanels', 'kzRival', 'kzCrown', 'kzReign'];
 
 let cached = null;
 

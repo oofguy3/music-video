@@ -6,7 +6,8 @@
 //   "@sections.C1.t0"      start of section C1         "@end_stop"       the hard stop
 //   "@downbeats[51]"       a downbeat by index         "@loudest"
 //
-// followed by any number of offsets: "+2b" (beats), "-1bar", "+0.5s", "-3f" (frames).
+// followed by any number of offsets: "+2b" (beats), "-1bar", "+0.5s", "-3f" (frames). Plain seconds
+// take offsets too ("42.37+2f").
 // A parameter is a constant or keyframes [[time, value, ease?], ...]; the ease of a segment is the
 // one written on the key it moves towards. Values may be numbers, hex colours or number arrays. A
 // constant written as a reference ("@lines[23].t0") is resolved to the time of its landing frame.
@@ -23,8 +24,14 @@ export function resolveTime(x, feats) {
   if (typeof x === 'number') return x;
   if (typeof x !== 'string') throw new Error(`bad time ${JSON.stringify(x)}`);
   if (!x.startsWith('@')) {
-    const v = Number(x);
-    if (!Number.isFinite(v)) throw new Error(`bad time "${x}"`);
+    // a number of seconds, optionally with offsets: "42.37", "42.37+2f", "12-1b"
+    const m = /^(-?(?:\d+\.?\d*|\.\d+))((?:[+-](?:\d+\.?\d*|\.\d+)(?:bar|b|s|f))*)$/.exec(x.trim());
+    if (!m) throw new Error(`bad time "${x}"`);
+    let v = Number(m[1]);
+    for (const [, n, unit] of (m[2] || '').matchAll(OFF)) {
+      const k = Number(n);
+      v += unit === 's' ? k : unit === 'b' ? k * feats.beatS : unit === 'bar' ? k * feats.beatS * feats.bpb : k / feats.fps;
+    }
     return v;
   }
   const m = REF.exec(x);
@@ -96,7 +103,9 @@ export function compileParam(spec, feats) {
     return { t: snapToFrame(resolveTime(time, feats), feats.fps), value, ease: e };
   }).sort((p, q) => p.t - q.t);
   return (t) => {
-    if (t <= keys[0].t) return keys[0].value;
+    // At a key's own time that key's value applies; of several keys at one time the last wins, so
+    // [[t, 0], [t, 1, 'step']] switches to 1 exactly on t's frame.
+    if (t < keys[0].t) return keys[0].value;
     const last = keys[keys.length - 1];
     if (t >= last.t) return last.value;
     let i = 0;

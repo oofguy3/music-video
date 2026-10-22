@@ -80,12 +80,20 @@ test('treatment: time references, durations, keyframes, coverage', () => {
   assert.equal(resolveTime('@sections.B1.t0', F), 1.6);
   assert.equal(resolveTime('@numb[0].t1', F), 2.0);
   assert.equal(resolveTime('@end_stop', F), 3.5);
+  assert.ok(Math.abs(resolveTime('1.5+3f', F) - (1.5 + 3 / F.fps)) < 1e-9);
+  assert.ok(Math.abs(resolveTime('2-1b', F) - 1.6) < 1e-9);
+  assert.throws(() => resolveTime('2+x', F));
   assert.throws(() => resolveTime('@nope[0]', F));
   assert.throws(() => resolveTime('@cuts[9]', F));
   assert.ok(Math.abs(resolveDuration('2b', F) - 0.8) < 1e-9);
   const p = compileParam([[0, 0], ['@downbeats[1]', 1, 'linear'], [2.0, '#ffffff']], F);
   assert.equal(p(0.4), 0.5);
   assert.equal(compileParam(7, F)(1), 7);
+  const strobe = compileParam([[1.5, 0], [1.5, 1, 'step'], ['1.5+2f', 0, 'step']], F);
+  assert.equal(strobe(1.5 - 1 / F.fps), 0);
+  assert.equal(strobe(1.5), 1);
+  assert.equal(strobe(1.5 + 1 / F.fps), 1);
+  assert.equal(strobe(1.5 + 2 / F.fps), 0);
   assert.ok(Math.abs(compileParam('@downbeats[1]', F)(0) - 0.8) < 1e-9);    // constant reference
   assert.equal(compileParam('line', F)(0), 'line');
   assert.equal(compileParam('#E6A930', F)(0), '#E6A930');
@@ -184,4 +192,16 @@ test('scene libraries draw deterministically (puppet, worldkit, fx)', async () =
   assert.ok(Number.isFinite(ik.s) && Number.isFinite(ik.e));
   assert.equal(FX.slam(1, 2), 0);
   assert.ok(FX.slam(2.03, 2) > 0 && FX.slam(5, 2) > 0.99 && FX.slam(5, 2) < 1.01);
+});
+
+test('the kaiser-emperor treatment resolves against its analysis', { skip: !fs.existsSync(path.join(HERE, '../../out/kaiser-emperor/stages/motion.json')) }, async () => {
+  const F = Features.load(path.join(HERE, '../../out/kaiser-emperor/stages/motion.json'));
+  const spec = JSON.parse(fs.readFileSync(path.join(HERE, '../treatments/kaiser-emperor.json'), 'utf8'));
+  const { loadScenes } = await import('../scenes/index.mjs');
+  const reg = await loadScenes();
+  const tr = new Treatment(spec, F, reg);
+  assert.deepEqual(tr.coverageProblems(F.duration), []);
+  const impact = tr.timeline.find((e) => e.id === 'impact');
+  assert.equal(tr.postParams(impact, 1271 / F.fps).invert, 1);   // the strike lands on its frame
+  assert.equal(tr.postParams(impact, 1270 / F.fps).invert, 0);
 });

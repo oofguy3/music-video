@@ -34,14 +34,23 @@ test('scenes and render engine are pure (no Math.random, Date, performance)', ()
   }
 });
 
-test('no lyric lines in scenes or treatments', { skip: !fs.existsSync(path.join(ROOT, '../out/numb-roomie/stages/lyrics.json')) }, () => {
-  // Any run of 4 consecutive transcribed words appearing verbatim would be quoting the lyrics.
-  const lyr = JSON.parse(read(path.join(ROOT, '../out/numb-roomie/stages/lyrics.json')));
+const lyricFiles = () => {
+  const out = path.join(ROOT, '../out');
+  if (!fs.existsSync(out)) return [];
+  return fs.readdirSync(out).map((d) => path.join(out, d, 'stages', 'lyrics.json')).filter((f) => fs.existsSync(f));
+};
+
+test('no lyric lines in scenes or treatments', { skip: !lyricFiles().length }, () => {
+  // Any run of 4 consecutive transcribed words (from any analysed song) appearing verbatim would be
+  // quoting the lyrics.
   const norm = (x) => String(x).toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ');
   const runs = new Set();
-  for (const ln of lyr.lines || []) {
-    const ws = (ln.words || []).map((w) => norm(w[2]).trim()).filter(Boolean);
-    for (let i = 0; i + 4 <= ws.length; i++) runs.add(ws.slice(i, i + 4).join(' '));
+  for (const lf of lyricFiles()) {
+    const lyr = JSON.parse(read(lf));
+    for (const ln of lyr.lines || []) {
+      const ws = (ln.words || []).map((w) => norm(w[2]).trim()).filter(Boolean);
+      for (let i = 0; i + 4 <= ws.length; i++) runs.add(ws.slice(i, i + 4).join(' '));
+    }
   }
   const files = [...sceneFiles(), ...fs.readdirSync(path.join(ROOT, 'treatments')).map((f) => path.join(ROOT, 'treatments', f))];
   for (const f of files) {
