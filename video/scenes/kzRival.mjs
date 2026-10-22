@@ -16,7 +16,7 @@
 import { KAISER, KZ, rivalDesign, drawRose, speedLines } from './lib/kaiser.mjs';
 import { drawPuppet, solve, cycles, poses, blend, armTo } from './lib/puppet.mjs';
 import { hashU } from './lib/worldkit.mjs';
-import { echo } from './lib/fx.mjs';
+import { echo, halftone } from './lib/fx.mjs';
 
 export const meta = { type: 'kzRival', budgetMs: 160 };
 
@@ -32,7 +32,7 @@ export const defaults = {
   square: 1.8,   // chessboard square (m)
   orbit: 0.22,   // how fast they circle each other (rad/s)
   ring: 1.75,    // radius of the afterimage ring around the rival (m)
-  copies: 12,    // most afterimages at once
+  copies: 10,    // most afterimages at once
   seed: 7,
 };
 
@@ -202,7 +202,8 @@ function makeModel(F, P, T) {
     return A0 + om * (T.visionT - T.t0) + om * 0.35 * (1 - (1 - u) * (1 - u));
   };
   const aT0 = A(T.t0);
-  const yaw = (tt) => -aT0 - 0.85 * (A(tt) - aT0) + 0.16 * rampInt(tt, T.crowdT - 0.3, 0.6, T.slamT - 0.1, 0.5);
+  const yaw = (tt) => -aT0 - 0.85 * (A(tt) - aT0) + 0.16 * rampInt(tt, T.crowdT - 0.3, 0.6, T.slamT - 0.1, 0.5)
+    - 0.13 * rampInt(tt, T.deadT + 0.25, 0.6, T.nameT, 0.3);
   const axes = (tt) => { const y = yaw(tt); return { r: [Math.cos(y), -Math.sin(y)], f: [Math.sin(y), Math.cos(y)] }; };
   const rivalCircle = (tt) => { const a = A(tt); return [Rc * Math.cos(a), Rc * Math.sin(a)]; };
   const kaiserCircle = (tt) => { const a = A(tt); return [-Rc * Math.cos(a), -Rc * Math.sin(a)]; };
@@ -387,7 +388,7 @@ function silOf(g, name, src, bb, color) {
 /** A mirror image on the glossy board below the feet, fading out in bands. */
 function reflectionOf(g, src, bb, feetY, alpha, fade) {
   if (alpha <= 0.003) return;
-  const ctx = g.ctx, ds = g.scale, bands = 4;
+  const ctx = g.ctx, ds = g.scale, bands = 3;
   ctx.save();
   ctx.translate(0, 2 * feetY);
   ctx.scale(1, -1);
@@ -680,6 +681,9 @@ function shatterKit(g, pose, facing, pal, seed) {
   fx.setTransform(ds, 0, 0, ds, -bb.x0 * ds, -bb.y0 * ds);
   drawPuppet(fx, RIVAL, pose, { x: 0, ground: 0, scale, facing, view: 'side', devScale: ds });
   fx.save();
+  fx.beginPath();
+  fx.rect(bb.x0, bb.y0, bb.x1 - bb.x0, bb.y1 - bb.y0);
+  fx.clip();
   fx.globalCompositeOperation = 'destination-over';             // the glass aura, behind him
   drawPuppet(fx, RIVAL, pose, { x: 0, ground: 0, scale, facing, view: 'side', devScale: ds, outline: g.color.css(pal.cyan, 0.2), outlineW: 7 });
   fx.globalCompositeOperation = 'source-atop';
@@ -817,7 +821,7 @@ function drawBoard(g, t, F, T, cam, pal, lit, dim) {
   ctx.fillRect(0, hy, W, H - hy);
   // the lattice of the visible ground
   const zVis = (h * f) / Math.max(40, H + 40 - hy);
-  const zFar = 48, k = (W / 2 + 140) / f;
+  const zFar = 42, k = (W / 2 + 140) / f;
   const corners = [[-k * zVis, zVis], [k * zVis, zVis], [k * zFar, zFar], [-k * zFar, zFar]].map(([xc, zc]) => camToWorld(cam, xc, zc));
   let i0 = Infinity, i1 = -Infinity, j0 = Infinity, j1 = -Infinity;
   for (const [X, Z] of corners) { i0 = Math.min(i0, Math.floor(X / q)); i1 = Math.max(i1, Math.floor(X / q)); j0 = Math.min(j0, Math.floor(Z / q)); j1 = Math.max(j1, Math.floor(Z / q)); }
@@ -879,7 +883,7 @@ function drawBoard(g, t, F, T, cam, pal, lit, dim) {
   const kick = F.c.kick || 0;
   const drums = clamp((F.c.drums_lvl || 0) * 2.2);
   const lineA = (0.42 + 0.3 * kick) * (0.55 + 0.45 * drums) * (1 - 0.8 * dim);
-  if (lineA > 0.01) {
+  if (lineA > 0.09) {
     const zMin = zVis * 0.8;
     const ribbon = (P0, D, wm) => {
       const r = clipLine(cam, P0, D, zMin, zFar, k);
@@ -900,7 +904,7 @@ function drawBoard(g, t, F, T, cam, pal, lit, dim) {
     ctx.fill();
     ctx.restore();
   }
-  // fog: one band at the horizon, and the board darkening towards the camera
+  // fog: one band at the horizon
   const fy = Math.min(H - hy, (h * f) / 13);
   const fog = ctx.createLinearGradient(0, hy, 0, hy + fy);
   fog.addColorStop(0, css(pal.fog, 1));
@@ -908,12 +912,6 @@ function drawBoard(g, t, F, T, cam, pal, lit, dim) {
   fog.addColorStop(1, css(pal.fog, 0));
   ctx.fillStyle = fog;
   ctx.fillRect(0, hy, W, fy);
-  const by = H - 300;
-  const dk = ctx.createLinearGradient(0, by, 0, H);
-  dk.addColorStop(0, css(pal.void, 0));
-  dk.addColorStop(1, css(pal.void, 0.55));
-  ctx.fillStyle = dk;
-  ctx.fillRect(0, by, W, 300);
 }
 
 /** The void above the board: a dithered sky, stars that turn with the camera, the horizon glows. */
@@ -946,16 +944,12 @@ function drawSky(g, t, F, cam, pal, dim, kx, rx, rivalA) {
   ctx.fill();
   // the duel's colours on the horizon: crimson and gold behind Kaiser, cyan behind the rival
   const a = 1 - dim;
-  if (kx !== null) {
-    ctx.globalAlpha = 0.5 * a;
-    ctx.drawImage(g.sprites.glow(pal.crimson), kx - 760, hy - 300, 1520, 560);
-    ctx.globalAlpha = 0.26 * a;
-    ctx.drawImage(g.sprites.glow(pal.gold), kx - 320, hy - 110, 640, 200);
-  }
-  if (rx !== null && rivalA > 0) {
-    ctx.globalAlpha = 0.5 * a * rivalA;
-    ctx.drawImage(g.sprites.glow(pal.cyan), rx - 700, hy - 280, 1400, 520);
-  }
+  const half = (hex, x, w, h, al) => {                  // the upper half of a glow sprite, sitting on the horizon
+    ctx.globalAlpha = al;
+    ctx.drawImage(g.sprites.glow(hex), 0, 0, 256, 128, x - w / 2, hy - h / 2, w, h / 2);
+  };
+  if (kx !== null) { half(pal.crimson, kx, 1500, 560, 0.55 * a); half(pal.gold, kx, 620, 190, 0.3 * a); }
+  if (rx !== null && rivalA > 0) half(pal.cyan, rx, 1400, 520, 0.55 * a * rivalA);
   ctx.globalAlpha = 1;
   ctx.fillStyle = css(pal.cyanHi, 0.3 * a);
   ctx.fillRect(0, hy - 1, W, 2);
@@ -1272,6 +1266,22 @@ export function draw(g, t, F, P, S) {
       if (a > 0.02) lit.push({ pos: M.stepPos(k), color: pal.royal, edge: pal.afterHi, a });
     }
   }
+  if (t > T.deadT + 0.3 && t < T.lookT + 0.1) {          // after the shatter every beat ripples out from Kaiser
+    const kp = ks.pos, q = T.q, ci = Math.floor(kp[0] / q), cj = Math.floor(kp[1] / q);
+    for (let b = Math.max(0, bi - 1); b <= bi; b++) {
+      const bt = T.beats[b];
+      if (bt === undefined || bt < T.deadT + 0.3 || bt > T.lookT - 0.05) continue;
+      const age = t - bt, ring = 1 + Math.floor(age / 0.1);
+      if (age < 0 || age > 0.42) continue;
+      const a = 0.6 * (1 - age / 0.42) * clamp(F.col('drums_lvl', bt + 0.02) * 2.2);
+      for (let di = -ring; di <= ring; di++) {
+        for (let dj = -ring; dj <= ring; dj++) {
+          if (Math.max(Math.abs(di), Math.abs(dj)) !== ring) continue;
+          lit.push({ pos: [(ci + di + 0.5) * q, (cj + dj + 0.5) * q], color: b % 2 ? pal.royal : pal.gold, edge: b % 2 ? pal.afterHi : pal.goldHi, a });
+        }
+      }
+    }
+  }
   if (shattered && t < T.deadT + 1.2) {                 // the shockwave lights the squares it crosses
     const age = t - T.deadT, rr = 7.5 * outCubic(age / 0.9);
     for (let di = -5; di <= 5; di++) {
@@ -1329,8 +1339,11 @@ export function draw(g, t, F, P, S) {
       crack = { O, U, R: cr };
       const pulse = F.impulse('hit', 0.1, 1, rtt) * smooth((t - T.slamT) / 0.05);
       const hot = smooth((t - (T.deadT - 0.15)) / 0.15);
-      const x = L.ctx;
+      const x = L.ctx, bb = rFig.bb;
       x.save();
+      x.beginPath();                                    // only where he is: the glass outside him would be invisible
+      x.rect(bb.x0, bb.y0, bb.x1 - bb.x0, bb.y1 - bb.y0);
+      x.clip();
       x.globalCompositeOperation = 'source-atop';
       drawCracks(g, x, crackNet(seed), crackXf(O, U, rFacing, phi), O, U, cr, pulse, hot, pal);
       x.restore();
@@ -1469,7 +1482,7 @@ export function draw(g, t, F, P, S) {
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = (0.2 + 0.14 * kick) * (1 - 0.6 * dark);
       const gx = (bb.x0 + bb.x1) / 2, gy = pl.ground - U * 0.55;
-      ctx.drawImage(g.sprites.glow(pal.royal), gx - U * 0.55, gy - U * 0.65, U * 1.1, U * 1.3);
+      ctx.drawImage(g.sprites.glow(pal.royal), gx - U * 0.45, gy - U * 0.56, U * 0.9, U * 1.12);
       ctx.restore();
     }
     const dashA = ks.dash !== undefined && ks.dash < 1 ? 0.35 + 0.65 * ks.dash : 1;
@@ -1481,8 +1494,9 @@ export function draw(g, t, F, P, S) {
     if (dark > 0) rimCol = g.color.mix(rimCol, '#FFF4DE', dark);
     if (closeUp) rimA = 0.55;
     const off = Math.max(2, Math.min(9, U * 0.011));
-    const rim = rimOf(g, 'kzr-krim', L.canvas, bb, rimCol, closeUp ? 0 : -0.5 * off * kFacing, 0.85 * off);
-    if (rim) blit(g, ctx, rim, bb, rimA * dashA, 'lighter');
+    const rb = closeUp ? { ...bb, y1: Math.min(bb.y1, kFig.j.neck[1] + U * 0.12) } : bb;   // in the close-up: head and shoulders
+    const rim = rimOf(g, 'kzr-krim', L.canvas, rb, rimCol, closeUp ? 0 : -0.5 * off * kFacing, 0.85 * off);
+    if (rim) blit(g, ctx, rim, rb, rimA * dashA, 'lighter');
     // PROF('kaiser')
   }
 
@@ -1507,9 +1521,6 @@ export function draw(g, t, F, P, S) {
     ctx.globalCompositeOperation = 'screen';
     ctx.globalAlpha = al;
     ctx.drawImage(s.c, x + s.x0 * U, gy + s.y0 * U, s.w * U, s.h * U);
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.16 * al;
-    ctx.drawImage(g.sprites.glow(pal.royal), x - U * 0.35, gy - U * 0.95, U * 0.7, U * 0.95);
     ctx.restore();
     // PROF('ghost')
   }
@@ -1521,15 +1532,13 @@ export function draw(g, t, F, P, S) {
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = (0.24 + 0.12 * snare) * rivalA;
     const gx = (bb.x0 + bb.x1) / 2, gy = pl.ground - U * 0.55;
-    ctx.drawImage(g.sprites.glow(pal.cyan), gx - U * 0.5, gy - U * 0.62, U * 1.0, U * 1.24);
+    ctx.drawImage(g.sprites.glow(pal.cyan), gx - U * 0.42, gy - U * 0.55, U * 0.84, U * 1.1);
     ctx.restore();
     blit(g, ctx, L.canvas, bb, 1);
     // PROF('rv-blit')
     const off = Math.max(2, Math.min(9, U * 0.012));
     const rim = rimOf(g, 'kzr-rrim', L.canvas, bb, pal.cyan, -rFacing * off * 0.8, off * 0.5);
-    if (rim) blit(g, ctx, rim, bb, 0.95, 'lighter');
-    const rim2 = rimOf(g, 'kzr-rrim', L.canvas, bb, pal.royal, rFacing * off, -off * 0.2);
-    if (rim2) blit(g, ctx, rim2, bb, 0.7, 'lighter');
+    if (rim) blit(g, ctx, rim, bb, 1, 'lighter');
     // PROF('rv-rims')
     const hot = smooth((t - (T.deadT - 0.12)) / 0.12);  // white-hot just before he breaks
     if (hot > 0) {
@@ -1591,7 +1600,10 @@ export function draw(g, t, F, P, S) {
         flip = Math.cos(ph);
         if (Math.abs(flip) < 0.16) flip = 0.16 * (flip < 0 ? -1 : 1);
         glint = Math.max(0, 1 - Math.abs(Math.cos(ph)) * 3.2) + Math.exp(-tau / 0.05);
-        al = (1 - smooth((tau - sh.life) / 0.45)) * (sh.zv ? 1 - smooth((zs - 1.6) / 0.8) : 1);
+        if (landed) {                                    // shards on the board stay, catching the kicks, until the dark
+          glint += kick * (sh.ph > 3.6 ? 0.8 : 0.15);
+          al = 1 - smooth((t - (T.lookT - 0.35)) / 0.3);
+        } else al = (1 - smooth((tau - sh.life) / 0.45)) * (sh.zv ? 1 - smooth((zs - 1.6) / 0.8) : 1);
       } else glint = 0.9;
       if (al <= 0.01) continue;
       const cx0 = O[0] + sh.cx * U, cy0 = O[1] + sh.cy * U;
@@ -1676,8 +1688,8 @@ export function draw(g, t, F, P, S) {
     const gr = r * (1.2 + 0.5 * glow);
     ctx.globalAlpha = 0.9 * glow;
     ctx.drawImage(g.sprites.glow(KZ.rose, 1), rose[0] - gr, rose[1] - gr, 2 * gr, 2 * gr);
-    ctx.globalAlpha = 0.45 * glow;
-    ctx.drawImage(g.sprites.glow(KZ.roseHi), rose[0] - gr * 2.2, rose[1] - gr * 2.2, gr * 4.4, gr * 4.4);
+    ctx.globalAlpha = 0.4 * glow;
+    ctx.drawImage(g.sprites.glow(KZ.roseHi), rose[0] - gr * 1.9, rose[1] - gr * 1.9, gr * 3.8, gr * 3.8);
     ctx.restore();
     drawRose(ctx, rose[0], rose[1], 0.24 * r, { rot: 0.4, color: KZ.roseHi, deep: KZ.rose, hi: '#FFFFFF', alpha: 0.8 * glow });
     ctx.save();                                          // a few blue petals drift up out of the light

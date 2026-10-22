@@ -2,18 +2,20 @@
 //
 // High in the night sky above a stadium (drawn here, seen from far above: a glowing oval ring of
 // floodlights round stands full of tiny lights and a floodlit pitch, in a city of lights under the
-// stars), Kaiser rises with the ball floating before him and his red cape billowing. On P.emperorT the
-// cape snaps open and gold rays burst behind him; from P.powerT blue energy rings converge on the ball
-// (one per strong kick), which glows brighter and brighter; on P.nameT we cut to his profile: he draws
-// his leg back and time slows (the world dims, focus lines, slow streaks). P.strikeT: four ink impact
-// frames (the engine inverts three of them), then a gigantic shockwave ring tears across the sky and the
-// ball dives onto the stadium as a blue comet. P.boomT (the engine flashes): a dome of blue light erupts
-// over the stadium, shockwave rings roll across the stands and the city, and the sky fills with blue rose
-// petals and gold confetti. The coronation: Kaiser hovers above the light; on P.chosenT a giant crown
-// descends from the sky, shrinking as it falls, and settles on his head on the next downbeat while gold
-// light pours down; on P.numberT fireworks burst in gold and blue around the stadium (and then on every
-// strong kick) and he raises an arm to the sky; on P.loudT a white-gold bloom and the crown flares.
-// Kicks fire shockwave pulses and fireworks, snares scatter the petals, hats twinkle the crowd.
+// stars), Kaiser rises out of a bank of cloud with the ball floating before him and his red cape
+// billowing. On P.emperorT the cape snaps open and gold rays burst behind him; from P.powerT blue energy
+// rings converge on the ball (one per strong kick), which glows brighter and brighter; on P.nameT we cut
+// to his profile: he draws his leg back and time slows (the world dims, screentone, focus lines, slow
+// streaks). P.strikeT: four ink impact frames (the engine inverts three of them), then a gigantic
+// shockwave ring tears across the sky and the ball dives onto the stadium as a blue comet. P.boomT (the
+// engine flashes): a dome of blue light erupts over the stadium, shockwave rings roll across the stands
+// and the city, the sky fills with blue rose petals and gold confetti, and searchlights sweep the sky
+// from the stands, re-aiming on every downbeat. The coronation: Kaiser hovers above the light; on
+// P.chosenT a giant crown descends from the sky, shrinking as it falls, and settles on his head on the
+// next downbeat while gold light pours down; on P.numberT fireworks burst in gold and blue around the
+// stadium (and then on strong kicks) and he raises an arm to the sky; on P.loudT a white-gold bloom and
+// the crown flares. Kicks fire shockwave pulses and fireworks, snares scatter the petals, hats twinkle
+// the crowd and the stars.
 //
 // Pure: every phase comes from t, F (columns and events) and P; caches are pure functions of their key.
 
@@ -142,7 +144,7 @@ function moments(F, P, S) {
 /** Events of a list in [a, b) with strength >= min, as [landed time, strength] (stable across frames). */
 function hits(F, list, a, b, min, fps) {
   const out = [];
-  if (!(b > a)) return out;
+  if (!(b > a) || !F.ev || !Array.isArray(F.ev[list])) return out;
   for (const e of F.between(list, a, b)) {
     const s = Array.isArray(e) ? (typeof e[1] === 'number' ? e[1] : 1) : 1;
     if (s >= min) out.push([landT(Array.isArray(e) ? e[0] : e, fps), s]);
@@ -168,7 +170,8 @@ function camPt(c, p, x, y) {
 }
 const camZ = (c, p) => 1 + (c.z - 1) * p;
 
-const PAR = { sky: 0.06, city: 0.2, stadium: 0.28, cloudFar: 0.4, cloudNear: 0.65, kaiser: 1, front: 1.25 };
+// parallax: the share of the camera's zoom and crane each layer takes (the tilt moves them all alike)
+const PAR = { city: 0.2, stadium: 0.28, cloudFar: 0.4, cloudNear: 0.65, kaiser: 1, front: 1.25 };
 
 // ---------------------------------------------------------------- the stadium (seen from far above)
 
@@ -857,7 +860,7 @@ function drawRaysBehind(g, cx, cy, col, amt, t, len, kick, rot0) {
   ctx.restore();
 }
 
-/** Electric arcs crackling off the ball (re-rolled every 2 frames). */
+/** Electric arcs crackling off the ball (re-rolled every `hold` frames: slower in slow motion). */
 function arcs(ctx, x, y, r, n, len, frame, color, width, seed = 5, hold = 2) {
   const k = Math.floor(frame / hold);
   ctx.strokeStyle = color;
@@ -919,14 +922,14 @@ function drawConverge(g, x, y, t, T, F, P, pal, scale = 1) {
     if (age > life) { flash = Math.max(flash, dec(t, t0 + life, 0.09) * Math.min(1, s)); continue; }
     const u = age / life;
     const id = Math.round(t0 * 1000);
-    const R = (380 + 240 * hashU(61, id, 1)) * (1 - inQuad(u)) * scale * (s > 1 ? 1.6 : 1);
+    const R = (380 + 240 * hashU(61, id, 1)) * (1 - inQuad(u)) * scale * (s > 1 ? 1.3 : 1);
     const ratio = 0.28 + 0.6 * hashU(61, id, 2), rot = hashU(61, id, 3) * Math.PI;
-    const a = clamp(0.45 + u * 4) * (0.55 + 0.45 * u);
+    const a = clamp(0.65 + u * 4) * (0.7 + 0.3 * u);
     ctx.save();
     ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, ratio);
     ctx.beginPath(); ctx.arc(0, 0, Math.max(1, R), 0, TAU);
-    ctx.lineWidth = (8 + 14 * u) * scale; ctx.strokeStyle = css(pal.rose, 0.3 * a); ctx.stroke();
-    ctx.lineWidth = (2 + 3.5 * u) * scale; ctx.strokeStyle = css(pal.comet, 0.95 * a); ctx.stroke();
+    ctx.lineWidth = (10 + 14 * u) * scale; ctx.strokeStyle = css(pal.rose, 0.32 * a); ctx.stroke();
+    ctx.lineWidth = (3 + 3 * u) * scale; ctx.strokeStyle = css(pal.comet, 0.95 * a); ctx.stroke();
     ctx.restore();
   }
   ctx.restore();
@@ -1147,7 +1150,7 @@ function drawDome(g, V, pal, t, T, F, P) {
     ctx.fillStyle = gr;
     ctx.fill();
     const rim = ctx.createRadialGradient(apex[0], (apex[1] + cy) / 2, 0, apex[0], (apex[1] + cy) / 2, Math.max(ax, cy - apex[1]) * 1.05);
-    rim.addColorStop(0, css(pal.comet, 0)); rim.addColorStop(0.7, css(pal.comet, 0.05 * a)); rim.addColorStop(1, css(pal.ice || pal.comet, 0.55 * a));
+    rim.addColorStop(0, css(pal.comet, 0)); rim.addColorStop(0.7, css(pal.comet, 0.05 * a)); rim.addColorStop(1, css(tones(g, pal).ice, 0.55 * a));
     ctx.fillStyle = rim;
     ctx.fill();
     ctx.lineWidth = 3.5; ctx.strokeStyle = css(pal.cometCore, 0.75 * a); ctx.stroke();
@@ -1505,7 +1508,7 @@ function fallingCrown(V, Tm, t, jRef) {
   const e = smooth(u);
   const w = lerp(900, sw, e ** 0.6);
   const slide = 1 - outCubic((t - Tm.chosen + f1) / 0.22);
-  const y = lerp(300, sy, e) - 700 * slide;
+  const y = lerp(300, sy, e) - 380 * slide;
   return { x: lerp(sx + 30, sx, e), y, w, ang: seat.ang * e + Math.sin(t * 3.1) * 0.06 * (1 - e), u, e };
 }
 
@@ -1584,7 +1587,7 @@ export function draw(g, t, F, P, S) {
     light = { aura: 0.32 + 0.22 * kick + 0.35 * toPow, auraColor: pal.rose, rim: 0.7, rimColor: pal.comet, rimDx: 0, rimDy: -6 };
   } else if (V.shot === 'B') {
     const u = clamp((t - Tm.name) / Math.max(1e-3, Tm.strike - Tm.name));
-    pose = blend(POSE.sideHover, POSE.windup, outCubic(u * 1.25));
+    pose = blend(POSE.sideHover, POSE.windup, outCubic(u * 1.2 + 0.22));
     const slow = Tm.name + (t - Tm.name) * 0.2;
     cape = { t: slow, wind: -0.6, length: 0.7, open: 0, skew: 0, stream: 0.95 + 0.05 * Math.sin(slow * 4) };
     light = { aura: 0.6, auraColor: pal.comet, rim: 0.95, rimColor: T2.ice, rimDx: -7, rimDy: 0 };
@@ -1664,7 +1667,7 @@ export function draw(g, t, F, P, S) {
     }
     // gold light pouring down from the crown (behind him, so his face stays clear)
     if (t >= Tm.chosen) {
-      const fin = clamp((t - Tm.chosen + f1) / 0.12);
+      const fin = clamp(0.5 + (t - Tm.chosen) / 0.15);
       if (t < Tm.crownLand) {
         const C = fallingCrown(V, Tm, t, jRef);
         drawGodRays(g, C.x, C.y, 0.85 * fin, t, pal, C.w);
@@ -1716,7 +1719,7 @@ export function draw(g, t, F, P, S) {
     const charge = smooth((t - Tm.power) / Math.max(0.3, Tm.name - Tm.power));
     const flash = t >= Tm.power ? drawConverge(g, bx, by, t, Tm, F, P, pal, z) : 0;
     drawInflow(g, bx, by, charge, t, pal);
-    drawBallEnergy(g, bx, by, ballR * z, charge, flash + 0.3 * kick * charge, F, pal, { rot: t * 1.3, arcsN: charge > 0.1 ? Math.round(2 + 4 * charge + 4 * snare) : 0 });
+    drawBallEnergy(g, bx, by, ballR * z, charge, flash + 0.3 * kick * charge + 0.8 * dec(t, Tm.power, 0.18), F, pal, { rot: t * 1.3, arcsN: charge > 0.1 ? Math.round(2 + 4 * charge + 4 * snare) : 0 });
   } else if (V.shot === 'B') {
     const ball = solve(KAISER, POSE.contact, { x: K.x, y: K.y, scale: K.U / KAISER.height, view: 'side', facing: 1 });
     const [bx, by] = camPt(V.cam, 1, ball.toeR[0] + 0.02 * K.U, ball.toeR[1] - 0.01 * K.U);
@@ -1725,7 +1728,7 @@ export function draw(g, t, F, P, S) {
     drawConfetti(g, V, pal, t, Tm, F, P);
     if (t >= Tm.chosen && !landed) {
       const C = fallingCrown(V, Tm, t, jRef);
-      const fin = clamp((t - Tm.chosen + f1) / 0.12);
+      const fin = clamp(0.5 + (t - Tm.chosen) / 0.15);
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = 0.5 * fin;

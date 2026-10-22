@@ -12,10 +12,9 @@
 
 import { KAISER_SUIT, KZ } from './lib/kaiser.mjs';
 import { solve } from './lib/puppet.mjs';
-import { hashU } from './lib/worldkit.mjs';
 import {
-  HALL, KAISER_H, CANDELABRA, candleTips, royalPalette, rgba, camera, orbitCamera, project, drawHall, drawSet, drawFlames,
-  drawShafts, drawPool, drawSpotCone, focusLight, drawPetals, drawMotes, drawGlint, drawSmoke, loungePose, faceSpots, crownOn, warmRoyal, veil, roseOn,
+  HALL, KAISER_H, CANDELABRA, royalPalette, rgba, mixHex, camera, orbitCamera, drawHall, drawSet, drawFlames, drawShafts,
+  drawSpotCone, focusLight, drawPetals, drawMotes, drawGlint, drawSmoke, loungePose, faceSpots, crownOn, warmRoyal, veil, roseOn,
 } from './lib/kzroyal.mjs';
 
 export const meta = { type: 'kzReign', budgetMs: 140 };
@@ -157,7 +156,7 @@ export function draw(g, t, F, P, S) {
     lit: (i) => states[i].lit,
     kaiser: {
       design: KAISER_SUIT, pose, wind: -0.3, cape: 0.62, crown: 1, cuff: KZ.black,
-      halo: (0.2 + 0.14 * kick) * spot, haloColor: C.spot, rim: phase === 'eyes' ? 0 : 0.85 * (1 - end), rimColor: '#D6E6FF', rimDir: [-4, -3],
+      halo: (0.2 + 0.14 * kick) * spot, haloColor: C.spot, rim: phase === 'eyes' ? 0 : 0.85 * (1 - end), rimColor: C.spot, rimDir: [-4, -3],
     },
   });
   const kj = set.kj;
@@ -191,7 +190,7 @@ export function draw(g, t, F, P, S) {
     if (lastGlow > 0) {
       ctx.save();
       ctx.globalAlpha = lastGlow;
-      const [cx, cy, cw] = crownOn(ctx, KAISER_SUIT, kj, C, { fill: '#FFE9A0' });
+      const [cx, cy, cw] = crownOn(ctx, KAISER_SUIT, kj, C, { fill: mixHex(C.gold, '#FFFFFF', 0.45) });
       ctx.restore();
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
@@ -211,7 +210,7 @@ export function draw(g, t, F, P, S) {
   }
 
   // petals fall slowly; dust in the spotlight
-  const petalA = 1 - 0.7 * end;
+  const petalA = 1 - ease(end);                          // gone by bassOut: only the crown and the eyes remain
   drawMotes(g, C, { t, box: [560, 0, 1360, 1080], n: 26, alpha: 0.5 * spot, color: C.spot });
   drawPetals(ctx, C, { t: t * 0.75, count: P.petals ?? defaults.petals, parallax: cam.x * 120 - cam.yaw * 900, alpha: petalA * (phase === 'eyes' ? 0.7 : 1), speed: 0.6, wind: 0.3 });
   ctx.restore();
@@ -240,7 +239,7 @@ function roseGlow(g, C, fp, v) {
   const rr = r * (0.55 + 0.6 * v);
   ctx.drawImage(gs, x - rr, y - rr, 2 * rr, 2 * rr);
   ctx.globalAlpha = 0.5 * v;
-  const gs2 = g.sprites.glow(C.roseHi || '#8FB6FF', 0);
+  const gs2 = g.sprites.glow(C.roseHi, 0);
   ctx.drawImage(gs2, x - rr * 2.2, y - rr * 2.2, rr * 4.4, rr * 4.4);
   ctx.restore();
 }
@@ -249,7 +248,7 @@ function eyeGlow(g, C, fp, a, t) {
   const { ctx } = g;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  const gs = g.sprites.glow('#3D8BFF', 1);
+  const gs = g.sprites.glow(KZ.eye, 1);
   for (const [x, y] of fp.eyes) {
     const rr = fp.r * (0.32 + 0.04 * Math.sin(t * 2.1));
     ctx.globalAlpha = Math.min(1, a);

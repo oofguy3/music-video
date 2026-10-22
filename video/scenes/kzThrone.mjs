@@ -6,11 +6,10 @@
 // flames flare and the bouquets pulse; on snares gold dust bursts; the chains swing to the beat;
 // petals drift down all the time. The hall itself is the shared builder in lib/kzroyal.mjs.
 
-import { KAISER } from './lib/kaiser.mjs';
-import { speedLines } from './lib/kaiser.mjs';
+import { KAISER, speedLines } from './lib/kaiser.mjs';
 import {
-  HALL, KAISER_H, royalPalette, rgba, camera, project, drawHall, drawSet, drawShafts, drawPetals, drawGoldDust,
-  drawMotes, drawGlint, loungePose, faceSpots, drawPool, focusLight, warmRoyal, drawFlames, veil, blinkAt, drawEyelids, cornerTone,
+  HALL, KAISER_H, royalPalette, camera, project, drawHall, drawSet, drawShafts, drawPetals, drawGoldDust, drawMotes, drawGlint,
+  loungePose, faceSpots, drawPool, focusLight, warmRoyal, drawFlames, veil, blinkAt, drawEyelids, cornerTone,
 } from './lib/kzroyal.mjs';
 import { solve } from './lib/puppet.mjs';
 
@@ -26,7 +25,6 @@ export const defaults = {
   impact: 0.35,                     // manga impact lines on each cut (s)
 };
 
-const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, u) => a + (b - a) * u;
 const ease = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
@@ -62,6 +60,9 @@ function currentShot(F, S, P, t) {
   const list = Array.isArray(P.shots) && P.shots.length ? P.shots : defaults.shots;
   return { kind: list[i % list.length], i, a, b, u: clamp((t - a) / Math.max(1e-3, b - a)), age: t - a };
 }
+
+// Points on the throne's gold (metres from its base centre) where the hi-hat glints land.
+const GOLD_SPOTS = [[0, 3.32], [-1.06, 2.79], [1.06, 2.79], [-1.06, 1.8], [1.06, 1.8], [-1.16, 0.68], [1.16, 0.68], [-0.88, 2.2], [0.88, 1.5], [0.36, 3.2], [-0.36, 3.2]];
 
 // Kaiser's head position in metres (from the solved pose), for framing close-ups.
 const headCache = new Map();
@@ -130,7 +131,7 @@ export function draw(g, t, F, P, S) {
     } : null,
     kaiser: {
       design: KAISER, pose, wind: -0.35, cape: 0.62, halo: (shot.kind === 'wide' ? 0.3 : 0.1) + 0.12 * kick, haloColor: C.moon,
-      rim: 0.9, rimColor: '#D6E6FF', rimDir: [-4, -3],
+      rim: 0.9, rimColor: C.spot, rimDir: [-4, -3],
       before: (p, U) => drawGoldDust(g, C, {
         t, births: sn, life, seed: 3, n: 26, spread: 0.75 * U, r0: 0.16 * U, size: Math.max(0.7, Math.min(3, U / 600)),
         origin: () => [p.x + 0.02 * U, p.y - 0.45 * U],
@@ -146,12 +147,24 @@ export function draw(g, t, F, P, S) {
   const kp = project(cam, HALL.pelvis[0], HALL.pelvis[1] + 0.5, HALL.pelvis[2]);
   // manga focus lines converge on him from below in the low angle
   if (shot.kind === 'low' && fp) {
-    speedLines(ctx, { cx: fp.eyes[0][0], cy: fp.eyes[0][1], n: 70, inner: 520, outer: 1900, color: '#000008', alpha: 0.22, seed: 9, frame: F.frame, hold: 2, width: 0.008 });
+    speedLines(ctx, { cx: fp.eyes[0][0], cy: fp.eyes[0][1], n: 70, inner: 520, outer: 1900, color: C.night, alpha: 0.24, seed: 9, frame: F.frame, hold: 2, width: 0.008 });
   }
   // a glint in his eye as the close-up lands
   if (shot.kind === 'close' && fp) {
     const a = Math.exp(-shot.age / 0.28);
     if (a > 0.02) drawGlint(g, fp.eyes[1][0] - fp.r * 0.06, fp.eyes[1][1] - fp.r * 0.06, fp.r * 0.38 * (0.6 + 0.4 * a), { alpha: 0.9 * a, rot: 0.3 + shot.age });
+  }
+  // hi-hats: glints run over the throne's gold (crest, finials, post bands, armrest scrolls)
+  for (const h of F.between('hat', t - 0.2, t + 1e-6)) {
+    if (h[1] < 0.45) continue;
+    const th = land(h[0], F.fps), age = t - th;
+    if (age < 0) continue;
+    const k = Math.floor(th * 1000) % GOLD_SPOTS.length;
+    const [gx, gy] = GOLD_SPOTS[k];
+    const p = project(cam, HALL.throne.x + gx, HALL.dais.y + gy, HALL.throne.z - 0.05);
+    if (!p || p.x < -50 || p.x > 1970 || p.y < -50 || p.y > 1130) continue;
+    const a = Math.exp(-age / 0.07) * Math.min(1, h[1]);
+    drawGlint(g, p.x, p.y, Math.min(90, 0.16 * p.s) * (0.6 + 0.4 * a), { alpha: 0.85 * a, rot: k * 0.7 });
   }
   drawMotes(g, C, { t, box: [0, 0, 1920, 1080], n: 36, alpha: 0.6 });
   drawPetals(ctx, C, { t, count: P.petals ?? defaults.petals, parallax: cam.x * 120 });

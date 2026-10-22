@@ -17,14 +17,13 @@
 //   drawHall(g, cam, C, { light, moon, ... });   // walls, floor, steps (far to near)
 //   drawSet(g, cam, C, { t, F, ... });           // billboards sorted by depth: throne, Kaiser, bouquets...
 
-import { KAISER, KAISER_SUIT, KZ, drawCape, drawRose, drawCrown, drawChain, drawBall } from './kaiser.mjs';
+import { KZ, drawCape, drawRose, drawCrown, drawChain, drawBall } from './kaiser.mjs';
 import { design, drawPuppet, solve, poses, armTo } from './puppet.mjs';
 import { hashU } from './worldkit.mjs';
 
 const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, u) => a + (b - a) * u;
-const sm = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
 
 // --- palette ----------------------------------------------------------------------------------------
 
@@ -146,12 +145,6 @@ function cached(key, make) {
     cache.set(key, v);
   }
   return v;
-}
-
-/** Resolution bucket (device px per metre) at or above `need`, in half-octave steps, capped. */
-export function resBucket(need, cap = 640, floor = 24) {
-  const k = Math.ceil(Math.log2(Math.max(floor, Math.min(cap, need))) * 2) / 2;
-  return Math.min(cap, Math.pow(2, k));
 }
 
 /** Rasterise a freshly drawn cache canvas now (drawing it once into a throwaway 1x1 canvas), so the
@@ -764,7 +757,7 @@ export function throneSprite(g, C, sPx) {
 }
 
 /** Draw the throne at world anchor (base centre), with a fake turn (squash + side face) for orbits. */
-export function drawThrone(g, cam, C, { turn = 0, alpha = 1, light = 1 } = {}) {
+export function drawThrone(g, cam, C, { turn = 0, alpha = 1 } = {}) {
   const T = HALL.throne;
   const p = project(cam, T.x, HALL.dais.y, T.z);
   if (!p) return null;
@@ -1318,9 +1311,6 @@ export function cornerTone(g, color, { alpha = 1, cell = 20, angle = 0.6 } = {})
   ctx.restore();
 }
 
-/** Manga focus lines: thin dark wedges converging on (cx, cy), re-drawn every 2 frames. */
-export { speedLines } from './kaiser.mjs';
-
 /** The blue rose on his neck redrawn over everything (lit from within): amt 0..1 brightens it. */
 export function roseOn(ctx, d, j, C, amt = 1) {
   if (amt <= 0) return;
@@ -1766,4 +1756,3 @@ export function drawFlames(g, C, flames, o = {}) {
   }
 }
 
-export { drawRose, drawCrown, drawBall, KAISER, KAISER_SUIT, KZ };

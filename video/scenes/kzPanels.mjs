@@ -460,32 +460,35 @@ const SHOTS = {
     fillBox(ctx, b, '#050A2A', '#14329A');
     burst(g, ctx, b, '#FFFFFF', 0.1);
     speedLines(ctx, { cx: b.cx, cy: b.cy, n: 60, inner: Math.min(b.w, b.h) * 0.35, outer: Math.max(b.w, b.h), color: '#BFD6FF', alpha: 0.3, seed: X.seed, frame: X.frame, hold: 4, width: 0.01 });
-    const R = Math.min(b.w, b.h) * 0.38;
-    glowAt(ctx, g, pal.rose, b.cx, b.cy, R * 2.4, 0.7 + 0.3 * X.kick);
-    drawRose(ctx, b.cx, b.cy, R * (1 + 0.05 * X.kick), { open: smooth(a / 0.7), rot: X.t * 0.25 + X.seed, color: pal.rose, deep: KZ.roseDeep, hi: KZ.roseHi });
+    const R = Math.min(b.w, b.h) * 0.38 * (1 + 0.05 * X.kick);
+    glowAt(ctx, g, '#7FB0FF', b.cx, b.cy, R * 2.2, 0.35 + 0.3 * X.kick);
+    const open = smooth(a / 0.7), rot = X.t * 0.25 + X.seed;
+    drawRose(ctx, b.cx, b.cy, R * 1.06, { open, rot, color: pal.ink, deep: pal.ink, hi: pal.ink });   // an inked silhouette
+    drawRose(ctx, b.cx, b.cy, R, { open, rot, color: pal.rose, deep: KZ.roseDeep, hi: '#E8F0FF' });
     petals(ctx, b, a, X, 10);
   },
 
   chains(ctx, b, a, X) {
     const { g, pal } = X;
-    const snapT = 0.26;
+    const snapT = X.beatS;                               // they hold for a beat, then snap
     const broken = smooth((a - snapT) / 0.3);
     fillBox(ctx, b, '#1A1A2A', '#04040A');
-    glowAt(ctx, g, pal.red, b.cx, b.cy, Math.max(b.w, b.h) * 0.7, 0.35 + (a > snapT ? 0.6 * Math.exp(-(a - snapT) / 0.15) : 0));
+    glowAt(ctx, g, pal.red, b.cx, b.cy, Math.max(b.w, b.h) * 0.7, 0.3 + 0.25 * X.kick + (a > snapT ? 0.6 * Math.exp(-(a - snapT) / 0.15) : 0));
     burst(g, ctx, b, '#FFFFFF', 0.08);
     const L = Math.hypot(b.w, b.h);
-    const link = Math.max(30, Math.min(b.w, b.h) * 0.13);
-    for (const [k, ang] of [[0, 0.3], [1, -0.3]]) {
+    const link = Math.max(30, Math.min(b.w, b.h) * 0.12);
+    const strain = a < snapT ? Math.sin(a * 60) * link * 0.04 * (a / snapT) : 0;
+    for (const [k, ang, off] of [[0, 0.3, 0], [1, -0.3, 0], [2, 0.02, 0.3]]) {
       ctx.save();
-      ctx.translate(b.cx, b.cy);
+      ctx.translate(b.cx, b.cy + off * b.h + strain);
       ctx.rotate(ang);
-      drawChain(ctx, -L * 0.6, 0, L * 0.6, 0, { sag: link * (0.5 + k * 0.4), link, width: link * 0.24, broken, color: '#E4EAF4', deep: KZ.chainDeep });
+      drawChain(ctx, -L * 0.6, 0, L * 0.6, 0, { sag: link * (0.3 + k * 0.3), link, width: link * 0.24, broken: k === 2 ? smooth((a - snapT - 0.08) / 0.3) : broken, color: '#E4EAF4', deep: KZ.chainDeep });
       ctx.restore();
     }
     if (a > snapT) {                                   // sparks from the break
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 22; i++) {
         const age = a - snapT, ang = hashU(X.seed, i, 1) * TAU, sp = 300 + 600 * hashU(X.seed, i, 2);
         const px = b.cx + Math.cos(ang) * sp * age, py = b.cy + Math.sin(ang) * sp * age + 500 * age * age;
         const k = 1 - clamp01(age / 0.6);
@@ -505,9 +508,10 @@ const SHOTS = {
     glowAt(ctx, g, '#DCEBFF', b.x + b.w * 1.05, b.y, b.w * 0.6, 0.5);
     const ix = b.cx + b.w * 0.08, iy = b.cy + b.h * 0.05;
     const hitA = 0.08;
-    netGrid(ctx, b, ix, iy, a - hitA, Math.min(b.w, b.h) * 0.09, Math.max(18, b.w * 0.06));
+    netGrid(ctx, b, ix, iy + Math.sin(X.t * 2.3) * b.h * 0.02, a - hitA, Math.min(b.w, b.h) * 0.09 * (1 + 0.3 * X.kick), Math.max(18, b.w * 0.06));
     const bu = smooth(a / hitA);
-    const bx = lerp(b.x - b.w * 0.1, ix, bu), by = lerp(b.y + b.h * 1.1, iy, bu);
+    const drop = Math.max(0, a - hitA - 0.35);                // after the hit it drops down the net
+    const bx = lerp(b.x - b.w * 0.1, ix, bu), by = lerp(b.y + b.h * 1.1, iy, bu) + 0.5 * 900 * drop * drop;
     const R = Math.min(b.w, b.h) * 0.12 * (a < hitA ? 1.4 - 0.4 * bu : 1);
     drawBall(ctx, bx, by, R, { rot: a * 6 });
     if (a > hitA) speedLines(ctx, { cx: ix, cy: iy, n: 40, inner: R * 1.4, outer: R * 4, color: '#FFFFFF', alpha: 0.85 * Math.exp(-(a - hitA) / 0.2), seed: X.seed, frame: X.frame, hold: 2, width: 0.03 });
@@ -574,8 +578,10 @@ const SHOTS = {
       const open = smooth((a - it.d * 0.5) / 0.35);
       if (open <= 0) continue;
       const rr = it.r * (0.5 + 0.5 * open) * (1 + 0.06 * X.kick);
-      glowAt(ctx, g, pal.rose, it.x, it.y, rr * 1.6, 0.25);
-      drawRose(ctx, it.x, it.y, rr, { open, rot: it.rot + X.t * 0.2, color: pal.rose, deep: KZ.roseDeep, hi: '#DCE8FF' });
+      const near = clamp01((it.r / Math.min(b.w, b.h) - 0.07) / 0.11);   // small ones sit further back, darker
+      glowAt(ctx, g, pal.rose, it.x, it.y, rr * 1.6, 0.12 + 0.2 * near);
+      drawRose(ctx, it.x, it.y, rr * 1.05, { open, rot: it.rot + X.t * 0.2, color: pal.ink, deep: pal.ink, hi: pal.ink, alpha: 0.6 + 0.4 * near });
+      drawRose(ctx, it.x, it.y, rr, { open, rot: it.rot + X.t * 0.2, color: near > 0.5 ? pal.rose : KZ.royal, deep: KZ.roseDeep, hi: '#DCE8FF', alpha: 0.55 + 0.45 * near });
     }
     petals(ctx, b, a, X, 14);
     for (let i = 0; i < 6; i++) {
@@ -713,6 +719,17 @@ const SHOTS = {
         drawPuppet(ctx, d, pose, { x, ground, scale: U / d.height, view: 'front', facing: 1, alpha: 1 - vanish, devScale: g.scale });
       }
       if (poofA >= 0) smokePuff(ctx, g, x, ground - U * 0.45, U * 0.5, poofA - i * 0.05, X.seed + i, pal);
+    }
+    if (poofA > 0.15) {                                  // and he runs on through the smoke
+      const u = (poofA - 0.15) / 0.9;
+      const x = lerp(b.x - U * 0.4, b.x + b.w + U * 0.4, u);
+      drawPuppet(ctx, KAISER, cycles.run((X.t * 2) % 1), { x, ground, scale: (U * 1.05) / KAISER.height, view: 'side', facing: 1, devScale: g.scale });
+      drawBall(ctx, x + U * 0.22, ground - U * 0.05, U * 0.045, { rot: X.t * 14 });
+      ctx.save();
+      ctx.fillStyle = pal.ink;
+      ctx.globalAlpha = 0.7;
+      for (let m = 0; m < 5; m++) ctx.fillRect(x - U * (0.5 + 0.4 * hashU(X.seed, m, 4)), ground - U * (0.2 + 0.15 * m), U * 0.35, Math.max(2, U * 0.012));
+      ctx.restore();
     }
     ramp(g, ctx, b, pal.ink, 0.15, Math.PI / 2);
   },
@@ -856,8 +873,8 @@ function netGrid(ctx, b, ix, iy, age, depth, cell, alpha = 0.75) {
 
 /** A comic puff of smoke: overlapping circles merged into one inked cloud with screentone. */
 function smokePuff(ctx, g, x, y, R, age, seed, pal) {
-  if (age < 0 || age > 1.3) return;
-  const u = outCubic(age / 0.45), fade = 1 - smooth((age - 0.55) / 0.7);
+  if (age < 0 || age > 2.6) return;
+  const u = outCubic(age / 0.45), fade = 1 - 0.55 * smooth((age - 0.5) / 0.8) - 0.45 * smooth((age - 1.6) / 1.0);
   const circles = [];
   for (let i = 0; i < 10; i++) {
     const ang = hashU(seed, i, 1) * TAU, d = R * (0.15 + 0.6 * hashU(seed, i, 2)) * u;
@@ -1119,23 +1136,49 @@ export function draw(g, t, F, P, S) {
   let pi = 0;
   while (pi + 1 < pages.length && pages[pi + 1].t0 <= t + 1e-6) pi++;
   const lead = 1 / fps;
-  const X = { g, t, F, pal, frame: F.frame, fps, lead, kick: F.c.kick || 0, snare: F.c.snare || 0 };
+  const X = { g, t, F, pal, frame: F.frame, fps, lead, beatS: F.beatS || 0.4, kick: F.c.kick || 0, snare: F.c.snare || 0 };
   // a page being cut by the slash: the next page shows through as its halves slide apart
   const SLICE_DUR = 0.5;
   const cut = pages.find((p) => p.slice !== undefined && t >= p.slice - 1e-6 && t < p.slice + SLICE_DUR);
   if (cut) {
     const next = pages[cut.index + 1];
-    if (next) drawPage(g, ctx, next, t, X);
+    if (next) renderPage(g, ctx, next, t, X);
     else drawBackground(g, ctx, 'royal', pal, X.frame, 7);
     const L = g.layer('kzPanelsCut');
-    drawPage(g, L.ctx, cut, Math.min(t, cut.t1 - lead), X);
+    renderPage(g, L.ctx, cut, Math.min(t, cut.t1 - lead), X);
     drawSlice(g, L.canvas, t - cut.slice, X);
     return;
   }
   const page = pages[pi];
-  if (page.eye !== undefined && t >= page.eye - 1e-6) {
-    drawEyeXL(g, ctx, t - page.eye + lead, X);
-    return;
+  renderPage(g, ctx, page, t, X);
+  // on every new bar the previous page whips off the screen as the new one starts
+  const prev = pi > 0 ? pages[pi - 1] : null;
+  const WHIP = 0.2;
+  const wa = t - page.t0 + lead;
+  if (prev && prev.slice === undefined && wa < WHIP) {
+    const L = g.layer('kzPanelsOld');
+    renderPage(g, L.ctx, prev, page.t0 - lead, X);
+    const u = outCubic(wa / WHIP);
+    const dir = hashU(47, page.index, 1) < 0.5 ? -1 : 1;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 0.35 * (1 - u);                   // a smear trailing the moving page
+    ctx.drawImage(L.canvas, dir * (u * 1.04 * g.devW - 0.12 * g.devW * (1 - u)), 0);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(L.canvas, dir * u * 1.04 * g.devW, 0);
+    ctx.restore();
+    const edge = dir > 0 ? u * 1.04 * W : W - u * 1.04 * W;
+    const sg = ctx.createLinearGradient(edge - dir * 60, 0, edge, 0);
+    sg.addColorStop(0, 'rgba(0,0,0,0)');
+    sg.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = sg;
+    ctx.fillRect(Math.min(edge, edge - dir * 60), 0, 60, H);
+    streakLines(ctx, { angle: 0, n: 26, color: '#FFFFFF', alpha: 0.7 * (1 - u), seed: page.index + 11, t: t * dir, speed: 3000, w: W, h: H });
   }
-  drawPage(g, ctx, page, t, X);
+}
+
+/** A page as it looks at time t: its panels, or the full-frame eye once that has slammed in. */
+function renderPage(g, ctx, page, t, X) {
+  if (page.eye !== undefined && t >= page.eye - 1e-6) drawEyeXL(g, ctx, t - page.eye + X.lead, X);
+  else drawPage(g, ctx, page, t, X);
 }
