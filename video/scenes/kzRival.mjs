@@ -192,7 +192,7 @@ function rampInt(t, a, ra, b, rb) {
 // ---------------------------------------------------------------------------------------------
 
 // afterimage spots around the rival, degrees: 0 right, 90 behind, 180 left (never right in front)
-const RING_DEG = [205, 25, 150, 335, 62, 190, 118, 352, 88, 168, 40, 215, 134, 322, 76, 104];
+const RING_DEG = [205, 25, 150, 335, 128, 190, 52, 352, 165, 12, 140, 218, 40, 322, 176, 8];
 
 function makeModel(F, P, T) {
   const Rc = 1.55, om = num(P.orbit, defaults.orbit), A0 = 0.4, ring = num(P.ring, defaults.ring);
@@ -238,7 +238,7 @@ function makeModel(F, P, T) {
   const ta = (200 * Math.PI) / 180;
   const templePos = add(RvEnd, add(mul(axH.r, Math.cos(ta) * 0.95), mul(axH.f, Math.sin(ta) * 0.95)));
   const axS = axes(T.slamT);
-  const dirA = norm(add(mul(axS.r, -1), mul(axS.f, -0.32)));
+  const dirA = norm(add(mul(axS.r, -1), mul(axS.f, -0.1)));
   const vA = 1.05, tau1 = Math.max(0.2, T.deadT + 0.55 - T.slamT);
   const awayD = (tt) => {
     const u = tt - T.slamT;
@@ -281,7 +281,7 @@ function camAt(g, tt, M, T) {
   const w3 = smooth((tt - (T.crowdT - 0.4)) / 0.9);                 // down into the crowd around the rival
   const wh = smooth((tt - (T.headT - 0.35)) / 0.5);                 // close on the crack
   const w4 = smooth((tt - T.slamT) / 0.7);                          // wider as Kaiser walks away
-  const w5 = smooth((tt - (T.deadT + 0.3)) / 1.5);                  // follow Kaiser
+  const w5 = smooth((tt - (T.deadT + 0.15)) / 1.3);                 // follow Kaiser
   const wl = smooth((tt - T.lookT) / 1.2);                          // ease in under the spotlight
   let c = [0, 0];
   if (wHv > 0) c = mixv(c, M.kaiserCircle(tt), 0.42 * wHv);
@@ -714,7 +714,7 @@ function shatterKit(g, pose, facing, pal, seed) {
     const ccx = pts.reduce((a, p) => a + p[0], 0) / pts.length, ccy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
     const i = cell.idx;
     const r1 = hashU(seed, i, 501), r2 = hashU(seed, i, 502), r3 = hashU(seed, i, 503), r4 = hashU(seed, i, 504), r5 = hashU(seed, i, 505), r6 = hashU(seed, i, 506);
-    const dir = norm([ccx - centre[0] + (r1 - 0.5) * refU * 0.25, ccy - centre[1] + (r2 - 0.5) * refU * 0.25]);
+    const dir = norm([(ccx - centre[0]) * 1.8 + (r1 - 0.5) * refU * 0.5, (ccy - centre[1]) * 0.8 + (r2 - 0.5) * refU * 0.3]);
     list.push({ c: cv, white: wv, x0: (x0 - O[0]) / refU, y0: (y0 - O[1]) / refU, w: (x1 - x0) / refU, h: (y1 - y0) / refU,
       cx: (ccx - O[0]) / refU, cy: (ccy - O[1]) / refU, delay: 0.08 * Math.hypot(ccx - O[0], ccy - O[1]) / refU,
       dir, v: 0.55 + 1.1 * r3, spin: (r4 - 0.5) * 11, flip: 2.5 + 7 * r5, ph: r1 * TAU, life: 0.8 + 0.75 * r2,
@@ -866,7 +866,7 @@ function drawBoard(g, t, F, T, cam, pal, lit, dim) {
     if (!p) continue;
     ctx.beginPath();
     path(p);
-    ctx.fillStyle = css(L.color, Math.min(1, 0.5 * L.a));
+    ctx.fillStyle = css(L.color, Math.min(1, 0.7 * L.a));
     ctx.fill();
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -1129,17 +1129,29 @@ function drawEye(g, eye, r, pal, flare, alpha, trail) {
   const css = g.color.css;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  if (trail && trail.length > 1) {                       // a tapered ribbon of light through where it was
-    for (let k = trail.length - 2; k >= 0; k--) {
-      const a = trail[k], b = trail[k + 1];
-      const wa = r * 0.4 * (1 - k / trail.length), wb = r * 0.4 * (1 - (k + 1) / trail.length);
-      const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  if (trail && trail.length > 2) {                       // one smooth tapered ribbon of light through where it was
+    const n = trail.length;
+    const ribbon = (wMax) => {
+      const L = [], R = [];
+      for (let k = 0; k < n; k++) {
+        const a = trail[Math.max(0, k - 1)], b = trail[Math.min(n - 1, k + 1)];
+        const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+        const w = wMax * (1 - k / (n - 1)) ** 1.3;
+        L.push([trail[k][0] - (dy / l) * w, trail[k][1] + (dx / l) * w]);
+        R.push([trail[k][0] + (dy / l) * w, trail[k][1] - (dx / l) * w]);
+      }
       ctx.beginPath();
-      ctx.moveTo(a[0] + nx * wa, a[1] + ny * wa); ctx.lineTo(b[0] + nx * wb, b[1] + ny * wb);
-      ctx.lineTo(b[0] - nx * wb, b[1] - ny * wb); ctx.lineTo(a[0] - nx * wa, a[1] - ny * wa); ctx.closePath();
-      ctx.fillStyle = css(k < 2 ? pal.cyanHi : pal.cyan, alpha * 0.8 * (1 - k / trail.length));
-      ctx.fill();
-    }
+      ctx.moveTo(L[0][0], L[0][1]);
+      for (let k = 1; k < n; k++) ctx.lineTo(L[k][0], L[k][1]);
+      for (let k = n - 1; k >= 0; k--) ctx.lineTo(R[k][0], R[k][1]);
+      ctx.closePath();
+    };
+    ribbon(r * 0.42);
+    ctx.fillStyle = css(pal.cyan, alpha * 0.45);
+    ctx.fill();
+    ribbon(r * 0.14);
+    ctx.fillStyle = css(pal.cyanHi, alpha * 0.85);
+    ctx.fill();
   }
   const gr = r * 2.4 * (1 + 2.2 * flare);
   ctx.globalAlpha = alpha;
@@ -1282,7 +1294,11 @@ export function draw(g, t, F, P, S) {
   }
   // the rival (the frozen, fully cracked figure once he shatters: the shards are cut from it)
   let rFig = null, crack = null;
-  if (rvIn && rpl && t < T.deadT + 2.5) {
+  if (rvIn && rpl && shattered && t < T.deadT + 2.5) {   // only his skeleton: the shards are cut from the shatter kit
+    const j = solve(RIVAL, rivalPose(rtt, T, F), { x: rpl.x, ground: rpl.ground, scale: rpl.scale, facing: rFacing, view: 'side' });
+    rFig = { j, bb: bboxOf(j, RIVAL, 6), pl: rpl };
+    crack = { O: crackFrame(j).O, U: rpl.U, R: 2 };
+  } else if (rvIn && rpl && !shattered) {
     const L = g.layer('kzr-r');
     const j = drawPuppet(L.ctx, RIVAL, rivalPose(rtt, T, F), { x: rpl.x, ground: rpl.ground, scale: rpl.scale, facing: rFacing, view: 'side', devScale: g.scale });
     rFig = { L, j, bb: bboxOf(j, RIVAL, 6), pl: rpl };
@@ -1291,14 +1307,16 @@ export function draw(g, t, F, P, S) {
     if (ap < 1) {                                       // materialising outward from the eye
       const eye = headPoint(j, RIVAL, 0.45, -0.06);
       const R = U * (0.1 + 1.25 * outCubic(ap)), edge = U * 0.08;
-      const x = L.ctx;
+      const x = L.ctx, ds = g.scale;
       x.save();
+      x.setTransform(1, 0, 0, 1, 0, 0);                 // (destination-in with a gradient breaks under a scaled transform)
       x.globalCompositeOperation = 'destination-in';
-      const gr = x.createRadialGradient(eye[0], eye[1], Math.max(0, R - edge), eye[0], eye[1], R + 0.5);
+      const gr = x.createRadialGradient(eye[0] * ds, eye[1] * ds, Math.max(0, R - edge) * ds, eye[0] * ds, eye[1] * ds, (R + 0.5) * ds);
       gr.addColorStop(0, 'rgba(0,0,0,1)');
       gr.addColorStop(1, 'rgba(0,0,0,0)');
       x.fillStyle = gr;
-      x.fillRect(rFig.bb.x0, rFig.bb.y0, rFig.bb.x1 - rFig.bb.x0, rFig.bb.y1 - rFig.bb.y0);
+      x.fillRect(rFig.bb.x0 * ds, rFig.bb.y0 * ds, (rFig.bb.x1 - rFig.bb.x0) * ds, (rFig.bb.y1 - rFig.bb.y0) * ds);
+      x.setTransform(ds, 0, 0, ds, 0, 0);
       x.globalCompositeOperation = 'source-atop';
       x.strokeStyle = css(pal.cyanHi, 0.95);
       x.lineWidth = U * 0.035;
@@ -1307,73 +1325,14 @@ export function draw(g, t, F, P, S) {
     }
     const cr = crackRadius(t, T, F);
     if (cr > 0) {                                       // glass: faceted panes, white fracture lines
-      const net = crackNet(seed);
-      const O = headPoint(j, RIVAL, 0.22, -0.12);
+      const { O, phi } = crackFrame(j);
       crack = { O, U, R: cr };
-      const x = L.ctx;
-      const P2 = (p) => [O[0] + p[0] * U * rFacing, O[1] + p[1] * U];
       const pulse = F.impulse('hit', 0.1, 1, rtt) * smooth((t - T.slamT) / 0.05);
       const hot = smooth((t - (T.deadT - 0.15)) / 0.15);
+      const x = L.ctx;
       x.save();
       x.globalCompositeOperation = 'source-atop';
-      x.lineCap = 'round';
-      x.lineJoin = 'round';
-      for (const c of net.cells) {                      // each pane catches the light differently
-        if (c.r > cr + 0.02) continue;
-        const a = (0.04 + 0.16 * c.tint * c.tint) * (0.7 + 0.6 * pulse) + 0.25 * hot;
-        x.fillStyle = css(c.tint > 0.6 ? pal.glass : pal.cyan, Math.min(1, a));
-        x.beginPath();
-        c.poly.forEach((p, i) => { const s = P2(p); if (i) x.lineTo(s[0], s[1]); else x.moveTo(s[0], s[1]); });
-        x.closePath();
-        x.fill();
-      }
-      const radialPath = (rmax, inner) => {
-        x.beginPath();
-        for (const line of net.radial) {
-          let started = false;
-          for (let i = 0; i < line.length; i++) {
-            const p = line[i];
-            if (inner && p[2] > inner) break;
-            if (p[2] <= rmax) {
-              const s = P2(p);
-              if (!started) { x.moveTo(s[0], s[1]); started = true; } else x.lineTo(s[0], s[1]);
-            } else {
-              if (started && i > 0) {
-                const a = line[i - 1], u = (rmax - a[2]) / Math.max(1e-6, p[2] - a[2]);
-                const s = P2([a[0] + (p[0] - a[0]) * u, a[1] + (p[1] - a[1]) * u]);
-                x.lineTo(s[0], s[1]);
-              }
-              break;
-            }
-          }
-        }
-      };
-      const full = cr > 1.3;
-      const otherPath = () => {
-        x.beginPath();
-        for (const rg of net.rings) {
-          if (!(rg.early || full) || rg.r > cr - 0.03) continue;
-          const a = P2(rg.pts[0]), b = P2(rg.pts[1]), c = P2(rg.pts[2]);
-          x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.lineTo(c[0], c[1]);
-        }
-        for (const sp of net.splinters) {
-          if (sp.r > cr) continue;
-          const a = P2(sp.a), b = P2(sp.b);
-          x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]);
-        }
-        if (full) for (const [a0, c0] of net.diags) { const a = P2(a0), c = P2(c0); x.moveTo(a[0], a[1]); x.lineTo(c[0], c[1]); }
-      };
-      const glowW = Math.max(2, U * (0.011 + 0.006 * pulse)), coreW = Math.max(1, U * 0.0028);
-      x.strokeStyle = css(pal.cyan, 0.4 + 0.3 * pulse + 0.3 * hot);
-      radialPath(cr, 0); x.lineWidth = glowW; x.stroke();
-      otherPath(); x.lineWidth = glowW * 0.7; x.stroke();
-      x.strokeStyle = '#FFFFFF';
-      radialPath(cr, 0); x.lineWidth = coreW; x.stroke();
-      radialPath(cr, 0.3); x.lineWidth = coreW * 2.2; x.stroke();
-      otherPath(); x.lineWidth = coreW * 0.8; x.stroke();
-      const lr = U * (0.1 + 0.08 * pulse + 0.25 * hot);  // light leaking from the impact point
-      x.globalAlpha = 0.65 + 0.35 * pulse;
-      x.drawImage(g.sprites.glow(pal.cyanHi, 1), O[0] - lr, O[1] - lr, 2 * lr, 2 * lr);
+      drawCracks(g, x, crackNet(seed), crackXf(O, U, rFacing, phi), O, U, cr, pulse, hot, pal);
       x.restore();
     }
   }
@@ -1413,6 +1372,64 @@ export function draw(g, t, F, P, S) {
   if (kFig && !closeUp && dark <= 0) reflectionOf(g, kFig.L.canvas, kFig.bb, kFig.pl.ground, 0.22, kFig.pl.U * 0.42);
   if (rFig && !shattered && rvIn) reflectionOf(g, rFig.L.canvas, rFig.bb, rFig.pl.ground, 0.2 * rivalA, rFig.pl.U * 0.4);
   // PROF('refl')
+
+  /** The column of heavenly light falling on Kaiser: its body behind him, the falling light in front. */
+  function heavenColumn(part) {
+    const age = t - T.heavenT;
+    const I = (0.55 + 0.45 * Math.exp(-age / 0.35)) * (1 - smooth((t - (T.visionT - 0.35)) / 0.7));
+    if (I <= 0.01) return;
+    const U = kFig.pl.U, cx = (kFig.j.pelvis[0] + kFig.j.neck[0]) / 2, feet = kFig.pl.ground;
+    const fall = outCubic(age / 0.14);
+    const yb = lerp(-60, feet + U * 0.04, fall);
+    const hw = U * 0.62;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    if (part === 'back') {
+      const gr = ctx.createLinearGradient(cx - hw, 0, cx + hw, 0);
+      gr.addColorStop(0, css(pal.gold, 0));
+      gr.addColorStop(0.2, css(pal.gold, 0.1 * I));
+      gr.addColorStop(0.42, css(pal.gold, 0.3 * I));
+      gr.addColorStop(0.5, css(pal.goldHi, 0.55 * I));
+      gr.addColorStop(0.58, css(pal.gold, 0.3 * I));
+      gr.addColorStop(0.8, css(pal.gold, 0.1 * I));
+      gr.addColorStop(1, css(pal.gold, 0));
+      ctx.fillStyle = gr;
+      ctx.fillRect(cx - hw, -20, 2 * hw, yb + 20);
+      for (let i = 0; i < 6; i++) {                        // brighter rays drifting inside
+        const x = cx + (hashU(92, i, 1) - 0.5) * 1.3 * hw + Math.sin(t * 0.9 + i * 2.1) * hw * 0.08, w = 3 + 9 * hashU(92, i, 2);
+        ctx.fillStyle = css(pal.goldHi, (0.05 + 0.1 * Math.abs(Math.sin(t * 2.3 + i * 1.7))) * I);
+        ctx.fillRect(x - w / 2, -20, w, yb + 20);
+      }
+      ctx.globalAlpha = 0.55 * I;                           // the heavens opening above him
+      ctx.drawImage(g.sprites.glow(pal.gold, 1), cx - hw * 1.6, -hw * 0.9, hw * 3.2, hw * 1.5);
+      ctx.globalAlpha = 1;
+      const imp = age >= 0.12 ? Math.exp(-(age - 0.12) / 0.25) : 0;
+      groundGlow(g, cam, ks.pos, 1.2 + 1.3 * imp, pal.gold, 0.45 * I + 0.6 * imp);
+    } else {
+      ctx.fillStyle = css(pal.goldHi, 0.9 * I);              // light falling through the column
+      for (let i = 0; i < 30; i++) {
+        const x = cx + (hashU(91, i, 1) - 0.5) * 1.5 * hw;
+        const y = ((hashU(91, i, 2) * 1300 + age * (300 + 500 * hashU(91, i, 3))) % 1300) - 100;
+        if (y > yb) continue;
+        const sz = 1.5 + 2.5 * hashU(91, i, 4);
+        ctx.fillRect(x - sz / 2, y, sz, sz * 6);
+      }
+      ctx.fillStyle = css(pal.goldHi, 0.7 * I);              // and gold motes rising around him
+      for (let i = 0; i < 18; i++) {
+        const a2 = (age * (0.35 + 0.4 * hashU(94, i, 1)) + hashU(94, i, 2)) % 1;
+        const x = cx + (hashU(94, i, 3) - 0.5) * 1.3 * hw + Math.sin(age * 3 + i) * 8;
+        const y = feet - a2 * U * 1.1;
+        const sz = (1.5 + 2.5 * hashU(94, i, 4)) * (1 - a2);
+        ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+      }
+      if (fall < 1) {                                        // the bright leading edge
+        ctx.globalAlpha = 1 - fall * 0.5;
+        ctx.drawImage(g.sprites.glow(pal.goldHi, 1), cx - hw * 1.4, yb - hw * 0.5, hw * 2.8, hw);
+      }
+    }
+    ctx.restore();
+  }
+  if (kFig && t >= T.heavenT && t < T.visionT + 0.6) heavenColumn('back');
 
   // ------------------------------------------------ the figures, back to front
   const items = [];
@@ -1542,66 +1559,60 @@ export function draw(g, t, F, P, S) {
     const fv = after(t, T.visionT), fa = after(t, T.rivalT);
     const flare = (fv >= 0 ? Math.exp(-fv / 0.22) : 0) + (fa >= 0 ? 0.9 * Math.exp(-fa / 0.18) : 0);
     const trail = [eye];
-    const back = [-rFacing, -0.12];
-    for (let k = 1; k <= 9; k++) {
+    const back = [-rFacing, -0.1];
+    for (let k = 1; k <= 10; k++) {                     // where the eye was, streaming back off his head
       if (t - k * 0.034 < T.rivalT) break;
       const p = rivalEyeAt(t - k * 0.034) || eye;
-      const wob = Math.sin(t * 7 + k * 0.9) * r * 0.08 * k;
-      trail.push([p[0] + back[0] * r * 0.32 * k, p[1] + back[1] * r * 0.32 * k + wob]);
+      const wob = Math.sin(t * 5 - k * 0.55) * r * 0.035 * k;
+      trail.push([p[0] + back[0] * r * 0.36 * k, p[1] + back[1] * r * 0.36 * k + wob]);
     }
     const cracked = t >= T.headT ? 0.65 + 0.35 * Math.sin(t * 50) ** 2 : 1;
     drawEye(g, eye, r, pal, flare, Math.max(rivalA, fa >= 0 ? 1 : 0) * cracked * (0.9 + 0.1 * snare), trail);
   }
 
   function drawShards() {
-    const { L, bb, j, pl } = rFig;
+    const { j, pl } = rFig;
     const U = pl.U;
-    const O = crack ? crack.O : headPoint(j, RIVAL, 0.22, -0.12);
-    const list = shardsOf(crackNet(seed), j, RIVAL, O, U, rFacing, seed);
-    const white = silOf(g, 'kzr-rwhite', L.canvas, bb, pal.glass);
-    const ds = g.scale, gAcc = 2.5;
-    for (const sh of list) {
+    const { O } = crackFrame(j);
+    const kit = shatterKit(g, rivalPose(T.deadT, T, F), rFacing, pal, seed);
+    const gAcc = 2.5;
+    for (const sh of kit.list) {
       const tau = t - (T.deadT + sh.delay);
-      let dx = 0, dy = 0, rot = 0, flip = 1, al = 1, glint;
+      let dx = 0, dy = 0, rot = 0, flip = 1, al = 1, glint, zs = 1;
       if (tau > 0) {
-        const k = 2.3, dd = (sh.v * (1 - Math.exp(-k * tau))) / k;
-        dx = sh.dir[0] * dd;
-        dy = sh.dir[1] * dd - 0.22 * (1 - Math.exp(-3 * tau)) + 0.5 * gAcc * Math.max(0, tau - 0.14) ** 2;
-        const landed = sh.cy + dy > sh.floor;
+        const kd = 2.4, dd = (sh.v * (1 - Math.exp(-kd * tau))) / kd;
+        zs = 1 + sh.zv * dd;                             // some fly at the camera
+        dx = sh.dir[0] * dd * (1 + 0.6 * sh.zv);
+        dy = sh.dir[1] * dd - 0.14 * (1 - Math.exp(-3 * tau)) + 0.5 * gAcc * Math.max(0, tau - 0.16) ** 2;
+        const landed = sh.zv === 0 && sh.cy + dy > sh.floor;
         if (landed) dy = sh.floor - sh.cy;
         rot = (sh.spin * (1 - Math.exp(-1.6 * tau))) / 1.6;
         const ph = sh.ph + sh.flip * tau * (landed ? 0.25 : 1);
         flip = Math.cos(ph);
         if (Math.abs(flip) < 0.16) flip = 0.16 * (flip < 0 ? -1 : 1);
-        glint = Math.max(0, 1 - Math.abs(Math.cos(ph)) * 2.6) + Math.exp(-tau / 0.06);
-        al = 1 - smooth((tau - sh.life) / 0.45);
+        glint = Math.max(0, 1 - Math.abs(Math.cos(ph)) * 3.2) + Math.exp(-tau / 0.05);
+        al = (1 - smooth((tau - sh.life) / 0.45)) * (sh.zv ? 1 - smooth((zs - 1.6) / 0.8) : 1);
       } else glint = 0.9;
       if (al <= 0.01) continue;
       const cx0 = O[0] + sh.cx * U, cy0 = O[1] + sh.cy * U;
       ctx.save();
       ctx.translate(cx0 + dx * U, cy0 + dy * U);
       ctx.rotate(rot);
-      ctx.scale(flip, 1);
+      ctx.scale(flip * zs, zs);
       ctx.translate(-cx0, -cy0);
-      ctx.beginPath();
-      sh.poly.forEach(([x, y], i) => (i ? ctx.lineTo(O[0] + x * U, O[1] + y * U) : ctx.moveTo(O[0] + x * U, O[1] + y * U)));
-      ctx.closePath();
-      ctx.clip();
-      const r = devRect(g, { x0: O[0] + sh.bb[0] * U - 3, y0: O[1] + sh.bb[1] * U - 3, x1: O[0] + sh.bb[2] * U + 3, y1: O[1] + sh.bb[3] * U + 3 });
-      if (r) {
-        ctx.globalAlpha = al;
-        ctx.drawImage(L.canvas, r[0], r[1], r[2], r[3], r[0] / ds, r[1] / ds, r[2] / ds, r[3] / ds);
-        if (white && glint > 0.02) {
-          ctx.globalAlpha = al * Math.min(1, glint);
-          ctx.drawImage(white, r[0], r[1], r[2], r[3], r[0] / ds, r[1] / ds, r[2] / ds, r[3] / ds);
-        }
+      const x = O[0] + sh.x0 * U, y = O[1] + sh.y0 * U, w = sh.w * U, h = sh.h * U;
+      ctx.globalAlpha = al;
+      ctx.drawImage(sh.c, x, y, w, h);
+      if (glint > 0.02) {
+        ctx.globalAlpha = al * Math.min(1, glint);
+        ctx.drawImage(sh.white, x, y, w, h);
       }
       ctx.restore();
     }
     // PROF('shards')
     const age = t - T.deadT;                            // the eye's light rides its shard up and dies
     if (age < 0.7) {
-      const eye = headPoint(j, RIVAL, 0.45, -0.06);
+      const eye = [O[0] + kit.eye[0] * U, O[1] + kit.eye[1] * U];
       const e2 = [eye[0] + rFacing * age * U * 0.25, eye[1] - U * 0.35 * outCubic(age / 0.7)];
       drawEye(g, e2, RIVAL.headR * U, pal, 0.8 * Math.exp(-age / 0.1), (1 - age / 0.7) ** 1.5, null);
     }
@@ -1611,47 +1622,7 @@ export function draw(g, t, F, P, S) {
   // PROF('items')
 
   // ------------------------------------------------ light, particles, manga effects
-  if (kFig && t >= T.heavenT && t < T.visionT + 0.6) {   // the column of heavenly light on Kaiser
-    const age = t - T.heavenT;
-    const I = (0.5 + 0.5 * Math.exp(-age / 0.35)) * (1 - smooth((t - (T.visionT - 0.35)) / 0.7));
-    const U = kFig.pl.U, cx = (kFig.j.pelvis[0] + kFig.j.neck[0]) / 2, feet = kFig.pl.ground;
-    const fall = outCubic(age / 0.14);
-    const yb = lerp(-60, feet + U * 0.04, fall);
-    const hw = U * 0.5;
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const gr = ctx.createLinearGradient(cx - hw, 0, cx + hw, 0);
-    gr.addColorStop(0, css(pal.gold, 0));
-    gr.addColorStop(0.22, css(pal.gold, 0.12 * I));
-    gr.addColorStop(0.5, css(pal.goldHi, 0.4 * I));
-    gr.addColorStop(0.78, css(pal.gold, 0.12 * I));
-    gr.addColorStop(1, css(pal.gold, 0));
-    ctx.fillStyle = gr;
-    ctx.fillRect(cx - hw, -20, 2 * hw, yb + 20);
-    ctx.fillStyle = css('#FFFFFF', 0.2 * I);            // the white core and a few rays
-    ctx.fillRect(cx - hw * 0.12, -20, hw * 0.24, yb + 20);
-    for (let i = 0; i < 7; i++) {
-      const x = cx + (hashU(92, i, 1) - 0.5) * 1.5 * hw, w = 2 + 6 * hashU(92, i, 2);
-      ctx.fillStyle = css(pal.goldHi, (0.06 + 0.1 * Math.abs(Math.sin(t * 2.3 + i * 1.7))) * I);
-      ctx.fillRect(x - w / 2, -20, w, yb + 20);
-    }
-    ctx.fillStyle = css(pal.goldHi, 0.85 * I);          // light falling inside the column
-    for (let i = 0; i < 30; i++) {
-      const x = cx + (hashU(91, i, 1) - 0.5) * 1.6 * hw;
-      const y = ((hashU(91, i, 2) * 1300 + age * (300 + 500 * hashU(91, i, 3))) % 1300) - 100;
-      if (y > yb) continue;
-      const s = 1.5 + 2.5 * hashU(91, i, 4);
-      ctx.fillRect(x - s / 2, y, s, s * 6);
-    }
-    if (fall < 1) {                                      // the bright leading edge
-      ctx.globalAlpha = 1 - fall * 0.5;
-      ctx.drawImage(g.sprites.glow(pal.goldHi, 1), cx - hw * 1.4, yb - hw * 0.5, hw * 2.8, hw);
-    }
-    ctx.globalAlpha = 1;
-    const imp = age >= 0.12 ? Math.exp(-(age - 0.12) / 0.25) : 0;
-    groundGlow(g, cam, ks.pos, 1.1 + 1.3 * imp, pal.gold, 0.4 * I + 0.6 * imp);
-    ctx.restore();
-  }
+  if (kFig && t >= T.heavenT && t < T.visionT + 0.6) heavenColumn('front');
   // PROF('heaven')
 
   if (dark > 0 && kFig) {                                // dark everywhere but one spotlight on Kaiser
@@ -1775,10 +1746,10 @@ export function draw(g, t, F, P, S) {
   {                                                      // flashes: heaven (gold), slam, shatter (white), the name (blue)
     let fl = 0, col = pal.glass;
     const fd = after(t, T.deadT), fs = after(t, T.slamT), fh = after(t, T.heavenT + 0.12), fn = after(t, T.nameT);
-    if (fd >= 0) fl = 0.6 * Math.exp(-fd / 0.07);
+    if (fd >= 0) fl = 0.45 * Math.exp(-fd / 0.07);
     if (fs >= 0 && t < T.deadT) fl = Math.max(fl, 0.32 * Math.exp(-fs / 0.06));
     if (fh >= 0 && fh < 0.5) { const v = 0.32 * Math.exp(-fh / 0.08); if (v > fl) { fl = v; col = pal.goldHi; } }
-    if (fn >= 0 && fn < 0.4) { const v = 0.35 * Math.exp(-fn / 0.06); if (v > fl) { fl = v; col = KZ.roseHi; } }
+    if (fn >= 0 && fn < 0.4) { const v = 0.18 * Math.exp(-fn / 0.06); if (v > fl) { fl = v; col = KZ.roseHi; } }
     if (fl > 0.01) {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';

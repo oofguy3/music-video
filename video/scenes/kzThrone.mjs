@@ -83,7 +83,7 @@ function shotCamera(kind, u, t, head) {
   const [px, , pz] = HALL.pelvis;
   switch (kind) {
     case 'medium':                // him lounging, the throne around him
-      return camera({ x: lerp(px + 0.5, px + 0.36, ease(u)), y: 1.98 + drift, z: lerp(pz - 2.75, pz - 2.4, ease(u)), f: 1150, px: 960, py: 560 });
+      return camera({ x: lerp(px + 0.5, px + 0.36, ease(u)), y: 1.98 + drift, z: lerp(pz - 2.75, pz - 2.4, ease(u)), f: 1150, px: 960, py: 495 });
     case 'close': {               // face and hand, the head large
       const dz = lerp(0.84, 0.7, ease(u));
       return camera({ x: head[0] + 0.03, y: head[1] - 0.1 + drift * 0.2, z: head[2] - dz, f: 1080, px: 990, py: 520 });
@@ -113,8 +113,8 @@ export function draw(g, t, F, P, S) {
   ctx.save();
   if (cam.roll) { ctx.translate(960, 540); ctx.rotate(cam.roll); ctx.translate(-960, -540); }
   drawHall(g, cam, C, { moon: 1, soft: shot.kind !== 'wide' });
-  drawPool(g, cam, HALL.throne.x - 0.2, HALL.dais.y + 0.01, HALL.throne.z - 0.9, 1.9, C.spot, 0.3 + 0.2 * kick);
-  drawShafts(g, cam, C, { amt: 1, spot: 0.8 + 0.4 * kick, t });
+  drawPool(g, cam, HALL.throne.x - 0.2, HALL.dais.y + 0.01, HALL.throne.z - 0.9, 1.9, C.candle, 0.22 + 0.2 * kick);
+  drawShafts(g, cam, C, { amt: 0.85 + 0.45 * kick, spot: 0.8 + 0.5 * kick, t });
 
   const swing = (P.swing ?? defaults.swing) * Math.cos(Math.PI * mt) + 0.03 * kick;
   // gold dust on snares: a burst of sparks behind him, like an aura flaring

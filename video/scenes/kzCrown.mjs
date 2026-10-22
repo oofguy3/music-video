@@ -525,7 +525,7 @@ const POSE = {
   emperor: { sL: 1.1, sR: 1.1, eL: 0.2, eR: 0.2, hL: 0.07, hR: 0.07, kL: 0.14, kR: 0.05, head: -0.3 },
   power: { sL: 0.85, sR: 1.3, eL: 0.25, eR: 0.7, hL: 0.06, hR: 0.04, kL: 0.2, kR: 0.08, head: 0.08 },
   sideHover: { sL: 0.45, eL: 0.55, sR: -0.3, eR: 0.45, hL: 0.25, kL: 0.45, hR: -0.15, kR: 0.6, head: 0.2, lean: 0.02 },
-  windup: { sL: 2.1, eL: 0.35, sR: -1.5, eR: 0.35, hL: 0.35, kL: 0.55, hR: -1.25, kR: 1.95, lean: -0.12, head: 0.4, rot: -0.22 },
+  windup: { sL: 1.0, eL: 0.4, sR: -2.2, eR: 0.3, hL: 0.3, kL: 0.5, hR: -1.0, kR: 2.4, lean: 0.15, head: 0.45, rot: -0.1 },
   contact: { sL: -1.2, eL: 0.35, sR: 1.9, eR: 0.2, hL: -0.6, kL: 1.2, hR: 1.35, kR: 0.08, lean: -0.3, head: 0.35, rot: 0.12 },
   follow: { sL: -1.3, eL: 0.3, sR: 2.3, eR: 0.15, hL: -0.7, kL: 1.1, hR: 2.0, kR: 0.1, lean: -0.42, head: 0.25, rot: -0.15 },
   crowned: { sL: 0.72, sR: 0.72, eL: 0.2, eR: 0.2, hL: 0.05, hR: 0.05, kL: 0.12, kR: 0.04, head: -0.24 },
@@ -578,9 +578,10 @@ function makeView(t, T) {
   }
   const p1 = smooth((t - T.boom) / Math.max(0.5, T.chosen - T.boom));
   const p2 = inOut((t - T.chosen) / Math.max(0.5, T.t1 - T.chosen));
+  const drift = Math.sin(Math.PI * p1) * (1 - p2);                // a slow sideways glide while he hovers
   return {
     shot, hy: 226, st: { x: 960, y: 915, s: 0.52 }, gx: 0, cloudY: 0,
-    cam: { z: 1 + 0.06 * p1 + 0.42 * p2, fx: 960, fy: 300, ox: 0, oy: 0, ty: crownTilt(t, T) },
+    cam: { z: 1 + 0.1 * p1 + 0.38 * p2, fx: 960, fy: 300, ox: 70 * drift, oy: -24 * drift, ty: crownTilt(t, T) },
     K: { x: 960, y: 440 + bob, U: 500, view: 'front', facing: 1 },
   };
 }
@@ -698,7 +699,7 @@ function capeFor(c, j, K, pal, ink) {
   const side = K.view === 'side';
   c.save();
   const sx = side ? 1 : 1 + 0.24 * cp.open, sy = side ? 1 : 1 + 0.06 * cp.open;
-  if (sx > 1.01) { c.beginPath(); c.rect(cx - 4 * U, cy + 0.066 * U, 8 * U, 4 * U); c.clip(); }   // the scaled collar stays hidden
+
   c.translate(cx, cy);
   if (side) {
     c.rotate(cp.stream * j.facing);
@@ -711,7 +712,8 @@ function capeFor(c, j, K, pal, ink) {
   if (ink) {
     drawCape(c, j, { t: cp.t, wind: cp.wind, length: cp.length, color: '#202020', deep: '#000000', gold: '#FFFFFF', fur: '#FFFFFF', spot: '#000000' });
   } else {
-    drawCape(c, j, { t: cp.t, wind: cp.wind, length: cp.length, color: pal.cape });
+    // (a widened cape's own collar is drawn in the cape's colours: it tucks under the real collar)
+    drawCape(c, j, sx > 1.01 ? { t: cp.t, wind: cp.wind, length: cp.length, color: pal.cape, fur: KZ.capeDeep, spot: KZ.capeDeep } : { t: cp.t, wind: cp.wind, length: cp.length, color: pal.cape });
     // folds: dark and light wedges from the collar to the hem, painted only onto the cape (first in the layer)
     c.globalCompositeOperation = 'source-atop';
     const half = Math.max(Math.abs(j.shoulderR[0] - j.shoulderL[0]) / 2, U * 0.09) + U * 0.05;
@@ -856,8 +858,8 @@ function drawRaysBehind(g, cx, cy, col, amt, t, len, kick, rot0) {
 }
 
 /** Electric arcs crackling off the ball (re-rolled every 2 frames). */
-function arcs(ctx, x, y, r, n, len, frame, color, width, seed = 5) {
-  const k = Math.floor(frame / 2);
+function arcs(ctx, x, y, r, n, len, frame, color, width, seed = 5, hold = 2) {
+  const k = Math.floor(frame / hold);
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.lineCap = 'round';
@@ -877,18 +879,18 @@ function arcs(ctx, x, y, r, n, len, frame, color, width, seed = 5) {
   ctx.stroke();
 }
 
-function drawBallEnergy(g, x, y, r, charge, flash, F, pal, { rot = 0, arcsN = 0 } = {}) {
+function drawBallEnergy(g, x, y, r, charge, flash, F, pal, { rot = 0, arcsN = 0, hold = 2 } = {}) {
   const { ctx } = g, css = g.color.css;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   const gl = g.sprites.glow(pal.comet), gw = g.sprites.glow(pal.rose);
-  const R1 = r * (2.6 + 8 * charge + 6 * flash);
-  ctx.globalAlpha = clamp(0.22 + 0.6 * charge + 0.45 * flash);
-  ctx.drawImage(gw, x - R1 * 1.7, y - R1 * 1.7, R1 * 3.4, R1 * 3.4);
+  const R1 = r * (2.6 + 6.5 * charge + 6 * flash);
+  ctx.globalAlpha = clamp(0.18 + 0.42 * charge + 0.4 * flash);
+  ctx.drawImage(gw, x - R1 * 1.3, y - R1 * 1.3, R1 * 2.6, R1 * 2.6);
   ctx.globalAlpha = clamp(0.25 + 0.75 * charge + 0.35 * flash);
   ctx.drawImage(gl, x - R1, y - R1, 2 * R1, 2 * R1);
   ctx.globalAlpha = 1;
-  if (arcsN > 0) arcs(ctx, x, y, r * 1.05, arcsN, r * (1.6 + 2.6 * charge), F.frame || 0, css(pal.cometCore, 0.85), Math.max(1.2, r * 0.06));
+  if (arcsN > 0) arcs(ctx, x, y, r * 1.05, arcsN, r * (1.6 + 2.6 * charge), F.frame || 0, css(pal.cometCore, 0.85), Math.max(1.2, r * 0.06), 5, hold);
   ctx.restore();
   drawBall(ctx, x, y, r, { rot });
   if (charge > 0.05 || flash > 0.05) {
@@ -1066,6 +1068,14 @@ function drawImpactFrame(g, k, V, pal, t) {
   }
   ctx.filter = 'grayscale(1) contrast(1.8)';
   ctx.drawImage(L.canvas, X, Y, Wd, Hd, X, Y, Wd, Hd);
+  ctx.restore();
+  // the head in negative, so that on the engine's inverted frames he has a light face with dark features
+  const [hx, hy] = camPt(cam, 1, j.headC[0], j.headC[1]);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(hx, hy, KAISER.headR * j.U * cam.z * 1.42, 0, TAU); ctx.clip();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.filter = 'grayscale(1) contrast(1.8) invert(1)';
+  ctx.drawImage(L.canvas, X, Y, Wd, Hd, X, Y, Wd, Hd);
   ctx.filter = 'none';
   ctx.restore();
   // the ball, squashed on the boot
@@ -1235,7 +1245,7 @@ function drawPetals(g, V, pal, t, T, F, P, layer) {
     let x = ox + (hashU(41, i, 5) - 0.5) * 300 + Math.cos(ang) * sp * dv + Math.sin(age * 2.1 + i) * 26 * depth;
     let y = oy - 40 + Math.sin(ang) * sp * dv + 35 * depth * age * age;
     const vx = x - 960, vy = y - 430, vl = Math.hypot(vx, vy) || 1;   // snare scatter, away from Kaiser
-    x += (vx / vl) * sc * 60 * depth; y += (vy / vl) * sc * 60 * depth;
+    x += (vx / vl) * sc * 95 * depth; y += (vy / vl) * sc * 95 * depth;
     const [X, Y] = camPt(V.cam, par, x, y);
     if (X < -80 || X > g.W + 80 || Y < -80 || Y > g.H + 80) continue;
     const fade = clamp(age / 0.15) * clamp((life - age) / 0.6);
@@ -1356,12 +1366,12 @@ function drawSearchlights(g, V, pal, t, T, F) {
     const [ox, oy] = stPt(V, Math.cos(phi) * 125, H_ROOF, Math.sin(phi) * 100);
     const aim = (n) => -Math.PI / 2 + side * (0.18 + 0.5 * hashU(5151, n, i)) + 0.12 * Math.sin(n * 1.7 + i * 2.1);
     const a = lerp(aim(k - 1), aim(k), ease) + 0.03 * Math.sin(t * 1.3 + i);
-    const len = 1500, w0 = 5, w1 = 80;
+    const len = 1500, w0 = 4, w1 = 64;
     const ex = ox + Math.cos(a) * len, ey = oy + Math.sin(a) * len;
     const px = -Math.sin(a), py = Math.cos(a);
     const col = gold && i % 2 === 0 ? pal.gold : pal.stadiumLight;
     const gr = ctx.createLinearGradient(ox, oy, ex, ey);
-    gr.addColorStop(0, css(col, (0.22 + 0.2 * kick) * fade));
+    gr.addColorStop(0, css(col, (0.16 + 0.18 * kick) * fade));
     gr.addColorStop(1, css(col, 0));
     ctx.fillStyle = gr;
     ctx.beginPath();
@@ -1469,6 +1479,20 @@ function starGlint(ctx, x, y, L, w, color, a) {
   ctx.restore();
 }
 
+/** An anamorphic lens streak: a thin horizontal bar of light, brightest at its centre. */
+function flareStreak(g, x, y, L, h, color, a) {
+  if (a <= 0.01 || L <= 1) return;
+  const { ctx } = g, css = g.color.css;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const gr = ctx.createLinearGradient(x - L, 0, x + L, 0);
+  gr.addColorStop(0, css(color, 0)); gr.addColorStop(0.5, css(color, clamp(a))); gr.addColorStop(1, css(color, 0));
+  ctx.fillStyle = gr;
+  ctx.fillRect(x - L, y - h / 2, 2 * L, h);
+  ctx.fillRect(x - L * 0.5, y - h * 0.18, L, h * 0.36);
+  ctx.restore();
+}
+
 // ---------------------------------------------------------------- the crown's descent
 
 /** The falling crown, in screen space: giant as it slides in from the sky, condensing onto his head. */
@@ -1528,6 +1552,8 @@ export function draw(g, t, F, P, S) {
   }
   if (V.shot === 'D') {
     drawSearchlights(g, V, pal, t, Tm, F);
+    const bf = dec(t, Tm.boom, 0.45);
+    if (bf > 0.02) { const [fx, fy] = camPt(V.cam, PAR.stadium, ...stPt(V, 0, 30, 0)); flareStreak(g, fx, fy, 1500, 16, T2.ice, 0.9 * bf); }
     drawDome(g, V, pal, t, Tm, F, P);
     drawFireworks(g, V, pal, t, Tm, F, P);
   }
@@ -1622,6 +1648,7 @@ export function draw(g, t, F, P, S) {
     const u = clamp((t - Tm.strike) / Math.max(1e-3, Tm.boom - Tm.strike)) ** 1.5;
     streakLines(ctx, { angle: ang, n: 50, color: T2.ice, alpha: 0.26, seed: 13, t, speed: 5200 });
     drawComet(g, kx, ky, sx, sy, u, t, pal);
+    flareStreak(g, kx + (sx - kx) * u, ky + (sy - ky) * u, 520 - 200 * u, 7, T2.ice, 0.7);
   } else {
     const [cx, cy] = camPt(V.cam, 1, jRef.neck[0], jRef.neck[1]);
     const gold = t >= Tm.chosen;
@@ -1693,7 +1720,7 @@ export function draw(g, t, F, P, S) {
   } else if (V.shot === 'B') {
     const ball = solve(KAISER, POSE.contact, { x: K.x, y: K.y, scale: K.U / KAISER.height, view: 'side', facing: 1 });
     const [bx, by] = camPt(V.cam, 1, ball.toeR[0] + 0.02 * K.U, ball.toeR[1] - 0.01 * K.U);
-    drawBallEnergy(g, bx, by, ballR * V.cam.z, 1, 0.3 + 0.4 * kick, F, pal, { rot: 0.4 + (t - Tm.name) * 0.5, arcsN: 7 + Math.round(4 * snare) });
+    drawBallEnergy(g, bx, by, ballR * V.cam.z, 1, 0.3 + 0.4 * kick, F, pal, { rot: 0.4 + (t - Tm.name) * 0.5, arcsN: 7 + Math.round(4 * snare), hold: 4 });
   } else if (V.shot === 'D') {
     drawConfetti(g, V, pal, t, Tm, F, P);
     if (t >= Tm.chosen && !landed) {
@@ -1712,6 +1739,7 @@ export function draw(g, t, F, P, S) {
       const s = crownSeat(j);
       const [hx, hy] = camPt(V.cam, 1, s.x, s.y);
       const la = t - Tm.crownLand;
+      flareStreak(g, hx, hy - 0.25 * s.w * V.cam.z, 700, 8, T2.goldHi, 0.85 * dec(t, Tm.crownLand, 0.18));
       if (la < 0.6) {                                         // it lands: a gold ring and a flash on the beat
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
         strokeRing(ctx, css, hx, hy - 0.25 * s.w * V.cam.z, 30 + 760 * outCubic(la / 0.6), 0.36, 0, 12 * (1 - la / 0.6) + 2, 1 - la / 0.6, '#FFFFFF', pal.gold);

@@ -15,7 +15,7 @@ import { solve } from './lib/puppet.mjs';
 import { hashU } from './lib/worldkit.mjs';
 import {
   HALL, KAISER_H, CANDELABRA, candleTips, royalPalette, rgba, camera, orbitCamera, project, drawHall, drawSet, drawFlames,
-  drawShafts, drawPool, focusLight, drawPetals, drawMotes, drawGlint, drawSmoke, loungePose, faceSpots, crownOn, warmRoyal, veil, roseOn,
+  drawShafts, drawPool, drawSpotCone, focusLight, drawPetals, drawMotes, drawGlint, drawSmoke, loungePose, faceSpots, crownOn, warmRoyal, veil, roseOn,
 } from './lib/kzroyal.mjs';
 
 export const meta = { type: 'kzReign', budgetMs: 140 };
@@ -100,7 +100,7 @@ function cameraFor(phase, t, T, S, P, h) {
     case 'eyes': {
       const u = (t - T.out2) / Math.max(0.1, T.pad - T.out2);
       const [ex, ey, ez] = h.eyes;
-      return camera({ x: ex, y: ey + 0.006, z: ez - lerp(0.3, 0.27, ease(u)), f: 1000, px: 960, py: 540 });
+      return camera({ x: ex, y: ey + 0.004, z: ez - lerp(0.215, 0.19, ease(u)), f: 1000, px: 960, py: 560 });
     }
     case 'last':
     default: {
@@ -140,9 +140,13 @@ export function draw(g, t, F, P, S) {
   const dark = phase === 'last' ? clamp(0.25 + 0.55 * (1 - litFrac) + 0.3 * end + 0.05 * clamp((t - T.bass) / 1.5), 0, 0.96) : 0;
 
   ctx.save();
-  drawHall(g, cam, C, { moon: 1 - 0.6 * end, dim: dimOrbit, soft: phase !== 'orbit' && !(phase === 'last' && t < T.pad + 0.8) });
-  drawPool(g, cam, HALL.throne.x - 0.2, HALL.dais.y + 0.01, HALL.throne.z - 0.9, 1.8, C.spot, 0.45 * spot);
-  drawShafts(g, cam, C, { amt: 0.6 * (1 - end), spot: spot * 1.1, t });
+  // the aftermath: a darker hall, the moon low in the windows, one cool spotlight from above on him
+  if (phase === 'eyes') {                               // only his face and the throne behind it are in frame
+    ctx.fillStyle = C.night;
+    ctx.fillRect(-40, -40, 2000, 1160);
+  } else drawHall(g, cam, C, { moon: 0.7 * (1 - 0.6 * end), dim: 0.25 + dimOrbit * 0.7, soft: phase !== 'orbit' && !(phase === 'last' && t < T.pad + 0.8) });
+  drawShafts(g, cam, C, { amt: 0.35 * (1 - end), spot: 0.25 * spot, t });
+  drawSpotCone(g, cam, C, HALL.pelvis[0] + 0.25, HALL.pelvis[2] - 0.15, { amt: spot, rTop: 0.3, rBot: 1.45 });
 
   const voc = vocalGlow(F, t);
   const veilAmt = phase === 'eyes' ? 1 : phase === 'push' ? ease((t - T.in) / Math.max(0.1, T.out2 - T.in) * 1.6 - 0.6) : 0;
@@ -153,16 +157,16 @@ export function draw(g, t, F, P, S) {
     lit: (i) => states[i].lit,
     kaiser: {
       design: KAISER_SUIT, pose, wind: -0.3, cape: 0.62, crown: 1, cuff: KZ.black,
-      halo: (0.2 + 0.14 * kick) * spot, haloColor: C.spot, rim: 0.85 * (1 - end), rimColor: '#D6E6FF', rimDir: [-4, -3],
+      halo: (0.2 + 0.14 * kick) * spot, haloColor: C.spot, rim: phase === 'eyes' ? 0 : 0.85 * (1 - end), rimColor: '#D6E6FF', rimDir: [-4, -3],
     },
   });
   const kj = set.kj;
 
   // keep the eye on him: darken away from his face
   const fp = kj ? faceSpots(KAISER_SUIT, kj) : null;
-  if (fp) {
-    const r = phase === 'eyes' ? 1400 : phase === 'push' ? lerp(700, 1100, clamp((t - T.in) / (T.out2 - T.in))) : 620;
-    focusLight(g, fp.eyes[0][0], fp.eyes[0][1] + fp.r * 0.6, r, phase === 'eyes' ? 0.25 : 0.55 + 0.25 * dimOrbit);
+  if (fp && veilAmt < 0.6) {                            // (the veil already does this in the close framings)
+    const r = phase === 'push' ? lerp(700, 1100, clamp((t - T.in) / (T.out2 - T.in))) : 620;
+    focusLight(g, fp.eyes[0][0], fp.eyes[0][1] + fp.r * 0.6, r, (0.55 + 0.25 * dimOrbit) * (1 - veilAmt));
   }
   if (dark > 0) {                                        // the hall sinks into the dark
     ctx.fillStyle = rgba('#010108', dark);

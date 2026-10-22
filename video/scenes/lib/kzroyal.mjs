@@ -1485,6 +1485,15 @@ export function drawShafts(g, cam, C, { amt = 1, spot = 1, t = 0 } = {}) {
       ctx.fill();
     }
   }
+  if (spot > 0) {                                        // the rose window itself glows with the spot
+    const rw = project(cam, 0, 8.95, B);
+    if (rw) {
+      const rr = 1.9 * rw.s * (0.9 + 0.25 * Math.min(1.5, spot));
+      ctx.globalAlpha = Math.min(1, 0.35 * spot);
+      ctx.drawImage(g.sprites.glow(C.moon, 0), rw.x - rr, rw.y - rr, 2 * rr, 2 * rr);
+      ctx.globalAlpha = 1;
+    }
+  }
   if (spot > 0) {
     const T = HALL.throne;
     const P = [[-1.0, 8.95, B], [1.0, 8.95, B], [1.9, HALL.dais.y, T.z - 1.6], [-2.3, HALL.dais.y, T.z - 1.6]];
@@ -1501,6 +1510,41 @@ export function drawShafts(g, cam, C, { amt = 1, spot = 1, t = 0 } = {}) {
     }
   }
   ctx.restore();
+}
+
+/**
+ * A spotlight cone from high above straight down onto (X, Z) on the dais: a soft volumetric trapezoid
+ * (narrow at the top, rTop..rBot metres) and a pool where it lands. Additive, amt 0..1.
+ */
+export function drawSpotCone(g, cam, C, X, Z, { amt = 1, rTop = 0.35, rBot = 1.5, top = 12, color = null } = {}) {
+  if (amt <= 0) return;
+  const ctx = g.ctx;
+  const col = color || C.spot;
+  const Y0 = HALL.dais.y;
+  const a = project(cam, X - rTop, top, Z), b = project(cam, X + rTop, top, Z);
+  const c = project(cam, X + rBot, Y0, Z), d = project(cam, X - rBot, Y0, Z);
+  if (!a || !b || !c || !d) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const gr = ctx.createLinearGradient(0, a.y, 0, c.y);
+  gr.addColorStop(0, rgba(col, 0.02 * amt));
+  gr.addColorStop(0.35, rgba(col, 0.12 * amt));
+  gr.addColorStop(1, rgba(col, 0.2 * amt));
+  ctx.fillStyle = gr;
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.closePath();
+  ctx.fill();
+  // a brighter core down the middle
+  const a2 = project(cam, X - rTop * 0.4, top, Z), b2 = project(cam, X + rTop * 0.4, top, Z);
+  const c2 = project(cam, X + rBot * 0.45, Y0, Z), d2 = project(cam, X - rBot * 0.45, Y0, Z);
+  if (a2 && b2 && c2 && d2) {
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(a2.x, a2.y); ctx.lineTo(b2.x, b2.y); ctx.lineTo(c2.x, c2.y); ctx.lineTo(d2.x, d2.y); ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+  drawPool(g, cam, X, Y0 + 0.01, Z, rBot * 1.1, col, 0.8 * amt);
 }
 
 /** A pool of light on a horizontal surface (Y) around (X, Z) of radius R metres, additive. */
@@ -1644,7 +1688,7 @@ export function drawSet(g, cam, C, o = {}) {
       drawCandelabraAt(ctx, C, p, arms, lit);
       const h = arms === 1 ? 0.82 : 1.85;
       for (const [tx, ty] of candleTips(arms, h)) {
-        flames.push({ x: p.x + tx * p.s, y: p.y - ty * p.s + 0.04 * p.s, s: p.s, seed: it.i * 7 + tx * 13, lit, i: it.i });
+        flames.push({ x: p.x + tx * p.s, y: p.y - ty * p.s + 0.04 * p.s, s: p.s, seed: it.i * 7 + tx * 13, lit, i: it.i, by: Y === 0 ? p.y : null });
       }
     } else if (it.k === 'bq') {
       const [X, Y, Z, v, lean, sc] = it.b;
@@ -1702,6 +1746,21 @@ export function drawSet(g, cam, C, o = {}) {
 /** The candle flames collected by drawSet (o: t, kick or flare(i), flameGlow). */
 export function drawFlames(g, C, flames, o = {}) {
   const t = o.t || 0;
+  // reflections in the polished floor under the floor-standing candelabras
+  const ctx = g.ctx;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const streak = g.sprites.glow(C.candle, 0);
+  for (const f of flames) {
+    if (f.by === null || f.by === undefined || f.lit <= 0.01) continue;
+    const d = f.by - f.y;                                 // flame height above the floor on screen
+    if (d < 4) continue;
+    const w = 0.09 * f.s, len = d * 0.7;
+    const fl = o.flare ? o.flare(f.i) : (o.kick || 0);
+    ctx.globalAlpha = Math.min(1, (0.16 + 0.18 * fl) * f.lit);
+    ctx.drawImage(streak, f.x - w, f.by + d * 0.15, 2 * w, len);
+  }
+  ctx.restore();
   for (const f of flames) {
     drawFlame(g, f.x, f.y, 0.11 * f.s, C, { t, seed: f.seed, flare: o.flare ? o.flare(f.i) : (o.kick || 0), lit: f.lit, glow: o.flameGlow ?? 1 });
   }
