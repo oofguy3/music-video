@@ -1,9 +1,10 @@
 // "The Emperor": the striker character and his motifs, shared by every scene of the Kaiser video.
 // An original stylised design in the puppet style (simple shapes), evoking the character through his
-// signature details: blond hair fading to blue tips, blue eyes, a smirk, a blue rose on the neck,
-// a red-and-black kit. Motifs: the blue rose, the crown, chains, the ball, manga speed lines.
+// signature details: blond hair fading to blue tips, blue eyes, a smirk, a blue rose on the neck;
+// a red-and-black kit on the pitch (KAISER) and a burgundy suit with a black shirt and olive tie
+// (KAISER_SUIT). Motifs: the blue rose, the crown, chains, the ball, manga speed lines.
 //
-//   import { KAISER, KZ, drawRose, drawCrown, drawChain, drawBall, speedLines } from './lib/kaiser.mjs';
+//   import { KAISER, KAISER_SUIT, KZ, drawRose, drawCrown, drawChain, drawBall, speedLines } from './lib/kaiser.mjs';
 //   drawPuppet(ctx, KAISER, cycles.run(p), { x, ground, view: 'side', devScale: g.scale });
 
 import { design } from './puppet.mjs';
@@ -18,6 +19,7 @@ export const KZ = {
   rose: '#2E6BFF', roseDeep: '#14329A', roseHi: '#8FB6FF',
   gold: '#FFD45A', goldDeep: '#B8860B', chain: '#C9D2E0', chainDeep: '#6B7488',
   royal: '#1F4FD8', navy: '#080D2A', cyan: '#3DE0FF', white: '#F7F9FF',
+  suit: '#7A1E2C', suitDeep: '#4E1019', olive: '#7A8A2A',
 };
 
 function faceShape(ctx, r, side) {
@@ -112,11 +114,44 @@ export function kaiserHead({ rose = true } = {}) {
 
 const ATHLETE = { headR: 0.1, neck: 0.03, torso: 0.3, shoulderX: 0.09, upperArm: 0.165, foreArm: 0.155, hand: 0.024, thigh: 0.245, shin: 0.235, foot: 0.06, torsoW: 0.15, torsoSide: 0.11, armW: 0.048, legW: 0.058 };
 
-/** The Emperor: red-and-black kit (red shirt, black sleeves edge, black shorts), broad shoulders. */
+/** The Emperor on the pitch: red-and-black kit (red shirt, black shorts), broad shoulders. */
 export const KAISER = design({
   ...ATHLETE, id: 'kaiser', height: 300, torsoShape: 'inv',
   fill: KZ.red, armFill: KZ.red, legFill: KZ.black, headFill: KZ.skin, head: kaiserHead(),
   outline: KZ.ink, outlineW: 3, farShade: 0.72,
+});
+
+/**
+ * The suit (the emperor off the pitch): burgundy jacket and trousers, black shirt, olive tie, black
+ * shoes. Drawn over the torso from the solved joints, so it follows every pose.
+ */
+function suitDetail(ctx, j, d, tw) {
+  const [px, py] = j.pelvis, [nx, ny] = j.neck;
+  const ax = nx - px, ay = ny - py, L = Math.hypot(ax, ay) || 1;
+  const ux = ax / L, uy = ay / L;                        // up the spine
+  const qx = -uy, qy = ux;                               // across the chest
+  const P = (along, across) => [px + ux * L * along + qx * tw * across, py + uy * L * along + qy * tw * across];
+  const front = j.view !== 'side';
+  const poly = (pts, fill) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); };
+  if (front) {
+    poly([P(1.0, -0.2), P(1.0, 0.2), P(0.42, 0.03), P(0.42, -0.03)], KZ.black);        // the shirt's V
+    poly([P(0.95, -0.035), P(0.95, 0.035), P(0.5, 0.05), P(0.42, 0), P(0.5, -0.05)], KZ.olive);  // the tie
+    poly([P(1.0, -0.2), P(0.42, -0.03), P(0.62, -0.3)], KZ.suitDeep);                   // lapels
+    poly([P(1.0, 0.2), P(0.42, 0.03), P(0.62, 0.3)], KZ.suitDeep);
+    ctx.fillStyle = KZ.gold;                                                           // a crest pin
+    const [bx, by] = P(0.78, 0.3);
+    ctx.beginPath(); ctx.arc(bx, by, tw * 0.05, 0, Math.PI * 2); ctx.fill();
+  } else {
+    poly([P(1.0, 0.25), P(1.0, 0.45), P(0.55, 0.42)], KZ.black);
+    poly([P(0.95, 0.4), P(0.95, 0.47), P(0.5, 0.46), P(0.5, 0.41)], KZ.olive);
+  }
+}
+
+/** The Emperor in his burgundy suit. */
+export const KAISER_SUIT = design({
+  ...ATHLETE, id: 'kaiser-suit', height: 300, torsoShape: 'inv',
+  fill: KZ.suit, armFill: KZ.suit, legFill: KZ.suit, footFill: KZ.black, headFill: KZ.skin, head: kaiserHead(),
+  torsoDetail: suitDetail, outline: KZ.ink, outlineW: 3, farShade: 0.72,
 });
 
 const rivals = new Map();

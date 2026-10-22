@@ -12,7 +12,8 @@
 //   hL/hR  thigh from straight down (+ = forward in 'side', outward in 'front')
 //   kL/kR  knee bend (+ = shin folds back)
 //   lean   torso tilt (+ = forward)          head  head tilt (+ = nods forward)
-// (armFill and legFill, in a design or in drawPuppet's opts, colour sleeves and legs separately.)
+// (armFill and legFill, in a design or in drawPuppet's opts, colour sleeves and legs separately;
+// footFill colours the shoes; torsoDetail draws over the torso, e.g. lapels and a tie.)
 //   rot    whole-body rotation about the pelvis (+ = clockwise on screen, before facing)
 //   bob    lift of the pelvis, in body heights      squash  0..1 flattens (landing), < 0 stretches
 // Lengths in a design are fractions of the body height; widths and outlines of the drawing are px at
@@ -29,7 +30,8 @@ const BASE = {
   torsoShape: 'capsule',          // 'capsule' | 'tri' (wider at the hem: a dress or coat) | 'inv' (broad shoulders)
   head: 'round',                  // 'round' | 'tv' | 'moon' | 'flower' | 'star' | 'none' | (ctx, r, info) => void
   face: 'dots',                   // 'dots' | 'closed' | 'none' | (ctx, r, info) => void
-  fill: '#F2EDE4', limbFill: null, armFill: null, legFill: null, headFill: null, faceColor: '#14101C',
+  fill: '#F2EDE4', limbFill: null, armFill: null, legFill: null, footFill: null, headFill: null, faceColor: '#14101C',
+  torsoDetail: null,              // (ctx, joints, design, torsoWidthPx) => void, drawn over the torso (lapels, a tie...)
   outline: null, outlineW: 0, glow: null, glowBlur: 0, farShade: 0.72,
   screen: '#89F7FE',              // tv: screen colour (or a function drawing the screen)
   petals: 7, petalFill: null,     // flower head
@@ -343,10 +345,14 @@ export function drawPuppet(ctx, d, pose, opts = {}) {
   if (opts.alpha !== undefined) ctx.globalAlpha *= Math.max(0, Math.min(1, opts.alpha));
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  const legs = (lr, pass, col) => {
+  const legs = (lr, pass, col, foot) => {
     ctx.strokeStyle = col;
     ctx.lineWidth = lw + (pass === 'outline' ? 2 * ow : 0);
-    polyline(ctx, [j[`hip${lr}`], j[`knee${lr}`], j[`ankle${lr}`], j[`toe${lr}`]]);
+    if (foot && pass === 'fill') {                        // shoes in their own colour
+      polyline(ctx, [j[`hip${lr}`], j[`knee${lr}`], j[`ankle${lr}`]]);
+      ctx.strokeStyle = foot;
+      polyline(ctx, [j[`ankle${lr}`], j[`toe${lr}`]]);
+    } else polyline(ctx, [j[`hip${lr}`], j[`knee${lr}`], j[`ankle${lr}`], j[`toe${lr}`]]);
   };
   const arms = (lr, pass, col) => {
     ctx.strokeStyle = ctx.fillStyle = col;
@@ -370,6 +376,11 @@ export function drawPuppet(ctx, d, pose, opts = {}) {
       ctx.lineWidth = aw * 0.8 + (pass === 'outline' ? 2 * ow : 0);
       polyline(ctx, [j.neck, [(j.neck[0] * 2 + j.headC[0]) / 3, (j.neck[1] * 2 + j.headC[1]) / 3]]);
     }
+    if (pass === 'fill' && d.torsoDetail) {
+      ctx.save();
+      d.torsoDetail(ctx, j, d, tw);
+      ctx.restore();
+    }
   };
   const head = (pass, col) => {
     ctx.fillStyle = ctx.strokeStyle = col;
@@ -388,7 +399,7 @@ export function drawPuppet(ctx, d, pose, opts = {}) {
     for (const [part, lr, far] of order) {
       const k = far ? d.farShade : 1;
       const col = (base) => (pass === 'outline' ? outline : k === 1 ? base : shade(base, k));
-      if (part === 'leg') legs(lr, pass, col(opts.legFill || d.legFill || limb));
+      if (part === 'leg') legs(lr, pass, col(opts.legFill || d.legFill || limb), d.footFill ? col(d.footFill) : null);
       else if (part === 'arm') arms(lr, pass, col(opts.armFill || d.armFill || limb));
       else if (part === 'torso') torso(pass, col(fill));
       else head(pass, col(headFill));
