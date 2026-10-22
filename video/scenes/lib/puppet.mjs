@@ -12,6 +12,7 @@
 //   hL/hR  thigh from straight down (+ = forward in 'side', outward in 'front')
 //   kL/kR  knee bend (+ = shin folds back)
 //   lean   torso tilt (+ = forward)          head  head tilt (+ = nods forward)
+// (armFill and legFill, in a design or in drawPuppet's opts, colour sleeves and legs separately.)
 //   rot    whole-body rotation about the pelvis (+ = clockwise on screen, before facing)
 //   bob    lift of the pelvis, in body heights      squash  0..1 flattens (landing), < 0 stretches
 // Lengths in a design are fractions of the body height; widths and outlines of the drawing are px at
@@ -28,7 +29,7 @@ const BASE = {
   torsoShape: 'capsule',          // 'capsule' | 'tri' (wider at the hem: a dress or coat) | 'inv' (broad shoulders)
   head: 'round',                  // 'round' | 'tv' | 'moon' | 'flower' | 'star' | 'none' | (ctx, r, info) => void
   face: 'dots',                   // 'dots' | 'closed' | 'none' | (ctx, r, info) => void
-  fill: '#F2EDE4', limbFill: null, headFill: null, faceColor: '#14101C',
+  fill: '#F2EDE4', limbFill: null, armFill: null, legFill: null, headFill: null, faceColor: '#14101C',
   outline: null, outlineW: 0, glow: null, glowBlur: 0, farShade: 0.72,
   screen: '#89F7FE',              // tv: screen colour (or a function drawing the screen)
   petals: 7, petalFill: null,     // flower head
@@ -387,8 +388,8 @@ export function drawPuppet(ctx, d, pose, opts = {}) {
     for (const [part, lr, far] of order) {
       const k = far ? d.farShade : 1;
       const col = (base) => (pass === 'outline' ? outline : k === 1 ? base : shade(base, k));
-      if (part === 'leg') legs(lr, pass, col(limb));
-      else if (part === 'arm') arms(lr, pass, col(limb));
+      if (part === 'leg') legs(lr, pass, col(opts.legFill || d.legFill || limb));
+      else if (part === 'arm') arms(lr, pass, col(opts.armFill || d.armFill || limb));
       else if (part === 'torso') torso(pass, col(fill));
       else head(pass, col(headFill));
     }
