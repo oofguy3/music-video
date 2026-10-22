@@ -269,7 +269,7 @@ export function drawCrown(ctx, x, y, w, { fill = KZ.gold, deep = KZ.goldDeep, in
   ctx.strokeRect(-w / 2, -band, w, band);
   for (const a of peaks) {                              // pearls on the points
     ctx.beginPath();
-    ctx.arc(w * a, -h * (a === -0.25 ? 1.12 : 1) - w * 0.035, w * 0.05, 0, TAU);
+    ctx.arc(w * a, -h * (a === 0 ? 1.12 : 1) - w * 0.035, w * 0.05, 0, TAU);   // the centre point is the tallest
     ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.stroke();
   }
   for (const a of [-0.3, 0, 0.3]) {                     // jewels on the band
