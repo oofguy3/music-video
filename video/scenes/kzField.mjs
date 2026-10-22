@@ -266,7 +266,7 @@ function cameraFor(sh, t, st, K, P, F) {
     const D = P.trackDist;
     const sway = 0.05 * Math.sin(TAU * mt * 0.5);
     const eye = [kx + sd * D * 0.52, 0.72 + 0.04 * Math.sin(TAU * mt), kz - D * 0.86];
-    return ST.lookAt(eye, [kx + sd * 0.25, 1.22, kz - 0.4], { focal: 1450, cy: 560, roll: -sd * 0.035 + sway * 0.2 });
+    return ST.lookAt(eye, [kx - sd * 0.1, 1.15, kz + 0.1], { focal: 1450, cy: 560, roll: -sd * 0.035 + sway * 0.2 });
   }
   if (sh.shot === 'side') {
     const D = 7.2;
@@ -286,13 +286,13 @@ function cameraFor(sh, t, st, K, P, F) {
   }
   // finale: he has turned back to the pitch; a high wide shot from over the pitch cranes down to a
   // low hero angle in front of him by emperorT (the goal and the roaring end stand behind him)
-  const u = smoother((t - st.kaiserT - 0.15) / Math.max(0.4, st.emperorT - st.kaiserT - 0.2));
+  const u = smoother((t - st.kaiserT - 0.1) / Math.max(0.4, st.emperorT - st.kaiserT - 0.15));
   const push = clamp((t - st.emperorT) / Math.max(0.5, st.t1 - st.emperorT));
-  const az = lerp(0.62, 0.17, u), el = lerp(0.62, -0.07, u), dist = lerp(56, 5.1 - 0.45 * push, u);
-  const tgtY = lerp(0.0, 1.3, u);
+  const az = lerp(0.55, 0.17, u), el = lerp(0.52, -0.07, u), dist = lerp(27, 5.1 - 0.45 * push, u);
+  const tgtY = lerp(0.6, 1.3, u);
   const eye = [kx + Math.sin(az) * dist * Math.cos(el), tgtY + Math.sin(el) * dist, kz + Math.cos(az) * dist * Math.cos(el)];
-  const focal = lerp(1100, (P.heroHeight / 1.85) * 5.1, u);
-  return ST.lookAt(eye, [kx, tgtY, kz - lerp(9, 0, u)], { focal, cy: lerp(540, 610, u), roll: lerp(0.05, -0.025, u) });
+  const focal = lerp(1150, (P.heroHeight / 1.85) * 5.1, u);
+  return ST.lookAt(eye, [kx, tgtY, kz - lerp(4, 0, u)], { focal, cy: lerp(560, 610, u), roll: lerp(0.05, -0.025, u) });
 }
 
 // ------------------------------------------------------------------------------------- drawing pieces
@@ -308,7 +308,12 @@ function facingOf(cam, x, z, vx, vz, fallback = 1) {
 function flashesAt(F, t, wild) {
   const out = [];
   for (const h of F.between('hat', t - 0.35, t + 1e-6)) out.push({ t0: land(h[0], F), n: Math.round(8 + 22 * (h[2] ?? h[1] ?? 0.5)), seed: Math.round(h[0] * 1000), s: 1 });
-  if (wild > 0) for (const h of F.between('hit', t - 0.35, t + 1e-6)) out.push({ t0: land(h[0], F), n: Math.round(60 * wild), seed: Math.round(h[0] * 1000) + 7, s: 1 });
+  if (wild > 0) {
+    for (const h of F.between('hit', t - 0.35, t + 1e-6)) out.push({ t0: land(h[0], F), n: Math.round(60 * wild), seed: Math.round(h[0] * 1000) + 7, s: 1 });
+    // a continuous storm of camera flashes: a fresh burst on every frame (closed form, seeded by frame)
+    const fps = F.fps || 30, f0 = Math.round(t * fps);
+    for (let k = 0; k < 9; k++) out.push({ t0: (f0 - k) / fps, n: Math.round(34 * wild), seed: (f0 - k) * 7 + 3, s: 0.9 });
+  }
   return out;
 }
 
@@ -434,7 +439,7 @@ function drawEcho(g, t, F, st, P, cam, K, kview, kfacing, pal) {
   const d = K.dodge;
   if (!d || kview !== 'side') return;
   const tau = t - d.tD;
-  const env = smooth((tau + 0.12) / 0.06) * (1 - smooth((tau - 0.18) / 0.3));
+  const env = smooth((tau + 0.04) / 0.05) * (1 - smooth((tau - 0.18) / 0.3));
   if (env <= 0.02) return;
   const L = g.layer('kzEcho');
   // fx.echo walks the trail oldest first; alpha decays per step (k = 0 is now, drawn in full colour later)

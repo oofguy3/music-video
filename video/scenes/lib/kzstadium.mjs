@@ -553,7 +553,6 @@ function drawTower(g, cam, pal, tw, o) {
   const facing = (cam.eye[0] - hx) * H.n[0] + (cam.eye[1] - hy) * H.n[1] + (cam.eye[2] - hz) * H.n[2] > 0;
   fillPoly(ctx, head, facing ? mixHex(pal.wall, pal.haze, 0.6) : mixHex(pal.wall, pal.haze, 0.2));
   if (!facing) return;
-  const flare = o.flare ?? 0;
   const lampCol = mixHex(pal.flood, '#FFFFFF', 0.5);
   ctx.fillStyle = lampCol;
   for (let j = 0; j < 4; j++) {
@@ -564,7 +563,6 @@ function drawTower(g, cam, pal, tw, o) {
       ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fill();
     }
   }
-  void flare;
 }
 
 /** Additive glows around the lamp heads (drawn after the pitch so they sit over everything far). */
@@ -699,8 +697,7 @@ const MARKS = (() => {
   arcs.push([0, -(L - 11), 9.15, Math.PI / 2 - a, Math.PI / 2 + a]);       // penalty arcs (outside the box)
   arcs.push([0, L - 11, 9.15, -Math.PI / 2 - a, -Math.PI / 2 + a]);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const a0 = Math.atan2(-sz, 0), base = sx > 0 ? (sz > 0 ? Math.PI : Math.PI / 2) : (sz > 0 ? -Math.PI / 2 : 0);
-    void a0;
+    const base = sx > 0 ? (sz > 0 ? Math.PI : Math.PI / 2) : (sz > 0 ? -Math.PI / 2 : 0);   // the quarter facing into the pitch
     arcs.push([sx * Wd, sz * L, 1, base, base + Math.PI / 2]);
   }
   const spots = [[0, 0], [0, -(L - 11)], [0, L - 11]];
