@@ -1,10 +1,11 @@
 // "The Emperor": the striker character and his motifs, shared by every scene of the Kaiser video.
 // An original stylised design in the puppet style (simple shapes), evoking the character through his
-// signature details: blond hair fading to blue tips, blue eyes, a smirk, a blue rose on the neck;
-// a red-and-black kit on the pitch (KAISER) and a burgundy suit with a black shirt and olive tie
-// (KAISER_SUIT). Motifs: the blue rose, the crown, chains, the ball, manga speed lines.
+// signature details: side-swept blond hair that is blue underneath, blue eyes, a smirk, a blue rose
+// on the neck; on the pitch a black-and-red kit with gold trim and blue boots (KAISER), off it a
+// burgundy suit with a black shirt and olive tie (KAISER_SUIT), and for the throne a red fur-trimmed
+// cape (drawCape). No lettering or real badges are drawn. Motifs: the blue rose, the crown, chains, the ball, manga speed lines.
 //
-//   import { KAISER, KAISER_SUIT, KZ, drawRose, drawCrown, drawChain, drawBall, speedLines } from './lib/kaiser.mjs';
+//   import { KAISER, KAISER_SUIT, KZ, drawCape, drawRose, drawCrown, drawChain, drawBall, speedLines } from './lib/kaiser.mjs';
 //   drawPuppet(ctx, KAISER, cycles.run(p), { x, ground, view: 'side', devScale: g.scale });
 
 import { design } from './puppet.mjs';
@@ -19,7 +20,8 @@ export const KZ = {
   rose: '#2E6BFF', roseDeep: '#14329A', roseHi: '#8FB6FF',
   gold: '#FFD45A', goldDeep: '#B8860B', chain: '#C9D2E0', chainDeep: '#6B7488',
   royal: '#1F4FD8', navy: '#080D2A', cyan: '#3DE0FF', white: '#F7F9FF',
-  suit: '#7A1E2C', suitDeep: '#4E1019', olive: '#7A8A2A',
+  suit: '#7A1E2C', suitDeep: '#4E1019', olive: '#7A8A2A', boot: '#2F5BFF',
+  cape: '#B3122B', capeDeep: '#6E0A1A', fur: '#F4F1EA', furSpot: '#1A1A22',
 };
 
 function faceShape(ctx, r, side) {
@@ -33,22 +35,28 @@ function faceShape(ctx, r, side) {
   ctx.closePath();
 }
 
-// The spiky mane: the outline runs up the left side, over the top and down the right in sharp
-// anime spikes, then back across the forehead as a jagged fringe.
-const HAIR = [
-  [-1.16, 0.96], [-1.0, 0.46], [-1.26, 0.3], [-1.06, -0.1], [-1.28, -0.44], [-0.92, -0.72], [-0.9, -1.06],
-  [-0.5, -1.0], [-0.26, -1.3], [0.04, -1.08], [0.42, -1.3], [0.62, -0.98], [1.04, -1.02], [0.98, -0.7],
-  [1.3, -0.48], [1.1, -0.15], [1.3, 0.1], [1.06, 0.38], [1.18, 0.92],
-  [0.88, 0.3], [0.82, 0.5], [0.6, 0.08], [0.36, 0.48], [0.16, 0.0], [-0.12, 0.44], [-0.32, 0.02],
-  [-0.6, 0.4], [-0.8, 0.06], [-0.94, 0.62],
-];
+// The hair: a smooth crown swept to one side, long locks to the jaw, and a fringe of three big
+// pointed locks falling across the forehead from a part on the left. Blond on top, blue underneath.
 function hairShape(ctx, r, side) {
   const s = side ? -0.14 * r : 0;
+  const X = (v) => s + v * r, Y = (v) => v * r;
   ctx.beginPath();
-  for (let i = 0; i < HAIR.length; i++) {
-    const x = s + HAIR[i][0] * r, y = HAIR[i][1] * r;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
+  ctx.moveTo(X(-1.05), Y(0.86));
+  ctx.quadraticCurveTo(X(-1.27), Y(0.4), X(-1.18), Y(-0.22));
+  ctx.quadraticCurveTo(X(-1.06), Y(-1.2), X(0.2), Y(-1.26));
+  ctx.quadraticCurveTo(X(1.12), Y(-1.16), X(1.2), Y(-0.15));
+  ctx.quadraticCurveTo(X(1.28), Y(0.36), X(1.08), Y(0.82));
+  for (const [x, y] of [[0.86, 0.26], [0.79, 0.45], [0.6, 0.08], [0.4, 0.47], [0.2, 0.1], [-0.04, 0.43], [-0.28, 0.02],
+    [-0.55, 0.27], [-0.78, 0.05], [-0.92, 0.52]]) ctx.lineTo(X(x), Y(y));
+  ctx.closePath();
+}
+
+function tailShape(ctx, r, side) {                       // the small blue tail at the nape
+  const s = side ? -0.6 * r : 0.78 * r;
+  ctx.beginPath();
+  ctx.moveTo(s, 0.35 * r);
+  ctx.quadraticCurveTo(s + 0.5 * r, 0.6 * r, s + 0.42 * r, 1.15 * r);
+  ctx.quadraticCurveTo(s + 0.28 * r, 0.75 * r, s - 0.05 * r, 0.62 * r);
   ctx.closePath();
 }
 
@@ -57,10 +65,14 @@ export function kaiserHead({ rose = true } = {}) {
   return (ctx, r, info) => {
     const side = info.joints && info.joints.view === 'side';
     if (info.pass === 'outline') {
+      tailShape(ctx, r, side); ctx.fill();
       faceShape(ctx, r, side); ctx.fill();
       hairShape(ctx, r, side); ctx.fill();
       return;
     }
+    ctx.fillStyle = KZ.tipDeep;
+    tailShape(ctx, r, side);
+    ctx.fill();
     ctx.fillStyle = KZ.skin;
     faceShape(ctx, r, side);
     ctx.fill();
@@ -93,19 +105,19 @@ export function kaiserHead({ rose = true } = {}) {
       ctx.beginPath(); ctx.moveTo(mx - 0.14 * r, 0.82 * r); ctx.quadraticCurveTo(mx + 0.04 * r, 0.86 * r, mx + 0.2 * r, 0.74 * r); ctx.stroke();
     }
     // hair: blond crown fading to blue tips
-    const grd = ctx.createLinearGradient(0, -1.4 * r, 0, 0.75 * r);
+    const grd = ctx.createLinearGradient(0, -1.3 * r, 0, 0.88 * r);
     grd.addColorStop(0, KZ.blondHi);
-    grd.addColorStop(0.42, KZ.blond);
-    grd.addColorStop(0.72, KZ.tip);
+    grd.addColorStop(0.55, KZ.blond);
+    grd.addColorStop(0.8, KZ.tip);
     grd.addColorStop(1, KZ.tipDeep);
     ctx.fillStyle = grd;
     hairShape(ctx, r, side);
     ctx.fill();
     // a few darker strands for texture
-    ctx.strokeStyle = 'rgba(29,70,200,0.35)'; ctx.lineWidth = 0.04 * r;
+    ctx.strokeStyle = 'rgba(184,150,60,0.45)'; ctx.lineWidth = 0.04 * r;   // strands sweeping from the part
     ctx.beginPath();
-    ctx.moveTo(-0.5 * r, -0.95 * r); ctx.quadraticCurveTo(-0.3 * r, -0.3 * r, -0.45 * r, 0.2 * r);
-    ctx.moveTo(0.3 * r, -1.0 * r); ctx.quadraticCurveTo(0.5 * r, -0.4 * r, 0.42 * r, 0.25 * r);
+    ctx.moveTo(-0.62 * r, -0.98 * r); ctx.quadraticCurveTo(0.1 * r, -0.85 * r, 0.6 * r, 0.05 * r);
+    ctx.moveTo(-0.5 * r, -0.7 * r); ctx.quadraticCurveTo(-0.1 * r, -0.4 * r, 0.2 * r, 0.08 * r);
     ctx.stroke();
     // the blue rose on the neck
     if (rose && big) drawRose(ctx, (side ? -0.1 : 0.4) * r, 1.42 * r, 0.24 * r, { rot: 0.4 });
@@ -114,11 +126,37 @@ export function kaiserHead({ rose = true } = {}) {
 
 const ATHLETE = { headR: 0.1, neck: 0.03, torso: 0.3, shoulderX: 0.09, upperArm: 0.165, foreArm: 0.155, hand: 0.024, thigh: 0.245, shin: 0.235, foot: 0.06, torsoW: 0.15, torsoSide: 0.11, armW: 0.048, legW: 0.058 };
 
-/** The Emperor on the pitch: red-and-black kit (red shirt, black shorts), broad shoulders. */
+function kitDetail(ctx, j, d, tw) {
+  const [px, py] = j.pelvis, [nx, ny] = j.neck;
+  const ax = nx - px, ay = ny - py, L = Math.hypot(ax, ay) || 1;
+  const ux = ax / L, uy = ay / L, qx = -uy, qy = ux;
+  const P = (along, across) => [px + ux * L * along + qx * tw * across, py + uy * L * along + qy * tw * across];
+  const poly = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); };
+  const front = j.view !== 'side';
+  const w0 = front ? 0.2 : 0.12, c = front ? 0 : 0.22;
+  poly([P(0.92, c - w0 - 0.04), P(0.92, c + w0 + 0.04), P(0.0, c + w0 + 0.08), P(0.0, c - w0 - 0.08)]);   // red front panel
+  ctx.fillStyle = KZ.red; ctx.fill();
+  ctx.strokeStyle = KZ.gold; ctx.lineWidth = Math.max(1, tw * 0.035);
+  ctx.beginPath();                                                                                     // gold trim
+  ctx.moveTo(...P(0.92, c - w0 - 0.04)); ctx.lineTo(...P(0.0, c - w0 - 0.08));
+  ctx.moveTo(...P(0.92, c + w0 + 0.04)); ctx.lineTo(...P(0.0, c + w0 + 0.08));
+  ctx.stroke();
+  poly([P(1.0, c - 0.16), P(1.0, c + 0.16), P(0.84, c)]);                                               // V collar
+  ctx.fillStyle = KZ.red; ctx.fill(); ctx.stroke();
+  if (front) {                                                                                         // a gold crest
+    const [bx, by] = P(0.74, 0.3);
+    ctx.fillStyle = KZ.gold;
+    ctx.beginPath(); ctx.moveTo(bx - tw * 0.05, by - tw * 0.06); ctx.lineTo(bx + tw * 0.05, by - tw * 0.06);
+    ctx.lineTo(bx + tw * 0.05, by + tw * 0.02); ctx.lineTo(bx, by + tw * 0.08); ctx.lineTo(bx - tw * 0.05, by + tw * 0.02); ctx.closePath(); ctx.fill();
+  }
+}
+
+/** The Emperor on the pitch: black jersey with a red front panel and gold trim, red sleeves, black
+ *  shorts and socks, blue boots. */
 export const KAISER = design({
   ...ATHLETE, id: 'kaiser', height: 300, torsoShape: 'inv',
-  fill: KZ.red, armFill: KZ.red, legFill: KZ.black, headFill: KZ.skin, head: kaiserHead(),
-  outline: KZ.ink, outlineW: 3, farShade: 0.72,
+  fill: KZ.black, armFill: KZ.red, legFill: KZ.black, footFill: KZ.boot, headFill: KZ.skin, head: kaiserHead(),
+  torsoDetail: kitDetail, outline: KZ.ink, outlineW: 3, farShade: 0.72,
 });
 
 /**
@@ -362,6 +400,61 @@ export function streakLines(ctx, { angle = 0, n = 40, color = '#FFFFFF', alpha =
     const period = 2 * R + len;
     const x = ((hU(seed, i, 4) * period + t * speed * (0.6 + 0.8 * hU(seed, i, 5))) % period) - R - len;
     ctx.fillRect(x, y, len, th);
+  }
+  ctx.restore();
+}
+
+/**
+ * The emperor's cape: deep red with a gold hem pattern and a white fur collar with black ermine
+ * spots, hanging from the shoulders of solved joints j (puppet.solve). Draw it BEFORE the puppet so
+ * it falls behind him. wind (-1..1) blows it sideways; t animates the hem's ripple; length is in body
+ * heights; collarOnly draws just the fur collar (draw that AFTER the puppet so it sits over the shirt).
+ */
+export function drawCape(ctx, j, { t = 0, wind = 0.3, length = 0.62, color = KZ.cape, deep = KZ.capeDeep, fur = KZ.fur, spot = KZ.furSpot,
+  gold = KZ.gold, collarOnly = false, alpha = 1 } = {}) {
+  const U = j.U;
+  const [lx, ly] = j.shoulderL, [rx, ry] = j.shoulderR;
+  const cx = (lx + rx) / 2, cy = (ly + ry) / 2;
+  const half = Math.max(Math.abs(rx - lx) / 2, U * 0.09) + U * 0.05;
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  if (!collarOnly) {
+    const bottom = cy + U * length, spread = U * (0.24 + 0.06 * Math.abs(wind));
+    const sway = wind * U * 0.16;
+    const N = 8;
+    ctx.beginPath();
+    ctx.moveTo(cx - half, cy);
+    ctx.quadraticCurveTo(cx - half - spread * 0.6 + sway * 0.4, cy + U * length * 0.5, cx - half - spread + sway, bottom);
+    for (let i = 1; i <= N; i++) {                       // the rippling hem
+      const u = i / N;
+      const x = cx - half - spread + sway + (2 * (half + spread)) * u;
+      const y = bottom + Math.sin(u * Math.PI * 3 + t * 2.2) * U * 0.018 + (u < 0.5 ? 0 : U * 0.01);
+      ctx.lineTo(x, y);
+    }
+    ctx.quadraticCurveTo(cx + half + spread * 0.6 + sway * 0.4, cy + U * length * 0.5, cx + half, cy);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(cx - half - spread, 0, cx + half + spread, 0);
+    g.addColorStop(0, deep); g.addColorStop(0.5, color); g.addColorStop(1, deep);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.lineWidth = Math.max(1, U * 0.008); ctx.strokeStyle = KZ.ink; ctx.stroke();
+    ctx.fillStyle = gold;                                // a band of gold crowns along the hem
+    for (let i = 0; i < 9; i++) {
+      const u = (i + 0.5) / 9;
+      const x = cx - half - spread + sway + (2 * (half + spread)) * u;
+      ctx.beginPath(); ctx.arc(x, bottom - U * 0.04, U * 0.008, 0, TAU); ctx.fill();
+    }
+  }
+  // the fur collar with ermine spots
+  ctx.fillStyle = fur;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + U * 0.01, half + U * 0.03, U * 0.05, 0, 0, TAU);
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, U * 0.006); ctx.strokeStyle = KZ.ink; ctx.stroke();
+  ctx.fillStyle = spot;
+  for (let i = 0; i < 7; i++) {
+    const u = (i + 0.5) / 7;
+    ctx.beginPath(); ctx.ellipse(cx - half + 2 * half * u, cy + U * 0.012 + (i % 2 ? U * 0.012 : -U * 0.008), U * 0.005, U * 0.009, 0, 0, TAU); ctx.fill();
   }
   ctx.restore();
 }
